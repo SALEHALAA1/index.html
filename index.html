@@ -4280,22 +4280,20 @@ onclick="openTraderPortal(${trader.id})">
 
 async function openTraderPortal(traderId){
 
-    const { data, error } =
-    await db
-    .from("trader_portal_tokens")
-    .select("token,is_active")
-    .eq("trader_id", traderId)
-    .eq("is_active", true)
-    .order("id", { ascending:false })
-    .limit(1)
-    .maybeSingle();
+    const { data, error } = await db
+        .from("trader_portal_tokens")
+        .select("token")
+        .eq("trader_id", traderId)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
 
     if(error){
 
         console.error(error);
 
         showToast(
-            "حدث خطأ أثناء الحصول على رابط التاجر",
+            "تعذر الحصول على رابط التاجر",
             true
         );
 
@@ -4313,12 +4311,12 @@ async function openTraderPortal(traderId){
     }
 
     const portalUrl =
-    new URL(
-        "trader.html",
-        window.location.href
-    ).href
-    + "?token="
-    + encodeURIComponent(data.token);
+        new URL(
+            "trader.html",
+            window.location.href
+        ).href
+        + "?token="
+        + encodeURIComponent(data.token);
 
     window.open(
         portalUrl,
@@ -4326,106 +4324,6 @@ async function openTraderPortal(traderId){
     );
 
 }
-/* =========================================
-   SERVICES
-========================================= */
-
-function renderServices(){
-
-    document.getElementById("content")
-    .innerHTML=`
-
-    <div class="page-head">
-
-        <div>
-
-            <h1>${t("services")}</h1>
-
-        </div>
-
-        <button
-        class="gold-btn"
-        onclick="openServiceModal()">
-
-        <i class="fa-solid fa-plus"></i>
-
-        ${t("newService")}
-
-        </button>
-
-    </div>
-
-
-    <div
-    class="grid"
-    style="
-    grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr))
-    ">
-
-    ${
-    state.services.map(function(service){
-
-        return `
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <h3>
-                ${esc(service.service_name)}
-                </h3>
-
-                <p class="muted">
-                ${esc(service.description||"")}
-                </p>
-
-                <div class="money">
-
-                ${money(service.default_price)}
-                ${esc(service.currency||"EGP")}
-
-                </div>
-
-                <div
-                class="actions"
-                style="margin-top:12px">
-
-                    <button
-                    class="mini-btn"
-                    onclick="openServiceModal(${service.id})">
-
-                    <i class="fa-solid fa-pen"></i>
-
-                    </button>
-
-                    <button
-                    class="mini-btn"
-                    onclick="deleteService(${service.id})">
-
-                    <i class="fa-solid fa-trash"></i>
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        `;
-
-    }).join("")
-    ||
-    `<div class="empty">${t("noData")}</div>`
-    }
-
-    </div>
-
-    `;
-
-}
-
 
 function openServiceModal(id=null){
 
