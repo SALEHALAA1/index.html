@@ -452,146 +452,6 @@ tr:hover td{
     color:var(--gold2);
     background:rgba(214,173,85,.1);
 }
-/* CUSTOMER GROUPED SUBSCRIPTIONS */
-
-.customer-subscriptions-list{
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    padding:14px;
-}
-
-.customer-subscriptions-card{
-    background:#121212;
-    border:1px solid var(--border);
-    border-radius:18px;
-    overflow:hidden;
-}
-
-.customer-card-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:18px;
-    padding:16px 18px;
-    background:linear-gradient(135deg,rgba(214,173,85,.08),rgba(255,255,255,.015));
-    border-bottom:1px solid rgba(255,255,255,.05);
-}
-
-.customer-card-total{
-    text-align:left;
-    flex-shrink:0;
-}
-
-.customer-card-total span{
-    display:block;
-    color:#777;
-    font-size:10px;
-    margin-bottom:2px;
-}
-
-.customer-card-total strong{
-    color:var(--gold2);
-    font-size:15px;
-}
-
-.customer-subscriptions-body{
-    padding:12px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-
-.customer-subscription-item{
-    background:#171717;
-    border:1px solid rgba(255,255,255,.05);
-    border-radius:14px;
-    padding:14px;
-}
-
-.customer-subscription-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:12px;
-}
-
-.customer-subscription-head strong{
-    display:block;
-    color:#aaa;
-    font-size:10px;
-    margin-bottom:3px;
-}
-
-.customer-subscription-head .service{
-    display:block;
-    font-size:14px;
-}
-
-.customer-subscription-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:8px;
-}
-
-.customer-subscription-grid > div{
-    background:#111;
-    border-radius:10px;
-    padding:9px 10px;
-}
-
-.customer-subscription-grid label{
-    display:block;
-    color:#777;
-    font-size:9px;
-    margin-bottom:2px;
-}
-
-.customer-subscription-grid strong{
-    font-size:12px;
-}
-
-@media(max-width:700px){
-
-    .customer-subscriptions-list{
-        padding:0;
-    }
-
-    .customer-card-head{
-        align-items:flex-start;
-        padding:14px;
-    }
-
-    .customer-card-total{
-        text-align:left;
-    }
-
-    .customer-subscriptions-body{
-        padding:10px;
-    }
-
-    .customer-subscription-grid{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-}
-
-@media(max-width:420px){
-
-    .customer-card-head{
-        flex-direction:column;
-        gap:10px;
-    }
-
-    .customer-card-total{
-        width:100%;
-        text-align:right;
-        padding-top:8px;
-        border-top:1px solid rgba(255,255,255,.05);
-    }
-
-}
 
 /* CUSTOMER CARDS MOBILE */
 
@@ -1698,38 +1558,135 @@ function renderSubscriptions(){
         );
 
     /*
-       تجميع كل اشتراكات نفس العميل في سجل واحد.
+       تجميع العملاء الذين لديهم نفس الاشتراك.
+       الاشتراك هنا = الخدمة + المنصة.
     */
 
-    const customerGroups = new Map();
+    const groups = new Map();
 
-    filteredRows.forEach(function(sub){
+    filteredRows.forEach(
+        sub => {
 
-        const customerId = String(sub.customer_id);
+            const serviceName =
+                sub.service_name || "-";
 
-        if(!customerGroups.has(customerId)){
+            const platform =
+                sub.platform || "-";
 
-            customerGroups.set(customerId,{
-                customer_id:sub.customer_id,
-                customer_name:sub.customer_name || "-",
-                customer_phone:sub.customer_phone || "",
-                subscriptions:[],
-                monthly_fee_total:0
-            });
+            const key =
+                serviceName
+                + "||"
+                + platform;
+
+            if(!groups.has(key)){
+
+                groups.set(
+                    key,
+                    {
+                        ...sub,
+                        customers:[],
+                        monthly_fee_total:0,
+                        payment_days:[],
+                        due_dates:[],
+                        statuses:[]
+                    }
+                );
+
+            }
+
+            const group =
+                groups.get(key);
+
+            const customerExists =
+                group.customers.some(
+                    c =>
+                        String(c.id)
+                        ===
+                        String(sub.customer_id)
+                );
+
+            if(!customerExists){
+
+                group.customers.push({
+                    id:sub.customer_id,
+                    name:sub.customer_name || "-",
+                    phone:sub.customer_phone || ""
+                });
+
+            }
+
+            group.monthly_fee_total +=
+                Number(sub.monthly_fee || 0);
+
+            if(
+                sub.payment_day !== null
+                &&
+                sub.payment_day !== undefined
+                &&
+                sub.payment_day !== ""
+            ){
+
+                group.payment_days.push(
+                    String(sub.payment_day)
+                );
+
+            }
+
+            if(sub.due_date){
+
+                group.due_dates.push(
+                    sub.due_date
+                );
+
+            }
+
+            group.statuses.push(
+                sub.payment_status || ""
+            );
 
         }
-
-        const group = customerGroups.get(customerId);
-
-        group.subscriptions.push(sub);
-
-        group.monthly_fee_total +=
-            Number(sub.monthly_fee || 0);
-
-    });
+    );
 
     const rows =
-        Array.from(customerGroups.values());
+        Array.from(groups.values());
+
+    rows.forEach(
+        group => {
+
+            const uniquePaymentDays =
+                [...new Set(group.payment_days)];
+
+            const uniqueDueDates =
+                [...new Set(group.due_dates)];
+
+            const uniqueStatuses =
+                [...new Set(
+                    group.statuses.filter(Boolean)
+                )];
+
+            group.payment_day_display =
+                uniquePaymentDays.length === 1
+                ?
+                uniquePaymentDays[0]
+                :
+                "متعدد";
+
+            group.due_date_display =
+                uniqueDueDates.length === 1
+                ?
+                uniqueDueDates[0]
+                :
+                null;
+
+            group.payment_status_display =
+                uniqueStatuses.length === 1
+                ?
+                uniqueStatuses[0]
+                :
+                "mixed";
+
+        }
+    );
 
     renderDesktopSubscriptions(rows);
 
@@ -1744,283 +1701,502 @@ function renderSubscriptions(){
 function renderDesktopSubscriptions(rows){
 
     const container =
-        document.getElementById("desktopTable");
+        document.getElementById(
+            "desktopTable"
+        );
+
 
     if(!rows.length){
 
-        container.innerHTML =
-            '<div class="empty">لا توجد اشتراكات مطابقة للبحث</div>';
+        container.innerHTML = `
+            <div class="empty">
+                <i
+                    class="fa-solid fa-folder-open"
+                    style="font-size:30px;margin-bottom:10px;color:#80662e;">
+                </i>
+
+                <div>
+                    لا توجد اشتراكات مطابقة للبحث
+                </div>
+            </div>
+        `;
 
         return;
 
     }
 
-    container.innerHTML =
-        '<div class="customer-subscriptions-list">' +
 
-        rows.map(function(customer){
+    container.innerHTML = `
 
-            return '<div class="customer-subscriptions-card">' +
+        <div class="table-wrap">
 
-                '<div class="customer-card-head">' +
+            <table>
 
-                    '<div class="customer-cell">' +
+                <thead>
 
-                        '<div class="avatar">' +
-                            escapeHtml(
-                                getInitial(customer.customer_name)
-                            ) +
-                        '</div>' +
+                    <tr>
 
-                        '<div class="customer-info">' +
-                            '<strong>' +
-                                escapeHtml(customer.customer_name) +
-                            '</strong>' +
-                            '<small>' +
-                                escapeHtml(customer.customer_phone || "") +
-                            '</small>' +
-                        '</div>' +
+                        <th>
+                            العميل
+                        </th>
 
-                    '</div>' +
+                        <th>
+                            الخدمة
+                        </th>
 
-                    '<div class="customer-card-total">' +
-                        '<span>إجمالي الاشتراكات الشهرية</span>' +
-                        '<strong>' +
-                            money(customer.monthly_fee_total) +
-                            ' ج.م' +
-                        '</strong>' +
-                    '</div>' +
+                        <th>
+                            المنصة
+                        </th>
 
-                '</div>' +
+                        <th>
+                            القيمة الشهرية
+                        </th>
 
-                '<div class="customer-subscriptions-body">' +
+                        <th>
+                            يوم الدفع
+                        </th>
 
-                    customer.subscriptions.map(function(sub,index){
+                        <th>
+                            موعد الاستحقاق
+                        </th>
 
-                        const status =
-                            sub.payment_status || "";
+                        <th>
+                            الحالة
+                        </th>
 
-                        return '<div class="customer-subscription-item">' +
+                    </tr>
 
-                            '<div class="customer-subscription-head">' +
+                </thead>
 
-                                '<div>' +
-                                    '<strong>اشتراك ' +
-                                        (index + 1) +
-                                    '</strong>' +
-                                    '<span class="service">' +
-                                        escapeHtml(
-                                            sub.service_name || "-"
-                                        ) +
-                                    '</span>' +
-                                '</div>' +
 
-                                '<span class="status ' +
-                                    escapeHtml(status) +
-                                '">' +
-                                    '<i class="fa-solid ' +
-                                        statusIcon(status) +
-                                    '"></i> ' +
-                                    statusLabel(status) +
-                                '</span>' +
+                <tbody>
 
-                            '</div>' +
+                    ${
 
-                            '<div class="customer-subscription-grid">' +
+                        rows.map(
+                            sub => {
 
-                                '<div>' +
-                                    '<label>المنصة</label>' +
-                                    '<strong>' +
-                                        escapeHtml(
-                                            sub.platform || "-"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
+                                const name =
+                                    sub.customers
+                                    ?
+                                    sub.customers
+                                        .map(c => c.name)
+                                        .join("، ")
+                                    :
+                                    (sub.customer_name || "-");
 
-                                '<div>' +
-                                    '<label>الاشتراك الشهري</label>' +
-                                    '<strong>' +
-                                        money(sub.monthly_fee || 0) +
-                                        ' ' +
-                                        escapeHtml(
-                                            sub.currency || "EGP"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
 
-                                '<div>' +
-                                    '<label>يوم الدفع</label>' +
-                                    '<strong>' +
-                                        escapeHtml(
-                                            sub.payment_day ?? "-"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
+                                return `
 
-                                '<div>' +
-                                    '<label>موعد الاستحقاق</label>' +
-                                    '<strong>' +
-                                        (
-                                            sub.due_date
-                                            ? formatDate(sub.due_date)
-                                            : "-"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
+                                    <tr>
 
-                            '</div>' +
+                                        <td>
 
-                        '</div>';
+                                            <div class="customer-cell">
 
-                    }).join("") +
+                                                <div class="avatar">
 
-                '</div>' +
+                                                    ${escapeHtml(
+                                                        getInitial(name)
+                                                    )}
 
-            '</div>';
+                                                </div>
 
-        }).join("") +
 
-        '</div>';
+                                                <div class="customer-info">
+
+                                                    <strong>
+                                                        ${escapeHtml(name)}
+                                                    </strong>
+
+                                                    <small>
+                                                        ${escapeHtml(
+                                                            sub.customers
+                                                            ?
+                                                            sub.customers
+                                                                .map(c => c.phone)
+                                                                .filter(Boolean)
+                                                                .join("، ")
+                                                            :
+                                                            (sub.customer_phone || "")
+                                                        )}
+                                                    </small>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span class="service">
+
+                                                ${escapeHtml(
+                                                    getServiceName(sub)
+                                                )}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${escapeHtml(
+                                                sub.platform || "-"
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span class="money">
+
+                                                ${money(
+                                                    sub.monthly_fee_total !== undefined
+                                                    ?
+                                                    sub.monthly_fee_total
+                                                    :
+                                                    sub.monthly_fee
+                                                )}
+
+                                            </span>
+
+                                            ${escapeHtml(
+                                                sub.currency || "EGP"
+                                            )}
+
+                                        </td>
+
+
+                                        <td class="day">
+
+                                            ${escapeHtml(
+                                                sub.payment_day_display !== undefined
+                                                ?
+                                                sub.payment_day_display
+                                                :
+                                                (sub.payment_day || "-")
+                                            )}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            ${sub.due_date_display !== undefined
+                                                ?
+                                                (
+                                                    sub.due_date_display
+                                                    ?
+                                                    formatDate(sub.due_date_display)
+                                                    :
+                                                    "متعدد"
+                                                )
+                                                :
+                                                formatDate(sub.due_date)
+                                            }
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span
+                                                class="status ${escapeHtml(
+                                                    sub.payment_status_display !== undefined
+                                                    ?
+                                                    sub.payment_status_display
+                                                    :
+                                                    sub.payment_status
+                                                )}">
+
+                                                <i
+                                                    class="fa-solid ${statusIcon(
+                                                        sub.payment_status_display !== undefined
+                                                        ?
+                                                        sub.payment_status_display
+                                                        :
+                                                        sub.payment_status
+                                                    )}">
+                                                </i>
+
+                                                ${sub.payment_status_display === "mixed"
+                                                    ?
+                                                    "حالات متعددة"
+                                                    :
+                                                    statusLabel(
+                                                        sub.payment_status_display !== undefined
+                                                        ?
+                                                        sub.payment_status_display
+                                                        :
+                                                        sub.payment_status
+                                                    )}
+
+                                            </span>
+
+                                        </td>
+
+                                    </tr>
+
+                                `;
+
+                            }
+                        ).join("")
+
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
 
 }
 
 
+/* =========================
+   MOBILE
+========================= */
+
 function renderMobileSubscriptions(rows){
 
     const container =
-        document.getElementById("mobileList");
+        document.getElementById(
+            "mobileList"
+        );
+
 
     if(!rows.length){
 
-        container.innerHTML =
-            '<div class="empty">لا توجد اشتراكات مطابقة</div>';
+        container.innerHTML = `
+            <div class="empty">
+                لا توجد اشتراكات مطابقة
+            </div>
+        `;
 
         return;
 
     }
 
+
     container.innerHTML =
-        rows.map(function(customer){
+        rows.map(
+            sub => {
 
-            return '<div class="customer-subscriptions-card">' +
+                const name =
+                    sub.customers
+                    ?
+                    sub.customers
+                        .map(c => c.name)
+                        .join("، ")
+                    :
+                    (sub.customer_name || "-");
 
-                '<div class="customer-card-head">' +
 
-                    '<div class="customer-cell">' +
+                return `
 
-                        '<div class="avatar">' +
-                            escapeHtml(
-                                getInitial(customer.customer_name)
-                            ) +
-                        '</div>' +
+                    <div class="subscription-card">
 
-                        '<div class="customer-info">' +
-                            '<strong>' +
-                                escapeHtml(customer.customer_name) +
-                            '</strong>' +
-                            '<small>' +
-                                escapeHtml(customer.customer_phone || "") +
-                            '</small>' +
-                        '</div>' +
+                        <div class="sub-top">
 
-                    '</div>' +
+                            <div class="sub-customer">
 
-                    '<div class="customer-card-total">' +
-                        '<span>الإجمالي الشهري</span>' +
-                        '<strong>' +
-                            money(customer.monthly_fee_total) +
-                            ' ج.م' +
-                        '</strong>' +
-                    '</div>' +
+                                <div class="avatar">
 
-                '</div>' +
+                                    ${escapeHtml(
+                                        getInitial(name)
+                                    )}
 
-                '<div class="customer-subscriptions-body">' +
+                                </div>
 
-                    customer.subscriptions.map(function(sub,index){
+                                <div>
 
-                        const status =
-                            sub.payment_status || "";
+                                    <strong>
+                                        ${escapeHtml(name)}
+                                    </strong>
 
-                        return '<div class="customer-subscription-item">' +
+                                    <small>
+                                        ${escapeHtml(
+                                            sub.customers
+                                            ?
+                                            sub.customers
+                                                .map(c => c.phone)
+                                                .filter(Boolean)
+                                                .join("، ")
+                                            :
+                                            (sub.customer_phone || "")
+                                        )}
+                                    </small>
 
-                            '<div class="customer-subscription-head">' +
+                                </div>
 
-                                '<div>' +
-                                    '<strong>اشتراك ' +
-                                        (index + 1) +
-                                    '</strong>' +
-                                    '<span class="service">' +
-                                        escapeHtml(
-                                            sub.service_name || "-"
-                                        ) +
-                                    '</span>' +
-                                '</div>' +
+                            </div>
 
-                                '<span class="status ' +
-                                    escapeHtml(status) +
-                                '">' +
-                                    '<i class="fa-solid ' +
-                                        statusIcon(status) +
-                                    '"></i> ' +
-                                    statusLabel(status) +
-                                '</span>' +
 
-                            '</div>' +
+                            <span
+                                class="status ${escapeHtml(
+                                    sub.payment_status_display !== undefined
+                                    ?
+                                    sub.payment_status_display
+                                    :
+                                    sub.payment_status
+                                )}">
 
-                            '<div class="customer-subscription-grid">' +
+                                <i
+                                    class="fa-solid ${statusIcon(
+                                        sub.payment_status_display !== undefined
+                                        ?
+                                        sub.payment_status_display
+                                        :
+                                        sub.payment_status
+                                    )}">
+                                </i>
 
-                                '<div>' +
-                                    '<label>المنصة</label>' +
-                                    '<strong>' +
-                                        escapeHtml(
-                                            sub.platform || "-"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
+                                ${sub.payment_status_display === "mixed"
+                                    ?
+                                    "حالات متعددة"
+                                    :
+                                    statusLabel(
+                                        sub.payment_status_display !== undefined
+                                        ?
+                                        sub.payment_status_display
+                                        :
+                                        sub.payment_status
+                                    )}
 
-                                '<div>' +
-                                    '<label>الاشتراك الشهري</label>' +
-                                    '<strong>' +
-                                        money(sub.monthly_fee || 0) +
-                                        ' ' +
-                                        escapeHtml(
-                                            sub.currency || "EGP"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
+                            </span>
 
-                                '<div>' +
-                                    '<label>يوم الدفع</label>' +
-                                    '<strong>' +
-                                        escapeHtml(
-                                            sub.payment_day ?? "-"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
+                        </div>
 
-                                '<div>' +
-                                    '<label>موعد الاستحقاق</label>' +
-                                    '<strong>' +
-                                        (
-                                            sub.due_date
-                                            ? formatDate(sub.due_date)
-                                            : "-"
-                                        ) +
-                                    '</strong>' +
-                                '</div>' +
 
-                            '</div>' +
+                        <div class="sub-grid">
 
-                        '</div>';
+                            <div class="sub-item">
 
-                    }).join("") +
+                                <label>
+                                    الخدمة
+                                </label>
 
-                '</div>' +
+                                <span>
+                                    ${escapeHtml(
+                                        getServiceName(sub)
+                                    )}
+                                </span>
 
-            '</div>';
+                            </div>
 
-        }).join("");
+
+                            <div class="sub-item">
+
+                                <label>
+                                    المنصة
+                                </label>
+
+                                <span>
+                                    ${escapeHtml(
+                                        sub.platform || "-"
+                                    )}
+                                </span>
+
+                            </div>
+
+
+                            <div class="sub-item">
+
+                                <label>
+                                    الاشتراك الشهري
+                                </label>
+
+                                <span>
+
+                                    ${money(
+                                        sub.monthly_fee_total !== undefined
+                                        ?
+                                        sub.monthly_fee_total
+                                        :
+                                        sub.monthly_fee
+                                    )}
+
+                                    ${escapeHtml(
+                                        sub.currency || "EGP"
+                                    )}
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="sub-item">
+
+                                <label>
+                                    يوم الدفع
+                                </label>
+
+                                <span>
+                                    ${escapeHtml(
+                                        sub.payment_day_display !== undefined
+                                        ?
+                                        sub.payment_day_display
+                                        :
+                                        (sub.payment_day || "-")
+                                    )}
+                                </span>
+
+                            </div>
+
+
+                            <div class="sub-item">
+
+                                <label>
+                                    الاستحقاق
+                                </label>
+
+                                <span>
+                                    ${sub.due_date_display !== undefined
+                                    ?
+                                    (
+                                        sub.due_date_display
+                                        ?
+                                        formatDate(sub.due_date_display)
+                                        :
+                                        "متعدد"
+                                    )
+                                    :
+                                    formatDate(sub.due_date)
+                                }
+                                </span>
+
+                            </div>
+
+
+                            <div class="sub-item">
+
+                                <label>
+                                    الحالة
+                                </label>
+
+                                <span>
+                                    ${statusLabel(
+                                        sub.payment_status
+                                    )}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+        ).join("");
 
 }
 
