@@ -4234,13 +4234,43 @@ function renderTraders(){
                     </button>
 
 
-                    <button
-                    class="mini-btn"
-                    title="رابط التاجر">
+                  <button
+class="mini-btn"
+title="رابط التاجر"
+onclick="openTraderPortal(${trader.id})">
 
-                    <i class="fa-solid fa-link"></i>
+<i class="fa-solid fa-link"></i>
 
-                    </button>
+</button>
+function openTraderPortal(traderId){
+
+    const trader =
+    getTrader(traderId);
+
+    if(!trader){
+
+        showToast(
+            "التاجر غير موجود",
+            true
+        );
+
+        return;
+    }
+
+    const portalUrl =
+    new URL(
+        "trader.html",
+        window.location.href
+    ).href
+    + "?trader="
+    + encodeURIComponent(traderId);
+
+    window.open(
+        portalUrl,
+        "_blank"
+    );
+
+}
 
 
                     <button
