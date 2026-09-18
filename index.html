@@ -1156,7 +1156,8 @@ let state={
     traders:[],
     services:[],
     subscriptions:[],
-    payments:[],
+    subscriptionServices:[],
+    payments:[]
     invoices:[],
     invoiceItems:[],
     followups:[],
@@ -1722,7 +1723,8 @@ async function loadData(){
         loadTable("invoice_items"),
         loadTable("followups"),
         loadTable("activity_logs"),
-        loadTable("app_settings")
+        loadTable("app_settings"),
+        loadTable("subscription_services")
 
     ]);
 
@@ -1735,6 +1737,7 @@ async function loadData(){
     state.invoiceItems=result[6];
     state.followups=result[7];
     state.logs=result[8];
+    state.subscriptionServices=result[10];
 
     state.settings={};
 
@@ -3294,223 +3297,408 @@ async function deleteCustomer(id){
 
 function renderSubscriptions(){
 
-    const rows=
-    state.subscriptions
-    .filter(x=>x.status!=="inactive");
+    const allRows =
+        state.subscriptions.filter(function(x){
+            return x.status !== "inactive";
+        });
 
-    document.getElementById("content")
-    .innerHTML=`
+    const selectedService =
+        document.getElementById("subscriptionServiceFilter")
+        ?.value || "";
 
+    function servicesForSubscription(subscription){
+
+        const childRows =
+            state.subscriptionServices.filter(function(row){
+                return String(row.subscription_id)
+                    === String(subscription.id);
+            });
+
+        if(childRows.length){
+            return childRows
+                .map(function(row){
+                    return getService(
+                        row.service_id || row.app_service_id
+                    );
+                })
+                .filter(Boolean);
+        }
+
+        const service =
+            getService(subscription.app_service_id);
+
+        return service ? [service] : [];
+    }
+
+    const rows =
+        selectedService
+        ?
+        allRows.filter(function(subscription){
+            return servicesForSubscription(subscription).some(
+                function(service){
+                    return String(service.id)
+                        === String(selectedService);
+                }
+            );
+        })
+        :
+        allRows;
+
+    const grouped = {};
+
+    rows.forEach(function(subscription){
+
+        const key = String(subscription.customer_id);
+
+        if(!grouped[key]){
+            grouped[key] = {
+                customer_id: subscription.customer_id,
+                subscriptions: []
+            };
+        }
+
+        grouped[key].subscriptions.push(subscription);
+    });
+
+    const customerGroups = Object.values(grouped);
+
+    document.getElementById("content").innerHTML = `
     <div class="page-head">
 
         <div>
-
-            <h1>
-            ${t("subscriptions")}
-            </h1>
-
+            <h1>${t("subscriptions")}</h1>
+            <p>تجميع اشتراكات العميل في حساب واحد</p>
         </div>
 
-        <button
-        class="gold-btn"
-        onclick="openSubscriptionModal()">
-
-        <i class="fa-solid fa-plus"></i>
-
-        ${t("newSubscription")}
-
+        <button class="gold-btn"
+            onclick="openSubscriptionModal()">
+            <i class="fa-solid fa-plus"></i>
+            ${t("newSubscription")}
         </button>
 
     </div>
-
 
     <div class="card">
 
         <div class="card-body">
 
-        <div class="table-wrap">
+            <div class="search">
 
-        <table class="table">
+                <select id="subscriptionServiceFilter"
+                    onchange="renderSubscriptions()">
 
-        <thead>
+                    <option value="">كل الخدمات</option>
 
-        <tr>
+                    ${state.services.map(function(service){
+                        return `
+                        <option value="${esc(service.id)}"
+                            ${String(selectedService) === String(service.id)
+                            ? "selected"
+                            : ""}>
+                            ${esc(service.service_name)}
+                        </option>
+                        `;
+                    }).join("")}
 
-            <th>${t("customer")}</th>
-            <th>${t("service")}</th>
-            <th>${t("platform")}</th>
-            <th>${t("monthlyFee")}</th>
-            <th>${t("paymentDay")}</th>
-            <th>${t("status")}</th>
-            <th>${t("actions")}</th>
+                </select>
 
-        </tr>
-
-        </thead>
-
-        <tbody>
-
-        ${
-        rows.length
-        ?
-        rows.map(function(s){
-
-            const customer=
-            getCustomer(s.customer_id);
-
-            const service=
-            getService(s.app_service_id);
-
-            const status=
-            getPaymentState(s);
-
-            return `
-
-            <tr>
-
-                <td>
-                ${esc(customer?.client_name||"-")}
-                </td>
-
-                <td>
-                ${esc(service?.service_name||"-")}
-                </td>
-
-                <td>
-                ${esc(s.platform||"-")}
-                </td>
-
-                <td class="money">
-
-                ${money(s.monthly_fee)}
-                ${esc(s.currency||"EGP")}
-
-                </td>
-
-                <td>
-                ${esc(s.payment_day||"-")}
-                </td>
-
-                <td>
-                ${statusBadge(s)}
-                </td>
-
-                <td>
-
-                <div class="actions">
-
-                ${
-                status.type!=="paid"
-                ?
-                `
-                <button
-                class="mini-btn pay"
-                onclick="openPaymentModal(${s.id})">
-
-                <i class="fa-solid fa-check"></i>
-
-                ${t("confirmPayment")}
-
-                </button>
-                `
-                :""
-                }
-
-
-                ${
-                customer?.phone
-                ?
-                `
-                <button
-                class="mini-btn wa"
-                onclick="sendWhatsApp(
-                    ${customer.id},
-                    ${s.id},
-                    '${status.type==="overdue"
-                    ?"overdue"
-                    :
-                    status.type==="due"
-                    ?"due"
-                    :"payment"}'
-                )">
-
-                <i class="fa-brands fa-whatsapp"></i>
-
-                </button>
-                `
-                :""
-                }
-${
-customer
-?
-`
-<button
-class="mini-btn"
-title="رابط العميل"
-onclick="openCustomerPortal(${customer.id})">
-
-<i class="fa-solid fa-link"></i>
-
-</button>
-`
-:""
-}
-
-                <button
-                class="mini-btn"
-                onclick="openSubscriptionModal(${s.id})">
-
-                <i class="fa-solid fa-pen"></i>
-
-                </button>
-
-
-                <button
-                class="mini-btn"
-                onclick="deleteSubscription(${s.id})">
-
-                <i class="fa-solid fa-trash"></i>
-
-                </button>
-
-                </div>
-
-                </td>
-
-            </tr>
-
-            `;
-
-        }).join("")
-        :
-        `
-        <tr>
-
-            <td colspan="7">
-
-            <div class="empty">
-            ${t("noData")}
             </div>
 
-            </td>
+            <div class="table-wrap">
 
-        </tr>
-        `
-        }
+                <table class="table">
 
-        </tbody>
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>الاشتراكات والخدمات</th>
+                            <th>المنصات</th>
+                            <th>إجمالي الحساب الشهري</th>
+                            <th>مواعيد الدفع</th>
+                            <th>الحالة</th>
+                            <th>${t("actions")}</th>
+                        </tr>
+                    </thead>
 
-        </table>
+                    <tbody>
 
-        </div>
+                    ${
+                    customerGroups.length
+                    ?
+                    customerGroups.map(function(group){
+
+                        const customer =
+                            getCustomer(group.customer_id);
+
+                        const total =
+                            group.subscriptions.reduce(
+                                function(sum,s){
+                                    return sum +
+                                        Number(s.monthly_fee || 0);
+                                },
+                                0
+                            );
+
+                        const statuses =
+                            group.subscriptions.map(function(s){
+                                return getPaymentState(s);
+                            });
+
+                        let groupStatus = statuses[0] || null;
+
+                        statuses.forEach(function(item){
+                            const rank = {
+                                paid:0,
+                                upcoming:1,
+                                due:2,
+                                overdue:3
+                            };
+
+                            if(
+                                groupStatus &&
+                                (rank[item.type] || 0)
+                                >
+                                (rank[groupStatus.type] || 0)
+                            ){
+                                groupStatus = item;
+                            }
+                        });
+
+                        const platforms =
+                            group.subscriptions
+                            .map(function(s){
+                                return esc(s.platform || "-");
+                            })
+                            .filter(function(v,index,array){
+                                return array.indexOf(v) === index;
+                            })
+                            .join(" ، ");
+
+                        const paymentDays =
+                            group.subscriptions
+                            .map(function(s){
+                                return esc(s.payment_day || "-");
+                            })
+                            .filter(function(v,index,array){
+                                return array.indexOf(v) === index;
+                            })
+                            .join(" ، ");
+
+                        const subscriptionHtml =
+                            group.subscriptions.map(function(s,index){
+
+                                const services =
+                                    servicesForSubscription(s);
+
+                                const serviceNames =
+                                    services
+                                    .map(function(service){
+                                        return esc(service.service_name);
+                                    })
+                                    .join(" + ") || "-";
+
+                                const status =
+                                    getPaymentState(s);
+
+                                const type =
+                                    status.type === "overdue"
+                                    ? "overdue"
+                                    :
+                                    status.type === "due"
+                                    ? "due"
+                                    :
+                                    "payment";
+
+                                return `
+                                <div style="
+                                    padding:8px 0;
+                                    border-bottom:${index < group.subscriptions.length-1
+                                        ? "1px solid var(--border)"
+                                        : "0"};
+                                ">
+
+                                    <div>
+                                        <b>${serviceNames}</b>
+                                    </div>
+
+                                    <div class="muted"
+                                        style="font-size:9px;margin-top:3px">
+                                        ${esc(s.platform || "-")}
+                                        •
+                                        ${money(s.monthly_fee)}
+                                        ${esc(s.currency || "EGP")}
+                                    </div>
+
+                                    <div style="margin-top:5px">
+                                        ${statusBadge(s)}
+                                    </div>
+
+                                    <div class="actions"
+                                        style="margin-top:6px">
+
+                                        ${
+                                        status.type !== "paid"
+                                        ?
+                                        `
+                                        <button class="mini-btn pay"
+                                            onclick="openPaymentModal(${s.id})">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                        `
+                                        :
+                                        ""
+                                        }
+
+                                        ${
+                                        customer?.phone
+                                        ?
+                                        `
+                                        <button class="mini-btn wa"
+                                            onclick="sendWhatsApp(${customer.id},${s.id},'${type}')">
+                                            <i class="fa-brands fa-whatsapp"></i>
+                                        </button>
+                                        `
+                                        :
+                                        ""
+                                        }
+
+                                        <button class="mini-btn"
+                                            onclick="openSubscriptionModal(${s.id})">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+
+                                        <button class="mini-btn"
+                                            onclick="deleteSubscription(${s.id})">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+
+                                    </div>
+
+                                </div>
+                                `;
+
+                            }).join("");
+
+                        return `
+                        <tr>
+
+                            <td>
+                                <b>${esc(customer?.client_name || "-")}</b>
+
+                                ${
+                                customer?.phone
+                                ?
+                                `
+                                <div class="muted"
+                                    style="font-size:9px;margin-top:3px">
+                                    ${esc(customer.phone)}
+                                </div>
+                                `
+                                :
+                                ""
+                                }
+
+                                <div class="muted"
+                                    style="font-size:9px;margin-top:5px">
+                                    ${group.subscriptions.length} اشتراك
+                                </div>
+                            </td>
+
+                            <td>
+                                ${subscriptionHtml}
+                            </td>
+
+                            <td>
+                                ${platforms || "-"}
+                            </td>
+
+                            <td class="money">
+                                <strong>
+                                    ${money(total)}
+                                    ${esc(
+                                        group.subscriptions[0]?.currency || "EGP"
+                                    )}
+                                </strong>
+                            </td>
+
+                            <td>
+                                ${paymentDays || "-"}
+                            </td>
+
+                            <td>
+                                ${
+                                groupStatus
+                                ?
+                                `
+                                <span class="badge ${groupStatus.type}">
+                                    ${esc(groupStatus.text)}
+                                </span>
+                                `
+                                :
+                                "-"
+                                }
+                            </td>
+
+                            <td>
+                                <div class="actions">
+
+                                    ${
+                                    customer
+                                    ?
+                                    `
+                                    <button class="mini-btn"
+                                        title="رابط العميل"
+                                        onclick="openCustomerPortal(${customer.id})">
+                                        <i class="fa-solid fa-link"></i>
+                                    </button>
+
+                                    <button class="mini-btn"
+                                        title="حساب العميل"
+                                        onclick="openCustomerProfile(${customer.id})">
+                                        <i class="fa-solid fa-folder-open"></i>
+                                    </button>
+                                    `
+                                    :
+                                    ""
+                                    }
+
+                                </div>
+                            </td>
+
+                        </tr>
+                        `;
+
+                    }).join("")
+                    :
+                    `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty">
+                                ${
+                                selectedService
+                                ?
+                                "لا يوجد مشتركين في هذه الخدمة"
+                                :
+                                t("noData")
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    `
+                    }
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
     </div>
-
     `;
-
 }
+
 
 
 /* =========================================
@@ -7998,1101 +8186,3 @@ function sendPortalWhatsApp(customerId, link){
 async function deactivateCustomerPortal(customerId){
 
     if(
-        !confirm(
-            "هل تريد إلغاء تفعيل رابط العميل؟"
-        )
-    ){
-        return;
-    }
-
-
-    try{
-
-        const result =
-            await db
-            .from("customer_portal_tokens")
-            .update({
-                is_active:false
-            })
-            .eq("customer_id",customerId)
-            .eq("is_active",true);
-
-
-        if(result.error)
-            throw result.error;
-
-
-        closeModal();
-
-        showToast(
-            "تم إلغاء تفعيل رابط العميل"
-        );
-
-
-    }catch(error){
-
-        console.error(error);
-
-        showToast(
-            "حدث خطأ: " + error.message,
-            true
-        );
-
-    }
-
-}
-/* =========================================
-   CUSTOMER PROFILE
-========================================= */
-
-function openCustomerProfile(id){
-
-    const customer=
-    getCustomer(id);
-
-    const subscriptions=
-    state.subscriptions
-    .filter(
-        x=>
-        Number(x.customer_id)
-        ===Number(id)
-    );
-
-    const subscriptionIds=
-    subscriptions.map(
-        x=>Number(x.id)
-    );
-
-    const payments=
-    state.payments
-    .filter(
-        x=>
-        subscriptionIds.includes(
-            Number(x.subscription_id)
-        )
-    );
-
-    const invoices=
-    state.invoices
-    .filter(
-        x=>
-        Number(x.customer_id)
-        ===Number(id)
-    );
-
-    openModal(
-
-        t("profile"),
-
-        `
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <h2 style="margin-top:0">
-
-                ${esc(customer.client_name)}
-
-                </h2>
-
-                <div class="muted">
-
-                ${esc(customer.phone||"-")}
-
-                </div>
-
-                <div class="muted">
-
-                ${esc(
-                    getTrader(
-                        customer.trader_id
-                    )?.trader_name||"-"
-                )}
-
-                </div>
-
-                ${
-                customer.phone
-                ?
-                `
-                <button
-                class="mini-btn wa"
-                style="margin-top:10px"
-                onclick="sendCustomerWhatsApp(${id})">
-
-                <i class="fa-brands fa-whatsapp"></i>
-
-                ${t("whatsapp")}
-
-                </button>
-                `
-                :""
-                }
-
-            </div>
-
-        </div>
-
-
-        <div
-        class="card"
-        style="margin-top:12px">
-
-            <div class="card-head">
-
-                <h3>
-                ${t("subscriptions")}
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-            ${
-            subscriptions.map(function(s){
-
-                return `
-
-                <div class="list-item">
-
-                    <div>
-
-                        <b>
-
-                        ${esc(
-                            getService(
-                                s.app_service_id
-                            )?.service_name
-                            ||"-"
-                        )}
-
-                        </b>
-
-                        <div class="muted">
-
-                        ${t("paymentDay")}:
-                        ${s.payment_day}
-
-                        </div>
-
-                    </div>
-
-                    <div>
-
-                        ${statusBadge(s)}
-
-                        ${
-                        getPaymentState(s).type
-                        !=="paid"
-                        ?
-                        `
-                        <button
-                        class="mini-btn pay"
-                        onclick="
-                        closeModal();
-                        openPaymentModal(${s.id})
-                        ">
-
-                        ${t("confirmPayment")}
-
-                        </button>
-                        `
-                        :""
-                        }
-
-                    </div>
-
-                </div>
-
-                `;
-
-            }).join("")
-            ||
-            `<div class="empty">${t("noData")}</div>`
-            }
-
-            </div>
-
-        </div>
-
-
-        <div
-        class="card"
-        style="margin-top:12px">
-
-            <div class="card-head">
-
-                <h3>
-                ${t("payments")}
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-            ${
-            payments.map(function(p){
-
-                return `
-
-                <div class="list-item">
-
-                    <span>
-                    ${formatDate(p.payment_date)}
-                    </span>
-
-                    <b class="money">
-
-                    ${money(p.amount)}
-                    ${esc(p.currency||"EGP")}
-
-                    </b>
-
-                </div>
-
-                `;
-
-            }).join("")
-            ||
-            `<div class="empty">${t("noData")}</div>`
-            }
-
-            </div>
-
-        </div>
-
-
-        <div
-        class="card"
-        style="margin-top:12px">
-
-            <div class="card-head">
-
-                <h3>
-                ${t("invoices")}
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-            ${
-            invoices.map(function(i){
-
-                return `
-
-                <div class="list-item">
-
-                    <span>
-                    ${esc(
-                        i.invoice_number
-                        ||("#"+i.id)
-                    )}
-                    </span>
-
-                    <b class="money">
-
-                    ${money(i.total)}
-                    ${esc(i.currency||"EGP")}
-
-                    </b>
-
-                </div>
-
-                `;
-
-            }).join("")
-            ||
-            `<div class="empty">${t("noData")}</div>`
-            }
-
-            </div>
-
-        </div>
-
-        `,
-
-        `
-
-        <button
-        class="ghost-btn"
-        onclick="closeModal()">
-
-        ${t("cancel")}
-
-        </button>
-
-        `
-
-    );
-
-}
-
-
-/* =========================================
-   SETTINGS
-========================================= */
-
-function renderSettings(){
-
-    const templates=
-    getWhatsAppTemplates();
-
-    document.getElementById("content")
-    .innerHTML=`
-
-    <div class="page-head">
-
-        <div>
-
-            <h1>${t("settings")}</h1>
-
-        </div>
-
-    </div>
-
-
-    <div class="grid cols">
-
-
-        <div class="card">
-
-            <div class="card-head">
-
-                <h3>
-                ${t("company")}
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-                <div class="field">
-
-                    <label>
-                    ${t("companyName")}
-                    </label>
-
-                    <input
-                    id="settingCompanyName"
-                    value="${esc(
-                        state.settings.company_name
-                        ||"BADGEIFY"
-                    )}"
-                    >
-
-                </div>
-
-
-                <div class="field">
-
-                    <label>
-                    ${t("companyPhone")}
-                    </label>
-
-                    <input
-                    id="settingCompanyPhone"
-                    value="${esc(
-                        state.settings.company_phone||""
-                    )}"
-                    >
-
-                </div>
-
-
-                <div class="field">
-
-                    <label>
-                    ${t("companyWhatsapp")}
-                    </label>
-
-                    <input
-                    id="settingCompanyWhatsapp"
-                    value="${esc(
-                        state.settings.company_whatsapp||""
-                    )}"
-                    >
-
-                </div>
-
-
-                <div class="field">
-
-                    <label>
-                    ${t("currency")}
-                    </label>
-
-                    <input
-                    id="settingCurrency"
-                    value="${esc(
-                        state.settings.currency||"EGP"
-                    )}"
-                    >
-
-                </div>
-
-
-                <button
-                class="gold-btn"
-                onclick="saveCompanySettings()">
-
-                ${t("save")}
-
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-head">
-
-                <h3>
-                ${t("appearance")}
-                </h3>
-
-            </div>
-
-            <div class="card-body">
-
-                <div class="list">
-
-                    <div class="list-item">
-
-                        <span>
-                        Language
-                        </span>
-
-                        <button
-                        class="ghost-btn"
-                        onclick="changeLanguage()">
-
-                        ${
-                        state.lang==="ar"
-                        ?"العربية / English"
-                        :"English / العربية"
-                        }
-
-                        </button>
-
-                    </div>
-
-
-                    <div class="list-item">
-
-                        <span>
-                        Theme
-                        </span>
-
-                        <button
-                        class="ghost-btn"
-                        onclick="changeTheme()">
-
-                        ${
-                        state.theme==="dark"
-                        ?"Dark"
-                        :"Light"
-                        }
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div
-    class="card"
-    style="margin-top:16px">
-
-        <div class="card-head">
-
-            <h3>
-            ${t("whatsappMessages")}
-            </h3>
-
-        </div>
-
-        <div class="card-body">
-
-            <div class="muted"
-            style="margin-bottom:15px">
-
-            المتغيرات المتاحة:
-
-            <br>
-
-            {{client_name}}
-            -
-            {{service_name}}
-            -
-            {{amount}}
-            -
-            {{currency}}
-            -
-            {{due_date}}
-            -
-            {{page_name}}
-            -
-            {{platform}}
-            -
-            {{company_name}}
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("welcomeMsg")}
-                </label>
-
-                <textarea
-                id="msgWelcome"
-                >${esc(templates.welcome)}</textarea>
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("paymentReminder")}
-                </label>
-
-                <textarea
-                id="msgPayment"
-                >${esc(templates.payment)}</textarea>
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("dueReminder")}
-                </label>
-
-                <textarea
-                id="msgDue"
-                >${esc(templates.due)}</textarea>
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("overdueReminder")}
-                </label>
-
-                <textarea
-                id="msgOverdue"
-                >${esc(templates.overdue)}</textarea>
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("paymentConfirmed")}
-                </label>
-
-                <textarea
-                id="msgConfirmed"
-                >${esc(templates.confirmed)}</textarea>
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("renewalMsg")}
-                </label>
-
-                <textarea
-                id="msgRenewal"
-                >${esc(templates.renewal)}</textarea>
-
-            </div>
-
-
-            <button
-            class="gold-btn"
-            onclick="saveWhatsAppMessages()">
-
-            ${t("saveMessage")}
-
-            </button>
-
-        </div>
-
-    </div>
-
-    `;
-
-}
-
-
-async function saveCompanySettings(){
-
-    const values={
-
-        company_name:
-        document.getElementById(
-            "settingCompanyName"
-        ).value,
-
-        company_phone:
-        document.getElementById(
-            "settingCompanyPhone"
-        ).value,
-
-        company_whatsapp:
-        document.getElementById(
-            "settingCompanyWhatsapp"
-        ).value,
-
-        currency:
-        document.getElementById(
-            "settingCurrency"
-        ).value
-
-    };
-
-    try{
-
-        for(
-            const [key,value]
-            of Object.entries(values)
-        ){
-
-            const result=
-            await db
-            .from("app_settings")
-            .upsert(
-                {
-                    setting_key:key,
-                    setting_value:value,
-                    updated_at:
-                    new Date().toISOString()
-                },
-                {
-                    onConflict:"setting_key"
-                }
-            );
-
-            if(result.error)
-                throw result.error;
-
-        }
-
-        await refresh();
-
-        showToast(t("saved"));
-
-    }catch(error){
-
-        showToast(
-            error.message,
-            true
-        );
-
-    }
-
-}
-
-
-async function saveWhatsAppMessages(){
-
-    const values={
-
-        wa_welcome:
-        document.getElementById(
-            "msgWelcome"
-        ).value,
-
-        wa_payment_reminder:
-        document.getElementById(
-            "msgPayment"
-        ).value,
-
-        wa_due_reminder:
-        document.getElementById(
-            "msgDue"
-        ).value,
-
-        wa_overdue_reminder:
-        document.getElementById(
-            "msgOverdue"
-        ).value,
-
-        wa_payment_confirmed:
-        document.getElementById(
-            "msgConfirmed"
-        ).value,
-
-        wa_renewal:
-        document.getElementById(
-            "msgRenewal"
-        ).value
-
-    };
-
-    try{
-
-        for(
-            const [key,value]
-            of Object.entries(values)
-        ){
-
-            const result=
-            await db
-            .from("app_settings")
-            .upsert(
-                {
-                    setting_key:key,
-                    setting_value:value,
-                    updated_at:
-                    new Date().toISOString()
-                },
-                {
-                    onConflict:"setting_key"
-                }
-            );
-
-            if(result.error)
-                throw result.error;
-
-        }
-
-        await refresh();
-
-        showToast(t("saved"));
-
-    }catch(error){
-
-        showToast(
-            error.message,
-            true
-        );
-
-    }
-
-}
-
-
-/* =========================================
-   ACTIVITY
-========================================= */
-
-function renderActivity(){
-
-    const rows=
-    [...state.logs]
-    .sort(
-        (a,b)=>
-        String(b.created_at)
-        .localeCompare(
-            String(a.created_at)
-        )
-    )
-    .slice(0,100);
-
-    document.getElementById("content")
-    .innerHTML=`
-
-    <div class="page-head">
-
-        <div>
-
-            <h1>
-            ${t("activity")}
-            </h1>
-
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <div class="card-body">
-
-        <div class="list">
-
-        ${
-        rows.map(function(row){
-
-            return `
-
-            <div class="list-item">
-
-                <div>
-
-                    <b>
-                    ${esc(row.action)}
-                    </b>
-
-                    <div class="muted">
-                    ${esc(row.description||"")}
-                    </div>
-
-                </div>
-
-                <span class="muted">
-
-                ${new Date(
-                    row.created_at
-                ).toLocaleString(
-                    state.lang==="ar"
-                    ?"ar-EG"
-                    :"en-GB"
-                )}
-
-                </span>
-
-            </div>
-
-            `;
-
-        }).join("")
-        ||
-        `<div class="empty">${t("noData")}</div>`
-        }
-
-        </div>
-
-        </div>
-
-    </div>
-
-    `;
-
-}
-
-
-/* =========================================
-   REFRESH / RENDER
-========================================= */
-
-async function refresh(){
-
-    try{
-
-        await loadData();
-
-        render();
-
-    }catch(error){
-
-        showToast(
-            error.message,
-            true
-        );
-
-    }
-
-}
-
-
-function render(){
-
-    applyTheme();
-
-    document
-    .querySelectorAll(".nav button")
-    .forEach(function(button){
-
-        button.classList.toggle(
-            "active",
-            button.dataset.page
-            ===state.page
-        );
-
-    });
-
-
-    document.getElementById(
-        "pageTitle"
-    ).textContent=
-    t(state.page);
-
-
-    const pages={
-
-        dashboard:renderDashboard,
-
-        customers:renderCustomers,
-
-        traders:renderTraders,
-
-        services:renderServices,
-
-        subscriptions:
-        renderSubscriptions,
-
-        payments:
-        renderPayments,
-
-        invoices:
-        renderInvoices,
-
-        followups:
-        renderFollowups,
-
-        settings:
-        renderSettings,
-
-        activity:
-        renderActivity
-
-    };
-
-
-    (
-        pages[state.page]
-        ||
-        renderDashboard
-    )();
-
-}
-
-
-/* =========================================
-   LOGIN
-========================================= */
-
-document.getElementById(
-    "loginBtn"
-).onclick=async function(){
-
-    const email=
-    document.getElementById(
-        "loginEmail"
-    ).value;
-
-    const password=
-    document.getElementById(
-        "loginPassword"
-    ).value;
-
-    document.getElementById(
-        "loginMsg"
-    ).textContent="...";
-
-
-    const result=
-    await db.auth.signInWithPassword({
-
-        email:email,
-
-        password:password
-
-    });
-
-
-    if(result.error){
-
-        document.getElementById(
-            "loginMsg"
-        ).textContent=
-        result.error.message;
-
-    }else{
-
-        document.getElementById(
-            "loginMsg"
-        ).textContent="";
-
-    }
-
-};
-
-
-document.getElementById(
-    "logoutBtn"
-).onclick=async function(){
-
-    await db.auth.signOut();
-
-};
-
-
-document.getElementById(
-    "refreshBtn"
-).onclick=
-refresh;
-
-
-/* =========================================
-   AUTH
-========================================= */
-
-db.auth.onAuthStateChange(
-async function(event,session){
-
-    currentUser=
-    session?.user||null;
-
-    if(currentUser){
-
-        document
-        .getElementById(
-            "loginView"
-        )
-        .classList
-        .add("hidden");
-
-        document
-        .getElementById(
-            "appView"
-        )
-        .classList
-        .remove("hidden");
-
-        await refresh();
-
-    }else{
-
-        document
-        .getElementById(
-            "loginView"
-        )
-        .classList
-        .remove("hidden");
-
-        document
-        .getElementById(
-            "appView"
-        )
-        .classList
-        .add("hidden");
-
-    }
-
-});
-
-
-/* =========================================
-   INITIAL
-========================================= */
-
-applyTheme();
-
-
-</script>
-
-</body>
-</html>
