@@ -3,157 +3,605 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badgeify</title>
-    <!-- مكتبة Supabase -->
+    <title>BADGEIFY | Platform Manager</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { dark: '#0F0F0F', card: '#1A1A1A', gold: '#D4AF37', goldhover: '#b5952f' }
+                }
+            }
+        }
+    </script>
+    
+    <!-- خط تجوال -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
-        body {
-            font-family: Tahoma, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            direction: rtl;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        h2 {
-            text-align: center;
-            color: #f39c12;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #f39c12;
-            color: #121212;
-            border: none;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #e67e22;
-        }
+        body { font-family: 'Tajawal', sans-serif; background-color: #0F0F0F; color: #ffffff; }
+        .glass-panel { background: rgba(26, 26, 26, 0.95); border: 1px solid rgba(212, 175, 55, 0.2); }
+        .glass-modal { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(5px); }
+        .table-container { overflow-x: auto; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex items-center justify-center">
 
-    <div class="container">
-        <h2>إضافة عميل جديد</h2>
-        <form id="customerForm">
-            <div class="form-group">
-                <label for="customerName">اسم العميل (أو دمج مع جهة)</label>
-                <input type="text" id="customerName" required placeholder="أدخل اسم العميل">
+    <!-- === 1. شاشة تسجيل الدخول === -->
+    <div id="login-screen" class="w-full max-w-md p-8 glass-panel rounded-2xl mx-4">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gold tracking-wider mb-2">BADGEIFY</h1>
+            <p class="text-sm text-gray-400 tracking-widest">DIGITAL SERVICES & SUBSCRIPTIONS</p>
+        </div>
+        <form id="login-form" class="space-y-6">
+            <div>
+                <label class="block text-sm text-gray-300 mb-2">البريد الإلكتروني</label>
+                <input type="email" id="email" required class="w-full bg-dark border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold" placeholder="admin@badgeify.com">
             </div>
-
-            <div class="form-group">
-                <label for="mobileNumber">رقم الموبايل / واتساب</label>
-                <input type="text" id="mobileNumber" required placeholder="01xxxxxxxx0">
+            <div>
+                <label class="block text-sm text-gray-300 mb-2">كلمة المرور</label>
+                <input type="password" id="password" required class="w-full bg-dark border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold" placeholder="••••••••">
             </div>
-
-            <div class="form-group">
-                <label for="agentName">التاجر التابع له (اختياري)</label>
-                <select id="agentName">
-                    <option value="بدون تاجر (عميل مباشر)">بدون تاجر (عميل مباشر)</option>
-                    <!-- أضف التجار هنا حسب الحاجة -->
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="serviceType">نوع الخدمة</label>
-                <input type="text" id="serviceType" placeholder="مثال: توثيق فيس بوك">
-            </div>
-
-            <div class="form-group">
-                <label for="price">السعر</label>
-                <input type="number" id="price" placeholder="350">
-            </div>
-
-            <div class="form-group">
-                <label for="quantity">الكمية</label>
-                <input type="number" id="quantity" value="1">
-            </div>
-
-            <div class="form-group">
-                <label for="notes">ملاحظات عامة</label>
-                <textarea id="notes" rows="3" placeholder="ملاحظات إضافية..."></textarea>
-            </div>
-
-            <button type="submit" id="saveBtn">حفظ البيانات</button>
+            <button type="submit" id="login-btn" class="w-full bg-gold hover:bg-goldhover text-dark font-bold rounded-lg px-4 py-3 transition-colors">دخول للنظام</button>
+            <p id="login-error" class="text-red-500 text-sm text-center hidden"></p>
         </form>
     </div>
 
+    <!-- === 2. النظام (Dashboard) === -->
+    <div id="dashboard-screen" class="hidden w-full min-h-screen flex flex-col md:flex-row">
+        <!-- القائمة الجانبية -->
+        <aside class="w-full md:w-64 glass-panel md:min-h-screen p-6 flex flex-col gap-6">
+            <div class="text-center border-b border-gray-800 pb-4">
+                <h2 class="text-2xl font-bold text-gold tracking-wider">BADGEIFY</h2>
+            </div>
+            <nav class="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2">
+                <button class="bg-gold text-dark font-bold px-4 py-2 rounded text-right whitespace-nowrap">لوحة التحكم</button>
+            </nav>
+            <div class="mt-auto hidden md:block">
+                <button onclick="handleLogout()" class="w-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded transition-colors">تسجيل خروج</button>
+            </div>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold">إدارة الاشتراكات والخدمات</h2>
+                <div class="flex gap-2">
+                    <button onclick="openAddModal()" class="bg-gold text-dark font-bold px-4 py-2 rounded text-sm md:text-base">+ إضافة اشتراك جديد</button>
+                    <button onclick="handleLogout()" class="md:hidden border border-red-500 text-red-500 px-3 py-2 rounded text-sm">خروج</button>
+                </div>
+            </div>
+
+            <!-- التنبيهات الذكية -->
+            <div id="alerts-container" class="mb-6 hidden">
+                <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center justify-between">
+                    <span id="alerts-text" class="text-sm font-bold"></span>
+                </div>
+            </div>
+
+            <!-- الإحصائيات والأرباح -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="glass-panel p-4 rounded-xl text-center">
+                    <p class="text-gray-400 text-sm">إجمالي الدخل المتوقع</p>
+                    <p id="stat-total-money" class="text-2xl font-bold text-white mt-1">0 ج</p>
+                </div>
+                <div class="glass-panel p-4 rounded-xl text-center">
+                    <p class="text-gray-400 text-sm">تم تحصيله (مدفوع)</p>
+                    <p id="stat-collected" class="text-2xl font-bold text-green-500 mt-1">0 ج</p>
+                </div>
+                <div class="glass-panel p-4 rounded-xl text-center">
+                    <p class="text-gray-400 text-sm">مستحق التحصيل</p>
+                    <p id="stat-pending-money" class="text-2xl font-bold text-yellow-500 mt-1">0 ج</p>
+                </div>
+                <div class="glass-panel p-4 rounded-xl text-center">
+                    <p class="text-gray-400 text-sm">الاشتراكات النشطة</p>
+                    <p id="stat-active-count" class="text-2xl font-bold text-gold mt-1">0</p>
+                </div>
+            </div>
+
+            <!-- أدوات البحث والفلترة -->
+            <div class="glass-panel p-4 rounded-xl mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="w-full md:w-1/2">
+                    <input type="text" id="search-input" oninput="filterTable()" placeholder="ابحث باسم العميل، التاجر، أو رقم الموبايل..." class="w-full bg-dark border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-gold text-sm">
+                </div>
+                <div class="w-full md:w-auto flex gap-2 overflow-x-auto">
+                    <button onclick="setFilter('all')" id="filter-all" class="filter-btn bg-gold text-dark px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">الكل</button>
+                    <button onclick="setFilter('merchant')" id="filter-merchant" class="filter-btn bg-dark border border-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">التجار فقط</button>
+                    <button onclick="setFilter('direct')" id="filter-direct" class="filter-btn bg-dark border border-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">عملاء مباشرين</button>
+                    <button onclick="setFilter('overdue')" id="filter-overdue" class="filter-btn bg-dark border border-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">المتأخرين</button>
+                </div>
+            </div>
+
+            <!-- جدول العملاء -->
+            <div class="glass-panel rounded-xl overflow-hidden">
+                <div class="table-container p-4">
+                    <table class="w-full text-right text-sm whitespace-nowrap">
+                        <thead class="text-gray-400 border-b border-gray-800">
+                            <tr>
+                                <th class="pb-3 pr-2">العميل / التاجر والخدمات</th>
+                                <th class="pb-3 px-4">رقم الموبايل</th>
+                                <th class="pb-3 px-4">الاشتراك</th>
+                                <th class="pb-3 px-4">مواعيد (تجديد / دفع)</th>
+                                <th class="pb-3 px-4">الحالة</th>
+                                <th class="pb-3 px-4">إجراءات وتحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-table-body" class="divide-y divide-gray-800">
+                            <!-- البيانات -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- === 3. نافذة إضافة أو تعديل اشتراك === -->
+    <div id="add-modal" class="hidden fixed inset-0 glass-modal flex items-center justify-center p-4 z-50">
+        <div class="glass-panel w-full max-w-lg rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modal-title" class="text-xl font-bold text-gold">إضافة اشتراك خدمة جديد</h3>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <form id="add-form" class="space-y-4">
+                <input type="hidden" id="edit-client-id">
+                
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">نوع العميل / الشريك</label>
+                    <select id="add-client-type" class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" onchange="toggleMerchantField()">
+                        <option value="direct">عميل مباشر (يستخدم الخدمة لنفسه)</option>
+                        <option value="merchant">تاجر / وسيط (يشتري نيابة عن عملاء آخرين)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label id="client-name-label" class="block text-sm text-gray-300 mb-1">اسم العميل</label>
+                        <input type="text" id="add-client-name" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="محمد أحمد">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">اسم الحساب / النشاط</label>
+                        <input type="text" id="add-page-name" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="اسم الخدمة أو التفاصيل">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">رقم الموبايل / واتساب</label>
+                        <input type="text" id="add-phone" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="010...">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">إجمالي الاشتراك (جنية)</label>
+                        <input type="number" id="add-fee" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white">
+                    </div>
+                </div>
+
+                <!-- المنصات -->
+                <div>
+                    <label class="block text-sm text-gray-300 mb-2">اختر المنصات والخدمات المشترك فيها:</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 bg-dark/50 p-3 rounded-lg border border-gray-800">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="فيس بوك" class="accent-gold w-4 h-4"> فيس بوك</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="انستجرام" class="accent-gold w-4 h-4"> انستجرام</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="واتساب بيزنس" class="accent-gold w-4 h-4"> واتساب</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="تروكولر" class="accent-gold w-4 h-4"> تروكلر</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="جيت كونتاكت" class="accent-gold w-4 h-4"> جيت كونتاكت</label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="مساحة جوجل" class="accent-gold w-4 h-4"> مساحة جوجل</label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">رابط الحساب (اختياري)</label>
+                        <input type="text" id="add-link" class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">يوم الدفع (1 - 31)</label>
+                        <input type="number" id="add-payment-day" min="1" max="31" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">يوم تجديد الخدمة</label>
+                        <input type="number" id="add-renewal-day" min="1" max="31" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">ملاحظات خاصة (اختياري)</label>
+                    <input type="text" id="add-notes" class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white text-sm" placeholder="ملاحظات العميل...">
+                </div>
+
+                <div class="pt-4 flex gap-2">
+                    <button type="submit" id="submit-add-btn" class="flex-1 bg-gold text-dark font-bold rounded py-2">حفظ التعديلات</button>
+                    <button type="button" onclick="closeAddModal()" class="flex-1 bg-gray-800 text-white rounded py-2">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- === 4. نافذة تفاصيل / ملف العميل (Profile View) === -->
+    <div id="profile-modal" class="hidden fixed inset-0 glass-modal flex items-center justify-center p-4 z-50">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-6">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
+                <h3 class="text-lg font-bold text-gold" id="profile-client-name">ملف العميل</h3>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div id="profile-content" class="space-y-3 text-sm">
+                <!-- تفاصيل العميل وسجله -->
+            </div>
+            <div class="mt-6">
+                <button onclick="closeProfileModal()" class="w-full bg-gray-800 text-white py-2 rounded">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === 5. الجافاسكريبت === -->
     <script>
-        // إعدادات الاتصال بـ Supabase والمفتاح الصحيح
         const SUPABASE_URL = 'https://rsvzachgbqsucqgrwguv.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ';
+        
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // تهيئة عميل Supabase
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let clientsData = [];
+        let currentFilter = 'all';
 
-        // الاستماع لحدث الضغط على زر حفظ البيانات وإرسالها للجدول
-        document.getElementById('customerForm').addEventListener('submit', async function(e) {
+        async function checkUser() {
+            const { data: { session } } = await db.auth.getSession();
+            if (session) {
+                document.body.classList.remove('items-center', 'justify-center');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+                loadData();
+            } else {
+                document.body.classList.add('items-center', 'justify-center');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.add('hidden');
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const errorMsg = document.getElementById('login-error');
             
-            const submitBtn = document.getElementById('saveBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'جاري الحفظ...';
+            btn.textContent = 'جاري الدخول...';
+            errorMsg.classList.add('hidden');
 
-            // تجميع البيانات من النموذج
-            const customerData = {
-                customer_name: document.getElementById('customerName').value,
-                mobile_number: document.getElementById('mobileNumber').value,
-                agent_name: document.getElementById('agentName').value,
-                service_type: document.getElementById('serviceType').value,
-                price: parseFloat(document.getElementById('price').value) || 0,
-                quantity: parseInt(document.getElementById('quantity').value) || 1,
-                notes: document.getElementById('notes').value
-            };
+            const { error } = await db.auth.signInWithPassword({
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+            });
 
-            try {
-                // إرسال البيانات إلى جدول customers في قاعدة البيانات
-                const { data, error } = await supabaseClient
-                    .from('customers')
-                    .insert([customerData]);
-
-                if (error) {
-                    throw error;
-                }
-
-                alert('تم حفظ البيانات بنجاح!');
-                document.getElementById('customerForm').reset(); // تفريغ الحقول بعد الحفظ
-            } catch (error) {
-                alert('Error: ' + error.message);
-                console.error(error);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'حفظ البيانات';
+            if (error) {
+                errorMsg.textContent = 'البيانات غير صحيحة!';
+                errorMsg.classList.remove('hidden');
+                btn.textContent = 'دخول للنظام';
+            } else {
+                checkUser();
             }
         });
+
+        async function handleLogout() {
+            await db.auth.signOut();
+            window.location.reload();
+        }
+
+        async function loadData() {
+            document.getElementById('clients-table-body').innerHTML = '<tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr>';
+            
+            const { data, error } = await db.from('clients').select('*, payments(*)').order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error('Error fetching data:', error);
+                return;
+            }
+            clientsData = data;
+            renderTable();
+        }
+
+        function toggleMerchantField() {
+            const type = document.getElementById('add-client-type').value;
+            const label = document.getElementById('client-name-label');
+            const input = document.getElementById('add-client-name');
+            if (type === 'merchant') {
+                label.textContent = 'اسم التاجر / الشريك';
+                input.placeholder = 'مثال: مكتب فلان';
+            } else {
+                label.textContent = 'اسم العميل';
+                input.placeholder = 'محمد أحمد';
+            }
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-gold', 'text-dark', 'font-bold');
+                btn.classList.add('bg-dark', 'border', 'border-gray-700', 'text-gray-300');
+            });
+            const activeBtn = document.getElementById(`filter-${filter}`);
+            activeBtn.classList.remove('bg-dark', 'border', 'border-gray-700', 'text-gray-300');
+            activeBtn.classList.add('bg-gold', 'text-dark', 'font-bold');
+            renderTable();
+        }
+
+        function filterTable() {
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('clients-table-body');
+            tbody.innerHTML = '';
+            
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+            const today = new Date();
+            const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+            const currentDay = today.getDate();
+
+            let totalMoney = 0;
+            let collectedMoney = 0;
+            let pendingMoney = 0;
+            let overdueCount = 0;
+            let overdueNames = [];
+
+            let filteredList = clientsData.filter(client => {
+                const matchesSearch = client.client_name.toLowerCase().includes(searchVal) || 
+                                      client.phone.toLowerCase().includes(searchVal) || 
+                                      client.page_name.toLowerCase().includes(searchVal);
+                if (!matchesSearch) return false;
+
+                const isPaid = client.payments && client.payments.some(p => p.paid_month === currentMonthStr);
+                const isOverdue = !isPaid && currentDay > client.payment_day;
+
+                if (currentFilter === 'merchant') return client.client_type === 'merchant';
+                if (currentFilter === 'direct') return client.client_type === 'direct';
+                if (currentFilter === 'overdue') return isOverdue;
+                return true;
+            });
+
+            filteredList.forEach(client => {
+                const isPaidThisMonth = client.payments && client.payments.some(p => p.paid_month === currentMonthStr);
+                const fee = Number(client.monthly_fee) || 0;
+                
+                totalMoney += fee;
+                if (isPaidThisMonth) {
+                    collectedMoney += fee;
+                } else {
+                    pendingMoney += fee;
+                }
+
+                let statusText = '';
+                let statusClass = '';
+
+                if (isPaidThisMonth) {
+                    statusText = 'مدفوع';
+                    statusClass = 'bg-green-500/20 text-green-500';
+                } else if (currentDay > client.payment_day) {
+                    statusText = 'متأخر';
+                    statusClass = 'bg-red-500/20 text-red-500';
+                    overdueCount++;
+                    overdueNames.push(client.client_name);
+                } else {
+                    statusText = 'مستحق';
+                    statusClass = 'bg-yellow-500/20 text-yellow-500';
+                }
+
+                let platformsList = client.platform;
+                try {
+                    const parsed = JSON.parse(client.platform);
+                    if (Array.isArray(parsed)) {
+                        platformsList = parsed.join(' + ');
+                    }
+                } catch (e) {}
+
+                const isMerchant = client.client_type === 'merchant';
+                const badgeHtml = isMerchant 
+                    ? `<span class="bg-purple-500/20 text-purple-400 text-[10px] px-1.5 py-0.5 rounded ml-1 font-bold">تاجر</span>` 
+                    : `<span class="bg-blue-500/20 text-blue-400 text-[10px] px-1.5 py-0.5 rounded ml-1">مباشر</span>`;
+
+                const waMsg = encodeURIComponent(`مرحباً ${client.client_name}، تذكير بخصوص تجديد اشتراك خدمات (${platformsList} - ${client.page_name}) بقيمة ${client.monthly_fee} جنيه، وموعد الدفع هو يوم ${client.payment_day} من الشهر. برجاء تأكيد الدفع. شكراً لك.`);
+                const waUrl = `https://wa.me/20${client.phone.replace(/^0/, '')}?text=${waMsg}`;
+
+                const notesHtml = client.notes ? `<p class="text-[11px] text-yellow-400 mt-0.5">ملاحظة: ${client.notes}</p>` : '';
+
+                const row = `
+                    <tr class="hover:bg-gray-900/50 transition-colors border-b border-gray-800">
+                        <td class="py-3 pr-2">
+                            <div class="flex items-center cursor-pointer" onclick="openProfile('${client.id}')">
+                                <p class="font-bold text-white hover:text-gold">${client.client_name}</p>
+                                ${badgeHtml}
+                            </div>
+                            <p class="text-xs text-gray-400">${client.page_name} <span class="text-gold">(${platformsList})</span></p>
+                            ${notesHtml}
+                        </td>
+                        <td class="py-3 px-4">${client.phone}</td>
+                        <td class="py-3 px-4 font-bold text-gold">${client.monthly_fee} ج</td>
+                        <td class="py-3 px-4 text-xs">
+                            <span class="text-gray-300">تجديد: يوم ${client.renewal_day}</span><br>
+                            <span class="text-gray-400">دفع: يوم ${client.payment_day}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded text-xs font-bold ${statusClass}">${statusText}</span>
+                        </td>
+                        <td class="py-3 px-4 flex gap-1.5 items-center">
+                            ${!isPaidThisMonth ? `<button onclick="markAsPaid('${client.id}',${client.monthly_fee})" class="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs">دفع</button>` : `<span class="text-xs text-gray-500">تم</span>`}
+                            <a href="${waUrl}" target="_blank" class="border border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-2 py-1 rounded text-xs">واتساب</a>
+                            <button onclick="openEditModal('${client.id}')" class="bg-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-1 rounded text-xs">تعديل</button>
+                            <button onclick="deleteClient('${client.id}')" class="bg-red-600/30 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs">حذف</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            document.getElementById('stat-total-money').textContent = totalMoney + ' ج';
+            document.getElementById('stat-collected').textContent = collectedMoney + ' ج';
+            document.getElementById('stat-pending-money').textContent = pendingMoney + ' ج';
+            document.getElementById('stat-active-count').textContent = clientsData.length;
+
+            const alertsContainer = document.getElementById('alerts-container');
+            if (overdueCount > 0) {
+                document.getElementById('alerts-text').textContent = `تنبيه! يوجد ${overdueCount} اشتراكات متأخرة عن ميعاد الدفع (${overdueNames.join(', ')}).`;
+                alertsContainer.classList.remove('hidden');
+            } else {
+                alertsContainer.classList.add('hidden');
+            }
+        }
+
+        async function markAsPaid(clientId, amount) {
+            if(!confirm('هل أنت متأكد من تسجيل دفعة هذا الشهر؟')) return;
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+            const { error } = await db.from('payments').insert([{ client_id: clientId, amount: amount, payment_date: dateStr, paid_month: monthStr }]);
+            if (error) alert('حدث خطأ');
+            else loadData();
+        }
+
+        async function deleteClient(id) {
+            if(!confirm('هل أنت متأكد من حذف هذا الاشتراك نهائياً؟')) return;
+            const { error } = await db.from('clients').delete().eq('id', id);
+            if (error) alert('خطأ في الحذف');
+            else loadData();
+        }
+
+        function openAddModal() {
+            document.getElementById('edit-client-id').value = '';
+            document.getElementById('modal-title').textContent = 'إضافة اشتراك خدمة جديد';
+            document.getElementById('submit-add-btn').textContent = 'حفظ الاشتراك';
+            document.getElementById('add-form').reset();
+            toggleMerchantField();
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const client = clientsData.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('edit-client-id').value = client.id;
+            document.getElementById('modal-title').textContent = 'تعديل بيانات الاشتراك';
+            document.getElementById('submit-add-btn').textContent = 'حفظ التعديلات';
+            
+            document.getElementById('add-client-type').value = client.client_type || 'direct';
+            toggleMerchantField();
+            document.getElementById('add-client-name').value = client.client_name;
+            document.getElementById('add-page-name').value = client.page_name;
+            document.getElementById('add-phone').value = client.phone;
+            document.getElementById('add-fee').value = client.monthly_fee;
+            document.getElementById('add-link').value = client.page_link || '';
+            document.getElementById('add-payment-day').value = client.payment_day;
+            document.getElementById('add-renewal-day').value = client.renewal_day;
+            document.getElementById('add-notes').value = client.notes || '';
+
+            // تفعيل المنصات الخاصة به
+            document.querySelectorAll('input[name="platforms"]').forEach(cb => cb.checked = false);
+            try {
+                const pList = JSON.parse(client.platform);
+                if (Array.isArray(pList)) {
+                    pList.forEach(p => {
+                        const cb = document.querySelector(`input[name="platforms"][value="${p}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                }
+            } catch (e) {}
+
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+
+        function closeAddModal() { 
+            document.getElementById('add-modal').classList.add('hidden'); 
+            document.getElementById('add-form').reset(); 
+        }
+
+        function openProfile(id) {
+            const client = clientsData.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('profile-client-name').textContent = client.client_name;
+            
+            let platformsList = client.platform;
+            try {
+                const parsed = JSON.parse(client.platform);
+                if (Array.isArray(parsed)) platformsList = parsed.join(', ');
+            } catch(e) {}
+
+            let paymentsHistory = '';
+            if (client.payments && client.payments.length > 0) {
+                paymentsHistory = client.payments.map(p => `<li class="text-green-400">دفعة بقيمة ${p.amount} ج عن شهر ${p.paid_month} (بتاريخ ${p.payment_date})</li>`).join('');
+            } else {
+                paymentsHistory = '<li class="text-gray-500">لا توجد دفعات مسجلة بعد</li>';
+            }
+
+            document.getElementById('profile-content').innerHTML = `
+                <p><strong class="text-gray-400">نوع العميل:</strong> ${client.client_type === 'merchant' ? 'تاجر / شريك' : 'عميل مباشر'}</p>
+                <p><strong class="text-gray-400">رقم الموبايل:</strong> ${client.phone}</p>
+                <p><strong class="text-gray-400">اسم الحساب/الخدمة:</strong> ${client.page_name}</p>
+                <p><strong class="text-gray-400">المنصات:</strong> ${platformsList}</p>
+                <p><strong class="text-gray-400">قيمة الاشتراك:</strong> ${client.monthly_fee} جنيه</p>
+                <p><strong class="text-gray-400">مواعيد:</strong> دفع يوم ${client.payment_day} | تجديد يوم ${client.renewal_day}</p>
+                <p><strong class="text-gray-400">ملاحظات:</strong> ${client.notes || 'لا توجد ملاحظات'}</p>
+                <div class="border-t border-gray-800 pt-2 mt-2">
+                    <p class="font-bold text-gold mb-1">سجل الدفعات:</p>
+                    <ul class="list-disc list-inside space-y-1 text-xs">${paymentsHistory}</ul>
+                </div>
+            `;
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        document.getElementById('add-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-add-btn');
+            btn.textContent = 'جاري الحفظ...';
+
+            const selectedPlatforms = [];
+            document.querySelectorAll('input[name="platforms"]:checked').forEach(checkbox => {
+                selectedPlatforms.push(checkbox.value);
+            });
+
+            if (selectedPlatforms.length === 0) {
+                alert('من فضلك اختر منصة واحدة على الأقل');
+                btn.textContent = 'حفظ';
+                return;
+            }
+
+            const editId = document.getElementById('edit-client-id').value;
+            const clientData = {
+                client_type: document.getElementById('add-client-type').value,
+                client_name: document.getElementById('add-client-name').value,
+                page_name: document.getElementById('add-page-name').value,
+                phone: document.getElementById('add-phone').value,
+                platform: JSON.stringify(selectedPlatforms),
+                page_link: document.getElementById('add-link').value,
+                monthly_fee: document.getElementById('add-fee').value,
+                payment_day: document.getElementById('add-payment-day').value,
+                renewal_day: document.getElementById('add-renewal-day').value,
+                notes: document.getElementById('add-notes').value
+            };
+
+            let error;
+            if (editId) {
+                // تعديل
+                const res = await db.from('clients').update(clientData).eq('id', editId);
+                error = res.error;
+            } else {
+                // إضافة جديد
+                const res = await db.from('clients').insert([clientData]);
+                error = res.error;
+            }
+
+            if (error) {
+                alert('حدث خطأ: ' + error.message);
+                btn.textContent = 'حفظ';
+            } else {
+                closeAddModal();
+                loadData();
+            }
+        });
+
+        checkUser();
     </script>
 </body>
 </html>
