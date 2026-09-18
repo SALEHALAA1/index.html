@@ -3295,7 +3295,7 @@ async function deleteCustomer(id){
    SUBSCRIPTIONS
 ========================================= */
 
-function newRenderer(){
+function renderSubscriptions(){
     const rows=state.subscriptions.filter(function(x){return x.status!=="inactive";});
     function servicesForSubscription(subscription){
         const childRows=state.subscriptionServices.filter(function(row){
