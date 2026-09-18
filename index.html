@@ -7688,13 +7688,8 @@ async function openCustomerPortal(customerId){
 
 
         const portalUrl =
-            new URL(
-                "client.html",
-                window.location.href
-            ).href
-            +
-            "?token="
-            +
+            window.location.origin +
+            "/client.html?token=" +
             encodeURIComponent(token.token);
 
 
