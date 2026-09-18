@@ -77,6 +77,7 @@
                 <nav class="hidden md:flex gap-1.5 overflow-x-auto">
                     <button onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-gold bg-gold/10" data-tab="dashboard"><i class="fa-solid fa-chart-pie ml-1"></i><span data-i18n="tab_dash">الرئيسية</span></button>
                     <button onclick="switchTab('clients')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="clients"><i class="fa-solid fa-users ml-1"></i><span data-i18n="tab_clients">العملاء</span></button>
+                    <button onclick="switchTab('merchants')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="merchants"><i class="fa-solid fa-store ml-1"></i><span data-i18n="tab_merchants">التجار وعملائهم</span></button>
                     <button onclick="switchTab('agenda')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="agenda"><i class="fa-solid fa-calendar-alt ml-1"></i><span data-i18n="tab_agenda">أجندة 30 يوم</span></button>
                     <button onclick="switchTab('collection')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="collection"><i class="fa-solid fa-wallet ml-1"></i><span data-i18n="tab_collection">التحصيل</span></button>
                     <button onclick="switchTab('renewals')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="renewals"><i class="fa-solid fa-calendar-days ml-1"></i><span data-i18n="tab_renewals">التجديد</span></button>
@@ -89,6 +90,9 @@
                 <button onclick="openAddClientModal()" class="px-3.5 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold text-xs rounded-lg transition-all shadow cursor-pointer">
                     <i class="fa-solid fa-plus ml-1"></i> <span data-i18n="add_client_btn">إضافة عميل</span>
                 </button>
+                <button onclick="openAddMerchantModal()" class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-gold font-bold text-xs rounded-lg transition-all border border-zinc-700 cursor-pointer">
+                    <i class="fa-solid fa-store ml-1"></i> <span data-i18n="add_merchant_btn">إضافة تاجر</span>
+                </button>
                 <button onclick="handleLogout()" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-rose-950/50 text-zinc-400 hover:text-rose-400 text-xs rounded-lg transition-all border border-zinc-700 cursor-pointer" title="خروج"><i class="fa-solid fa-power-off"></i></button>
             </div>
         </header>
@@ -97,9 +101,9 @@
         <div class="md:hidden bg-zinc-900 border-t gold-border fixed bottom-0 left-0 right-0 z-40 flex justify-around p-2 text-[10px]">
             <button onclick="switchTab('dashboard')" class="mob-nav text-gold flex flex-col items-center gap-0.5" data-tab="dashboard"><i class="fa-solid fa-chart-pie"></i><span data-i18n="tab_dash">الرئيسية</span></button>
             <button onclick="switchTab('clients')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="clients"><i class="fa-solid fa-users"></i><span data-i18n="tab_clients">العملاء</span></button>
+            <button onclick="switchTab('merchants')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="merchants"><i class="fa-solid fa-store"></i><span data-i18n="tab_merchants">التجار</span></button>
             <button onclick="switchTab('agenda')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="agenda"><i class="fa-solid fa-calendar-alt"></i><span data-i18n="tab_agenda">الأجندة</span></button>
             <button onclick="switchTab('collection')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="collection"><i class="fa-solid fa-wallet"></i><span data-i18n="tab_collection">التحصيل</span></button>
-            <button onclick="switchTab('payments')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="payments"><i class="fa-solid fa-receipt"></i><span data-i18n="tab_payments">المدفوعات</span></button>
         </div>
 
         <main class="flex-1 p-4 md:p-8 pb-20 md:pb-8 max-w-7xl mx-auto w-full">
@@ -111,8 +115,8 @@
                         <h3 id="stat-total" class="text-3xl font-black text-white mt-2">0</h3>
                     </div>
                     <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
-                        <p class="text-xs text-zinc-400 font-medium" data-i18n="stat_services">إجمالي الخدمات النشطة</p>
-                        <h3 id="stat-services" class="text-3xl font-black text-gold mt-2">0</h3>
+                        <p class="text-xs text-zinc-400 font-medium" data-i18n="stat_merchants">إجمالي التجار</p>
+                        <h3 id="stat-merchants" class="text-3xl font-black text-gold mt-2">0</h3>
                     </div>
                     <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
                         <p class="text-xs text-zinc-400 font-medium" data-i18n="stat_paid">مدفوع هذا الشهر</p>
@@ -135,7 +139,7 @@
                                     <th class="p-3" data-i18n="th_amount">المبلغ</th>
                                     <th class="p-3" data-i18n="th_pay_date">موعد الدفع</th>
                                     <th class="p-3" data-i18n="th_status">الحالة</th>
-                                    <th class="p-3" data-i18n="th_action">إجراء</th>
+                                    <th class="p-3" data-i18n="th_action">إجراء الدفع</th>
                                 </tr>
                             </thead>
                             <tbody id="dashboard-due-list" class="divide-y divide-zinc-800"></tbody>
@@ -175,6 +179,21 @@
                 </div>
             </section>
 
+            <!-- التجار وعملائهم -->
+            <section id="tab-merchants" class="tab-content hidden space-y-6">
+                <div class="flex flex-col md:flex-row justify-between gap-4 items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-store ml-2 text-gold"></i><span data-i18n="tab_merchants">إدارة التجار والشبكة التابعة لهم</span></h2>
+                        <p class="text-xs text-zinc-400 mt-1" data-i18n="merchant_desc">لكل تاجر قائمة عملائه الخاصة به وخدماتهم المرتبطة.</p>
+                    </div>
+                    <button onclick="openAddMerchantModal()" class="px-5 py-3 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-xl text-sm transition cursor-pointer">
+                        <i class="fa-solid fa-store ml-2"></i><span data-i18n="add_merchant_btn">إضافة تاجر جديد</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="merchants-grid"></div>
+            </section>
+
             <!-- أجندة 30 يوم -->
             <section id="tab-agenda" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
@@ -183,7 +202,7 @@
                             <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-calendar-alt ml-2 text-gold"></i><span data-i18n="tab_agenda">أجندة التحصيل والتجديد (30 يوم)</span></h2>
                             <p class="text-xs text-zinc-400 mt-1" data-i18n="agenda_desc">توزيع مواعيد الاستحقاق على أيام الشهر لتنظيم جدول أعمالك بدقة.</p>
                         </div>
-                        <div class="mt-4 md:mt-0 flex items-center gap-2">
+                        <div class="mt-4 md:mt-0">
                             <select id="agenda-day-filter" onchange="renderAgenda()" class="px-3 py-2 bg-zinc-950 border gold-border rounded-xl text-xs text-white focus:outline-none">
                                 <option value="all" data-i18n="all_days">كل أيام الشهر (1-31)</option>
                                 <option value="today" data-i18n="today_only">استحقاقات اليوم فقط</option>
@@ -198,7 +217,7 @@
             <section id="tab-collection" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
                     <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-wallet ml-2 text-gold"></i><span data-i18n="tab_collection">متابعة وتحصيل الاشتراكات</span></h2>
-                    <p class="text-xs text-zinc-400 mb-6" data-i18n="coll_desc">الخدمات المستحقة والمتأخرة عن الدفع هذا الشهر.</p>
+                    <p class="text-xs text-zinc-400 mb-6" data-i18n="coll_desc">الخدمات المستحقة والمتأخرة عن الدفع هذا الشهر مع أزرار الدفع التفاعلية.</p>
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-sm">
                             <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
@@ -208,7 +227,7 @@
                                     <th class="p-3" data-i18n="th_amount">المبلغ</th>
                                     <th class="p-3" data-i18n="th_pay_day_num">يوم الدفع</th>
                                     <th class="p-3" data-i18n="th_status">الحالة</th>
-                                    <th class="p-3 text-center" data-i18n="th_actions_wa">الإجراءات والواتساب</th>
+                                    <th class="p-3 text-center" data-i18n="th_actions_wa">الدفع والإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="collection-table-body" class="divide-y divide-zinc-800"></tbody>
@@ -279,6 +298,15 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_merchant_assign">التاجر التابع له (اختياري)</label>
+                        <select id="c-merchant-id" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none">
+                            <option value="">بدون تاجر (عميل مباشر)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="border-t border-zinc-800 pt-4 mt-4">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="text-sm font-bold text-gold" data-i18n="sec_services_list">خدمات العميل المرتبطة</h4>
@@ -286,9 +314,7 @@
                             <i class="fa-solid fa-plus ml-1"></i> <span data-i18n="btn_add_service">إضافة خدمة أخرى</span>
                         </button>
                     </div>
-                    <div id="services-container" class="space-y-3">
-                        <!-- صفوف الخدمات الديناميكية -->
-                    </div>
+                    <div id="services-container" class="space-y-3"></div>
                 </div>
 
                 <div>
@@ -298,6 +324,32 @@
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="closeModal('client-modal')" class="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-medium cursor-pointer" data-i18n="btn_cancel">إلغاء</button>
                     <button type="submit" class="px-5 py-2 bg-gold text-zinc-950 font-bold rounded-xl text-sm hover:bg-gold-600 transition cursor-pointer" data-i18n="btn_save">حفظ العميل والخدمات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة أو تعديل التاجر -->
+    <div id="merchant-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-zinc-900 border gold-border w-full max-w-lg rounded-2xl p-6 relative">
+            <h3 id="merchant-modal-title" class="text-lg font-bold text-gold mb-4" data-i18n="modal_merchant_title">إضافة تاجر جديد</h3>
+            <form onsubmit="saveMerchant(event)" class="space-y-4">
+                <input type="hidden" id="merchant-id">
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_merchant_name">اسم التاجر / الشركة</label>
+                    <input type="text" id="m-name" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_phone">رقم الموبايل / واتساب</label>
+                    <input type="text" id="m-phone" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none" placeholder="010xxxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_notes">ملاحظات</label>
+                    <textarea id="m-notes" rows="2" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('merchant-modal')" class="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-medium cursor-pointer" data-i18n="btn_cancel">إلغاء</button>
+                    <button type="submit" class="px-5 py-2 bg-gold text-zinc-950 font-bold rounded-xl text-sm hover:bg-gold-600 transition cursor-pointer" data-i18n="btn_save">حفظ التاجر</button>
                 </div>
             </form>
         </div>
@@ -314,14 +366,13 @@
                 <button onclick="closeModal('statement-modal')" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <!-- ملخص الحساب -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
                     <span class="text-xs text-zinc-400 block" data-i18n="stmt_active_services">عدد الخدمات النشطة</span>
                     <strong id="stmt-services-count" class="text-lg text-white">0</strong>
                 </div>
                 <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
-                    <span class="text-xs text-zinc-400 block" data-i18n="stmt_total_amount">إجمالي قيمة الاشتراكات الشهرية</span>
+                    <span class="text-xs text-zinc-400 block" data-i18n="stmt_total_amount">إجمالي الاشتراكات الشهرية</span>
                     <strong id="stmt-total-amount" class="text-lg text-gold">0 EGP</strong>
                 </div>
                 <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
@@ -330,7 +381,6 @@
                 </div>
             </div>
 
-            <!-- خدمات العميل -->
             <h4 class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-list-check ml-2 text-gold"></i><span data-i18n="stmt_services_title">الخدمات المشترك بها</span></h4>
             <div class="overflow-x-auto mb-6">
                 <table class="w-full text-right text-xs">
@@ -348,7 +398,6 @@
                 </table>
             </div>
 
-            <!-- سجل المدفوعات -->
             <h4 class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-receipt ml-2 text-gold"></i><span data-i18n="stmt_payments_title">سجل المدفوعات السابقة</span></h4>
             <div class="overflow-x-auto">
                 <table class="w-full text-right text-xs">
@@ -379,6 +428,7 @@
         let clientsData = [];
         let servicesData = [];
         let paymentsData = [];
+        let merchantsData = [];
         let currentLang = localStorage.getItem('badgeify_lang') || 'ar';
         let currentTheme = localStorage.getItem('badgeify_theme') || 'dark';
 
@@ -391,13 +441,15 @@
                 login_btn: "تسجيل الدخول",
                 tab_dash: "الرئيسية",
                 tab_clients: "العملاء",
+                tab_merchants: "التجار وعملائهم",
                 tab_agenda: "أجندة 30 يوم",
                 tab_collection: "التحصيل",
                 tab_renewals: "تجديد الخدمات",
                 tab_payments: "سجل المدفوعات",
                 add_client_btn: "إضافة عميل",
+                add_merchant_btn: "إضافة تاجر",
                 stat_total: "كل العملاء",
-                stat_services: "إجمالي الخدمات",
+                stat_merchants: "إجمالي التجار",
                 stat_paid: "مدفوع هذا الشهر",
                 stat_due: "مستحق / متأخر",
                 dash_due_title: "أقرب مواعيد التحصيل والمتابعة",
@@ -406,7 +458,7 @@
                 th_amount: "المبلغ",
                 th_pay_date: "موعد الدفع",
                 th_status: "الحالة",
-                th_action: "إجراء",
+                th_action: "إجراء الدفع",
                 search_placeholder: "بحث شامل بالاسم، الخدمة، أو الموبايل...",
                 th_services_count: "عدد الخدمات",
                 th_total_sub: "إجمالي الاشتراكات",
@@ -416,7 +468,7 @@
                 today_only: "استحقاقات اليوم فقط",
                 coll_desc: "الخدمات المستحقة والمتأخرة عن الدفع هذا الشهر.",
                 th_pay_day_num: "يوم الدفع",
-                th_actions_wa: "الإجراءات والواتساب",
+                th_actions_wa: "الدفع والإجراءات",
                 renew_desc: "مواعيد تجديد الخدمات منفصلة تماماً عن مواعيد دفع الاشتراكات.",
                 th_renew_day_num: "يوم التجديد",
                 th_alert_status: "الحالة التنبيهية",
@@ -425,13 +477,16 @@
                 th_paid_month: "الشهر المدفوع",
                 th_real_date: "تاريخ الدفع الحقيقي",
                 modal_add_title: "إضافة عميل جديد",
+                modal_merchant_title: "إضافة تاجر جديد",
                 lbl_name: "اسم العميل",
                 lbl_phone: "رقم الموبايل / واتساب",
+                lbl_merchant_assign: "التاجر التابع له (اختياري)",
+                lbl_merchant_name: "اسم التاجر / الشركة",
                 sec_services_list: "خدمات العميل المرتبطة",
                 btn_add_service: "إضافة خدمة أخرى",
                 lbl_notes: "ملاحظات عامة",
                 btn_cancel: "إلغاء",
-                btn_save: "حفظ العميل والخدمات",
+                btn_save: "حفظ البيانات",
                 stmt_active_services: "عدد الخدمات النشطة",
                 stmt_total_amount: "إجمالي الاشتراكات الشهرية",
                 stmt_total_paid_history: "إجمالي ما تم دفعه تاريخياً",
@@ -440,6 +495,7 @@
                 th_platform: "المنصة",
                 th_pay_day: "يوم الدفع",
                 th_renew_day: "يوم التجديد",
+                merchant_desc: "إدارة التجار والشبكة التابعة لهم وعرض عملائهم.",
                 status_paid: "مدفوع",
                 status_due: "مستحق",
                 status_late: "متأخر"
@@ -452,13 +508,15 @@
                 login_btn: "Login",
                 tab_dash: "Dashboard",
                 tab_clients: "Clients",
+                tab_merchants: "Merchants & Clients",
                 tab_agenda: "30-Day Agenda",
                 tab_collection: "Collection",
                 tab_renewals: "Renewals",
                 tab_payments: "Payments Log",
                 add_client_btn: "Add Client",
+                add_merchant_btn: "Add Merchant",
                 stat_total: "Total Clients",
-                stat_services: "Total Services",
+                stat_merchants: "Total Merchants",
                 stat_paid: "Paid This Month",
                 stat_due: "Due / Late",
                 dash_due_title: "Upcoming Collections & Follow-up",
@@ -467,7 +525,7 @@
                 th_amount: "Amount",
                 th_pay_date: "Payment Date",
                 th_status: "Status",
-                th_action: "Action",
+                th_action: "Payment Action",
                 search_placeholder: "Search by name, service, or mobile...",
                 th_services_count: "Services Count",
                 th_total_sub: "Total Subscriptions",
@@ -477,7 +535,7 @@
                 today_only: "Today's Dues Only",
                 coll_desc: "Services due and late for payment this month.",
                 th_pay_day_num: "Pay Day",
-                th_actions_wa: "Actions & WhatsApp",
+                th_actions_wa: "Payment & Actions",
                 renew_desc: "Service renewal dates separated from subscription payments.",
                 th_renew_day_num: "Renewal Day",
                 th_alert_status: "Alert Status",
@@ -486,13 +544,16 @@
                 th_paid_month: "Paid Month",
                 th_real_date: "Real Payment Date",
                 modal_add_title: "Add New Client",
+                modal_merchant_title: "Add New Merchant",
                 lbl_name: "Client Name",
                 lbl_phone: "Mobile / WhatsApp",
+                lbl_merchant_assign: "Associated Merchant (Optional)",
+                lbl_merchant_name: "Merchant Name",
                 sec_services_list: "Associated Services",
                 btn_add_service: "Add Another Service",
                 lbl_notes: "General Notes",
                 btn_cancel: "Cancel",
-                btn_save: "Save Client & Services",
+                btn_save: "Save Data",
                 stmt_active_services: "Active Services",
                 stmt_total_amount: "Monthly Subscriptions",
                 stmt_total_paid_history: "Total Paid History",
@@ -501,6 +562,7 @@
                 th_platform: "Platform",
                 th_pay_day: "Pay Day",
                 th_renew_day: "Renewal Day",
+                merchant_desc: "Manage merchants and their client network.",
                 status_paid: "Paid",
                 status_due: "Due",
                 status_late: "Late"
@@ -604,25 +666,35 @@
 
         async function loadAllData() {
             try {
-                const [clientsRes, servicesRes, paymentsRes] = await Promise.all([
+                const [clientsRes, servicesRes, paymentsRes, merchantsRes] = await Promise.all([
                     db.from('clients').select('*').order('id', { ascending: false }),
                     db.from('client_services').select('*').order('id', { ascending: false }),
-                    db.from('payments').select('*').order('id', { ascending: false })
+                    db.from('payments').select('*').order('id', { ascending: false }),
+                    db.from('merchants').select('*').order('id', { ascending: false })
                 ]);
 
                 clientsData = clientsRes.data || [];
                 servicesData = servicesRes.data || [];
                 paymentsData = paymentsRes.data || [];
+                merchantsData = merchantsRes.data || [];
 
+                populateMerchantsDropdown();
                 renderAll();
             } catch (err) {
                 console.error("Error loading data:", err);
             }
         }
 
+        function populateMerchantsDropdown() {
+            const select = document.getElementById('c-merchant-id');
+            select.innerHTML = `<option value="">${currentLang === 'ar' ? 'بدون تاجر (عميل مباشر)' : 'Direct Client (No Merchant)'}</option>` +
+                merchantsData.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+        }
+
         function renderAll() {
             renderDashboard();
             renderClients();
+            renderMerchants();
             renderAgenda();
             renderCollection();
             renderRenewals();
@@ -640,7 +712,7 @@
 
         function renderDashboard() {
             const totalClients = clientsData.length;
-            const totalServices = servicesData.length;
+            const totalMerchants = merchantsData.length;
             let paidCount = 0, dueCount = 0;
             const dueRows = [];
 
@@ -661,14 +733,14 @@
                             <td class="p-3 text-gold font-bold">${service.amount} EGP</td>
                             <td class="p-3">يوم ${service.pay_day}</td>
                             <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${isLate ? 'bg-rose-950 text-rose-400 border border-rose-900' : 'bg-amber-950 text-amber-400 border border-amber-900'}">${status}</span></td>
-                            <td class="p-3"><button onclick="recordPayment(${service.id})" class="px-3 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-lg text-xs cursor-pointer">${currentLang === 'ar' ? 'تسجيل الدفع' : 'Record'}</button></td>
+                            <td class="p-3"><button onclick="recordPayment(${service.id})" class="px-3 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-lg text-xs cursor-pointer shadow"><i class="fa-solid fa-check ml-1"></i> ${currentLang === 'ar' ? 'تم الدفع' : 'Pay'}</button></td>
                         </tr>
                     `);
                 }
             });
 
             document.getElementById('stat-total').textContent = totalClients;
-            document.getElementById('stat-services').textContent = totalServices;
+            document.getElementById('stat-merchants').textContent = totalMerchants;
             document.getElementById('stat-paid').textContent = paidCount;
             document.getElementById('stat-due').textContent = dueCount;
             document.getElementById('dashboard-due-list').innerHTML = dueRows.length ? dueRows.join('') : `<tr><td colspan="6" class="p-4 text-center text-zinc-500">${currentLang === 'ar' ? 'لا توجد مستحقات متأخرة حالياً، الكل تمام!' : 'No pending dues!'}</td></tr>`;
@@ -693,8 +765,8 @@
                         <td class="p-4 text-gold font-bold">${totalSub} EGP</td>
                         <td class="p-4 text-center space-x-1 space-x-reverse">
                             <button onclick="openClientStatement(${client.id})" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-gold rounded-lg text-xs font-bold"><i class="fa-solid fa-file-invoice-dollar ml-1"></i> كشف حساب</button>
-                            <button onclick="editClient(${client.id})" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs" title="تعديل"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteClient(${client.id})" class="p-2 bg-zinc-800 hover:bg-rose-950 text-rose-400 rounded-lg text-xs" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="editClient(${client.id})" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-bold"><i class="fa-solid fa-pen ml-1"></i> تعديل</button>
+                            <button onclick="deleteClient(${client.id})" class="px-3 py-1.5 bg-zinc-800 hover:bg-rose-950 text-rose-400 rounded-lg text-xs font-bold"><i class="fa-solid fa-trash ml-1"></i> حذف</button>
                         </td>
                     </tr>
                 `;
@@ -713,6 +785,52 @@
 
             const filtered = clientsData.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query) || matchedClientIds.has(c.id));
             renderClients(filtered);
+        }
+
+        function renderMerchants() {
+            const grid = document.getElementById('merchants-grid');
+            if (!merchantsData.length) {
+                grid.innerHTML = `<div class="col-span-full p-8 text-center text-zinc-500 bg-zinc-900 border gold-border rounded-2xl">${currentLang === 'ar' ? 'لا توجد تجار مضافون بعد.' : 'No merchants.'}</div>`;
+                return;
+            }
+
+            grid.innerHTML = merchantsData.map(merchant => {
+                const merchantClients = clientsData.filter(c => c.merchant_id === merchant.id);
+                return `
+                    <div class="bg-zinc-900 border gold-border rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 class="font-bold text-white text-base">${merchant.name}</h3>
+                                    <span class="text-xs text-zinc-400" dir="ltr">${merchant.phone}</span>
+                                </div>
+                                <div class="space-x-1 space-x-reverse">
+                                    <button onclick="editMerchant(${merchant.id})" class="p-1.5 bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs" title="تعديل"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="deleteMerchant(${merchant.id})" class="p-1.5 bg-zinc-800 text-rose-400 hover:bg-rose-950 rounded-lg text-xs" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-zinc-400 mb-4">${merchant.notes || (currentLang === 'ar' ? 'لا توجد ملاحظات' : 'No notes')}</p>
+                            
+                            <div class="border-t border-zinc-800 pt-3">
+                                <span class="text-xs font-bold text-gold block mb-2">عملاء التاجر (${merchantClients.length}):</span>
+                                <div class="space-y-1.5 max-h-40 overflow-y-auto">
+                                    ${merchantClients.length ? merchantClients.map(mc => `
+                                        <div class="bg-zinc-950 p-2 rounded-xl text-xs flex justify-between items-center border border-zinc-800">
+                                            <span class="text-white font-medium">${mc.name}</span>
+                                            <button onclick="openClientStatement(${mc.id})" class="text-gold hover:underline">كشف حساب</button>
+                                        </div>
+                                    `).join('') : '<p class="text-[11px] text-zinc-600">لا يوجد عملاء مرتبطين بهذا التاجر حتى الآن</p>'}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-zinc-800 flex justify-end">
+                            <button onclick="openAddClientForMerchant(${merchant.id})" class="px-3 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-xl text-xs cursor-pointer">
+                                <i class="fa-solid fa-user-plus ml-1"></i> إضافة عميل لهذا التاجر
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderAgenda() {
@@ -776,7 +894,7 @@
                         <td class="p-3">${service.pay_day}</td>
                         <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${isLate ? 'bg-rose-950 text-rose-400 border border-rose-900' : 'bg-amber-950 text-amber-400 border border-amber-900'}">${status}</span></td>
                         <td class="p-3 text-center space-x-2 space-x-reverse">
-                            <button onclick="recordPayment(${service.id})" class="px-3 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-lg text-xs cursor-pointer">${currentLang === 'ar' ? 'تسجيل الدفع' : 'Record'}</button>
+                            <button onclick="recordPayment(${service.id})" class="px-3 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-lg text-xs cursor-pointer shadow"><i class="fa-solid fa-check ml-1"></i> ${currentLang === 'ar' ? 'تم الدفع' : 'Pay'}</button>
                             <a href="${waLink}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs inline-block"><i class="fa-brands fa-whatsapp ml-1"></i>WhatsApp</a>
                         </td>
                     </tr>
@@ -842,7 +960,7 @@
                         <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i> حذف الخدمة</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <input type="text" class="s-name w-full p-2.5 bg-zinc-900 border gold-border rounded-xl text-xs text-white" placeholder="اسم الخدمة / البيدج (إدخال يدوي)" value="${data.page_name || ''}" required>
+                        <input type="text" class="s-name w-full p-2.5 bg-zinc-900 border gold-border rounded-xl text-xs text-white" placeholder="اسم الخدمة / البيدج" value="${data.page_name || ''}" required>
                         <input type="text" class="s-platform w-full p-2.5 bg-zinc-900 border gold-border rounded-xl text-xs text-white" placeholder="المنصة (Facebook / Web / ...)" value="${data.platform || ''}">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -855,15 +973,20 @@
             container.insertAdjacentHTML('beforeend', html);
         }
 
-        function openAddClientModal() {
+        function openAddClientModal(merchantId = '') {
             document.getElementById('client-id').value = '';
             document.getElementById('modal-title').textContent = currentLang === 'ar' ? 'إضافة عميل جديد' : 'Add New Client';
             document.getElementById('c-name').value = '';
             document.getElementById('c-phone').value = '';
             document.getElementById('c-notes').value = '';
+            document.getElementById('c-merchant-id').value = merchantId;
             document.getElementById('services-container').innerHTML = '';
-            addServiceRow(); // صف افتراضي أول
+            addServiceRow();
             document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        function openAddClientForMerchant(merchantId) {
+            openAddClientModal(merchantId);
         }
 
         function editClient(id) {
@@ -875,6 +998,7 @@
             document.getElementById('c-name').value = client.name;
             document.getElementById('c-phone').value = client.phone;
             document.getElementById('c-notes').value = client.notes || '';
+            document.getElementById('c-merchant-id').value = client.merchant_id || '';
 
             const container = document.getElementById('services-container');
             container.innerHTML = '';
@@ -891,10 +1015,12 @@
         async function saveClient(e) {
             e.preventDefault();
             const id = document.getElementById('client-id').value;
+            const merchantVal = document.getElementById('c-merchant-id').value;
             const clientObj = {
                 name: document.getElementById('c-name').value.trim(),
                 phone: document.getElementById('c-phone').value.trim(),
-                notes: document.getElementById('c-notes').value.trim()
+                notes: document.getElementById('c-notes').value.trim(),
+                merchant_id: merchantVal ? parseInt(merchantVal) : null
             };
 
             let clientId = id;
@@ -907,7 +1033,6 @@
                 clientId = data[0].id;
             }
 
-            // حفظ الخدمات المرتبطة
             const serviceRows = document.querySelectorAll('.service-row');
             for (let row of serviceRows) {
                 const sId = row.querySelector('.s-id').value;
@@ -935,6 +1060,54 @@
             if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف العميل وكل خدماته؟' : 'Delete client and all services?')) return;
             await db.from('client_services').delete().eq('client_id', id);
             const { error } = await db.from('clients').delete().eq('id', id);
+            if (error) { alert('Error: ' + error.message); return; }
+            await loadAllData();
+        }
+
+        function openAddMerchantModal() {
+            document.getElementById('merchant-id').value = '';
+            document.getElementById('merchant-modal-title').textContent = currentLang === 'ar' ? 'إضافة تاجر جديد' : 'Add New Merchant';
+            document.getElementById('m-name').value = '';
+            document.getElementById('m-phone').value = '';
+            document.getElementById('m-notes').value = '';
+            document.getElementById('merchant-modal').classList.remove('hidden');
+        }
+
+        function editMerchant(id) {
+            const m = merchantsData.find(item => item.id === id);
+            if (!m) return;
+            document.getElementById('merchant-id').value = m.id;
+            document.getElementById('merchant-modal-title').textContent = currentLang === 'ar' ? 'تعديل بيانات التاجر' : 'Edit Merchant';
+            document.getElementById('m-name').value = m.name;
+            document.getElementById('m-phone').value = m.phone;
+            document.getElementById('m-notes').value = m.notes || '';
+            document.getElementById('merchant-modal').classList.remove('hidden');
+        }
+
+        async function saveMerchant(e) {
+            e.preventDefault();
+            const id = document.getElementById('merchant-id').value;
+            const obj = {
+                name: document.getElementById('m-name').value.trim(),
+                phone: document.getElementById('m-phone').value.trim(),
+                notes: document.getElementById('m-notes').value.trim()
+            };
+
+            if (id) {
+                const { error } = await db.from('merchants').update(obj).eq('id', id);
+                if (error) { alert('Error: ' + error.message); return; }
+            } else {
+                const { error } = await db.from('merchants').insert([obj]);
+                if (error) { alert('Error: ' + error.message); return; }
+            }
+
+            closeModal('merchant-modal');
+            await loadAllData();
+        }
+
+        async function deleteMerchant(id) {
+            if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف التاجر؟' : 'Delete merchant?')) return;
+            const { error } = await db.from('merchants').delete().eq('id', id);
             if (error) { alert('Error: ' + error.message); return; }
             await loadAllData();
         }
