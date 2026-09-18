@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BADGEIFY | بوابة العميل</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --bg:#090909;
+    --card:#111111;
+    --card2:#161616;
+    --gold:#d6ad55;
+    --gold2:#f1d48a;
+    --text:#f5f5f5;
+    --muted:#999;
+    --green:#35c98a;
+    --red:#ff6262;
+    --orange:#f0a84b;
+    --border:rgba(214,173,85,.18);
+}
+
+body{
+    font-family:Tahoma,Arial,sans-serif;
+    background:
+        radial-gradient(circle at top right,rgba(214,173,85,.12),transparent 30%),
+        radial-gradient(circle at bottom left,rgba(214,173,85,.07),transparent 30%),
+        var(--bg);
+    color:var(--text);
+    min-height:100vh;
+}
+
+.container{
+    width:min(1150px,94%);
+    margin:auto;
+}
+
+.header{
+    padding:25px 0 15px;
+}
+
+.brand{
+    color:var(--gold2);
+    font-size:27px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+.subtitle{
+    color:var(--muted);
+    margin-top:5px;
+    font-size:13px;
+}
+
+.hero{
+    margin-top:20px;
+    padding:28px;
+    border:1px solid var(--border);
+    border-radius:24px;
+    background:
+        linear-gradient(135deg,rgba(214,173,85,.10),rgba(255,255,255,.02)),
+        var(--card);
+    box-shadow:0 15px 50px rgba(0,0,0,.35);
+}
+
+.hero-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+}
+
+.welcome{
+    color:var(--muted);
+    font-size:14px;
+}
+
+.customer-name{
+    margin-top:7px;
+    font-size:29px;
+    font-weight:900;
+    color:#fff;
+}
+
+.customer-phone{
+    margin-top:8px;
+    color:var(--muted);
+}
+
+.status-badge{
+    padding:10px 17px;
+    border-radius:50px;
+    border:1px solid rgba(53,201,138,.3);
+    color:var(--green);
+    background:rgba(53,201,138,.08);
+    white-space:nowrap;
+}
+
+.summary{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-top:20px;
+}
+
+.summary-card{
+    background:var(--card2);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:20px;
+}
+
+.summary-title{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.summary-value{
+    margin-top:10px;
+    font-size:25px;
+    font-weight:900;
+    color:var(--gold2);
+}
+
+.section{
+    margin-top:25px;
+}
+
+.section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:13px;
+}
+
+.section-title h2{
+    font-size:20px;
+}
+
+.section-title span{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:20px;
+}
+
+.subscription-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:15px;
+}
+
+.service-name{
+    font-size:19px;
+    font-weight:900;
+    color:var(--gold2);
+}
+
+.page-name{
+    color:var(--muted);
+    margin-top:6px;
+    font-size:13px;
+}
+
+.status{
+    padding:7px 11px;
+    border-radius:30px;
+    font-size:12px;
+    white-space:nowrap;
+}
+
+.status-paid{
+    color:var(--green);
+    background:rgba(53,201,138,.1);
+}
+
+.status-overdue{
+    color:var(--red);
+    background:rgba(255,98,98,.1);
+}
+
+.status-today{
+    color:var(--orange);
+    background:rgba(240,168,75,.1);
+}
+
+.status-upcoming{
+    color:var(--gold2);
+    background:rgba(214,173,85,.1);
+}
+
+.status-inactive{
+    color:#aaa;
+    background:#222;
+}
+
+.details{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:18px;
+}
+
+.detail{
+    background:#0d0d0d;
+    border-radius:13px;
+    padding:12px;
+}
+
+.detail-label{
+    color:#777;
+    font-size:11px;
+}
+
+.detail-value{
+    margin-top:5px;
+    font-size:14px;
+    font-weight:bold;
+}
+
+.table-wrap{
+    overflow-x:auto;
+    border-radius:18px;
+    border:1px solid var(--border);
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:650px;
+}
+
+th,td{
+    padding:14px;
+    text-align:right;
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+th{
+    color:var(--gold2);
+    font-size:12px;
+    background:#141414;
+}
+
+td{
+    color:#ddd;
+    font-size:13px;
+}
+
+tr:last-child td{
+    border-bottom:0;
+}
+
+.invoice{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.invoice-number{
+    font-weight:900;
+    color:var(--gold2);
+}
+
+.invoice-date{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:5px;
+}
+
+.invoice-total{
+    font-size:18px;
+    font-weight:900;
+}
+
+.invoice-status{
+    margin-top:5px;
+    color:var(--muted);
+    font-size:12px;
+}
+
+.followup{
+    display:flex;
+    gap:15px;
+    align-items:flex-start;
+}
+
+.followup-date{
+    min-width:70px;
+    text-align:center;
+    background:rgba(214,173,85,.08);
+    border:1px solid var(--border);
+    border-radius:13px;
+    padding:10px;
+    color:var(--gold2);
+    font-weight:bold;
+}
+
+.followup-title{
+    font-weight:bold;
+}
+
+.followup-notes{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:5px;
+}
+
+.actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:25px;
+}
+
+.btn{
+    border:0;
+    cursor:pointer;
+    padding:13px 20px;
+    border-radius:13px;
+    font-weight:bold;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.btn-whatsapp{
+    background:#1faa67;
+    color:#fff;
+}
+
+.btn-refresh{
+    background:#1a1a1a;
+    border:1px solid var(--border);
+    color:var(--gold2);
+}
+
+.empty{
+    text-align:center;
+    padding:35px;
+    color:var(--muted);
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:18px;
+}
+
+.loading{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+}
+
+.loader-box{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:35px;
+    width:min(400px,90%);
+}
+
+.loader-brand{
+    font-size:28px;
+    font-weight:900;
+    color:var(--gold2);
+}
+
+.loader-text{
+    margin-top:15px;
+    color:var(--muted);
+}
+
+.error{
+    color:var(--red);
+    margin-top:15px;
+    line-height:1.8;
+}
+
+.footer{
+    text-align:center;
+    padding:35px 0;
+    color:#666;
+    font-size:12px;
+}
+
+@media(max-width:850px){
+    .summary{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:550px){
+    .container{
+        width:92%;
+    }
+
+    .hero{
+        padding:20px;
+    }
+
+    .hero-top{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .customer-name{
+        font-size:24px;
+    }
+
+    .summary{
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+    }
+
+    .summary-card{
+        padding:15px;
+    }
+
+    .summary-value{
+        font-size:19px;
+    }
+
+    .details{
+        grid-template-columns:1fr;
+    }
+
+    .invoice{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading" class="loading">
+    <div class="loader-box">
+        <div class="loader-brand">BADGEIFY</div>
+        <div class="loader-text">جاري تحميل بيانات حسابك...</div>
+    </div>
+</div>
+
+<div id="app" style="display:none;">
+
+    <div class="container">
+
+        <header class="header">
+            <div class="brand">BADGEIFY</div>
+            <div id="companySubtitle" class="subtitle">
+                بوابة العميل
+            </div>
+        </header>
+
+        <section class="hero">
+
+            <div class="hero-top">
+
+                <div>
+                    <div class="welcome">
+                        مرحباً بك
+                    </div>
+
+                    <div id="customerName" class="customer-name">
+                        —
+                    </div>
+
+                    <div id="customerPhone" class="customer-phone">
+                        —
+                    </div>
+                </div>
+
+                <div id="customerStatus" class="status-badge">
+                    حساب نشط
+                </div>
+
+            </div>
+
+            <div class="actions">
+
+                <a
+                    id="whatsappBtn"
+                    class="btn btn-whatsapp"
+                    href="#"
+                    target="_blank"
+                    style="display:none;"
+                >
+                    واتساب
+                </a>
+
+                <button
+                    class="btn btn-refresh"
+                    onclick="loadPortal()"
+                >
+                    تحديث البيانات
+                </button>
+
+            </div>
+
+        </section>
+
+        <section class="summary">
+
+            <div class="summary-card">
+                <div class="summary-title">
+                    إجمالي الاشتراكات الشهرية
+                </div>
+
+                <div id="monthlyTotal" class="summary-value">
+                    0
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-title">
+                    المسدد هذا الشهر
+                </div>
+
+                <div id="paidCurrentMonth" class="summary-value">
+                    0
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-title">
+                    المتبقي هذا الشهر
+                </div>
+
+                <div id="remainingCurrentMonth" class="summary-value">
+                    0
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-title">
+                    عدد الاشتراكات
+                </div>
+
+                <div id="subscriptionsCount" class="summary-value">
+                    0
+                </div>
+            </div>
+
+        </section>
+
+        <section class="section">
+
+            <div class="section-title">
+                <h2>اشتراكاتي</h2>
+                <span id="billingMonth"></span>
+            </div>
+
+            <div id="subscriptions" class="grid"></div>
+
+        </section>
+
+        <section class="section">
+
+            <div class="section-title">
+                <h2>سجل المدفوعات</h2>
+            </div>
+
+            <div id="payments"></div>
+
+        </section>
+
+        <section class="section">
+
+            <div class="section-title">
+                <h2>الفواتير</h2>
+            </div>
+
+            <div id="invoices"></div>
+
+        </section>
+
+        <section class="section">
+
+            <div class="section-title">
+                <h2>المتابعات</h2>
+            </div>
+
+            <div id="followups"></div>
+
+        </section>
+
+        <footer class="footer">
+            BADGEIFY
+            <br>
+            بوابة العميل
+        </footer>
+
+    </div>
+
+</div>
+
+<script>
+
+const FUNCTION_URL =
+    "https://rsvzachgbqsucqgrwguv.supabase.co/functions/v1/customer-portal";
+
+const params = new URLSearchParams(window.location.search);
+
+const TOKEN = params.get("token");
+
+let portalData = null;
+
+function escapeHtml(value){
+
+    if(value === null || value === undefined){
+        return "";
+    }
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+function money(value,currency="EGP"){
+
+    const number = Number(value || 0);
+
+    return new Intl.NumberFormat(
+        "ar-EG",
+        {
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+        }
+    ).format(number) + " " + currency;
+}
+
+function formatDate(value){
+
+    if(!value){
+        return "—";
+    }
+
+    const date = new Date(value);
+
+    if(isNaN(date.getTime())){
+        return value;
+    }
+
+    return new Intl.DateTimeFormat(
+        "ar-EG",
+        {
+            year:"numeric",
+            month:"long",
+            day:"numeric"
+        }
+    ).format(date);
+}
+
+function serviceName(subscription){
+
+    if(
+        subscription.app_service &&
+        subscription.app_service.service_name
+    ){
+        return subscription.app_service.service_name;
+    }
+
+    if(
+        subscription.service &&
+        subscription.service.service_name
+    ){
+        return subscription.service.service_name;
+    }
+
+    if(
+        subscription.service &&
+        subscription.service.name
+    ){
+        return subscription.service.name;
+    }
+
+    return "خدمة";
+}
+
+function statusHtml(status){
+
+    if(!status){
+        return "";
+    }
+
+    const code = status.code;
+
+    let className = "status-upcoming";
+
+    if(code === "paid"){
+        className = "status-paid";
+    }
+
+    if(code === "overdue"){
+        className = "status-overdue";
+    }
+
+    if(code === "due_today"){
+        className = "status-today";
+    }
+
+    if(code === "inactive"){
+        className = "status-inactive";
+    }
+
+    return `
+        <span class="status ${className}">
+            ${escapeHtml(status.label)}
+        </span>
+    `;
+}
+
+async function loadPortal(){
+
+    if(!TOKEN){
+
+        showError(
+            "رابط العميل غير صحيح أو لا يحتوي على رمز الوصول."
+        );
+
+        return;
+    }
+
+    try{
+
+        document.getElementById("loading").style.display =
+            "flex";
+
+        document.getElementById("app").style.display =
+            "none";
+
+        const response = await fetch(
+            FUNCTION_URL +
+            "?token=" +
+            encodeURIComponent(TOKEN),
+            {
+                method:"GET",
+                headers:{
+                    "Accept":"application/json"
+                },
+                cache:"no-store"
+            }
+        );
+
+        const data = await response.json();
+
+        if(!response.ok || !data.success){
+
+            throw new Error(
+                data.error ||
+                "تعذر تحميل بيانات الحساب."
+            );
+        }
+
+        portalData = data;
+
+        renderPortal(data);
+
+        document.getElementById("loading").style.display =
+            "none";
+
+        document.getElementById("app").style.display =
+            "block";
+
+    }catch(error){
+
+        console.error(error);
+
+        showError(
+            error.message ||
+            "حدث خطأ أثناء تحميل بيانات الحساب."
+        );
+    }
+}
+
+function showError(message){
+
+    document.getElementById("loading").innerHTML = `
+        <div class="loader-box">
+            <div class="loader-brand">
+                BADGEIFY
+            </div>
+
+            <div class="error">
+                ${escapeHtml(message)}
+            </div>
+        </div>
+    `;
+}
+
+function renderPortal(data){
+
+    const customer =
+        data.customer || {};
+
+    const summary =
+        data.summary || {};
+
+    document.getElementById("customerName").textContent =
+        customer.client_name || "عميل BADGEIFY";
+
+    document.getElementById("customerPhone").textContent =
+        customer.phone || "";
+
+    if(data.company){
+
+        if(data.company.company_name){
+
+            document.getElementById(
+                "companySubtitle"
+            ).textContent =
+                "بوابة العميل — " +
+                data.company.company_name;
+        }
+    }
+
+    document.getElementById("monthlyTotal").textContent =
+        money(
+            summary.monthly_total,
+            data.company?.currency || "EGP"
+        );
+
+    document.getElementById("paidCurrentMonth").textContent =
+        money(
+            summary.paid_current_month,
+            data.company?.currency || "EGP"
+        );
+
+    document.getElementById("remainingCurrentMonth").textContent =
+        money(
+            summary.remaining_current_month,
+            data.company?.currency || "EGP"
+        );
+
+    document.getElementById("subscriptionsCount").textContent =
+        summary.subscriptions_count || 0;
+
+    document.getElementById("billingMonth").textContent =
+        summary.current_billing_month || "";
+
+    renderWhatsapp(customer);
+
+    renderSubscriptions(
+        data.subscriptions || [],
+        data.company?.currency || "EGP"
+    );
+
+    renderPayments(
+        data.payments || [],
+        data.subscriptions || [],
+        data.company?.currency || "EGP"
+    );
+
+    renderInvoices(
+        data.invoices || [],
+        data.invoice_items || [],
+        data.company?.currency || "EGP"
+    );
+
+    renderFollowups(
+        data.followups || []
+    );
+}
+
+function renderWhatsapp(customer){
+
+    const btn =
+        document.getElementById("whatsappBtn");
+
+    if(!customer.phone){
+        btn.style.display = "none";
+        return;
+    }
+
+    let phone =
+        String(customer.phone)
+            .replace(/\D/g,"");
+
+    if(phone.startsWith("01")){
+        phone = "20" + phone.substring(1);
+    }
+
+    const company =
+        portalData?.company?.company_name ||
+        "BADGEIFY";
+
+    const message =
+        `مرحباً ${customer.client_name || ""}،\n` +
+        `نحن سعداء بخدمتك مع ${company}.\n` +
+        `يمكنك متابعة اشتراكاتك ومدفوعاتك من بوابة العميل.`;
+
+    btn.href =
+        "https://wa.me/" +
+        phone +
+        "?text=" +
+        encodeURIComponent(message);
+
+    btn.style.display = "inline-flex";
+}
+
+function renderSubscriptions(
+    subscriptions,
+    currency
+){
+
+    const container =
+        document.getElementById("subscriptions");
+
+    if(!subscriptions.length){
+
+        container.innerHTML = `
+            <div class="empty">
+                لا توجد اشتراكات حالياً.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        subscriptions.map(subscription => {
+
+            const service =
+                serviceName(subscription);
+
+            const page =
+                subscription.page_name ||
+                "—";
+
+            const platform =
+                subscription.platform ||
+                "—";
+
+            const fee =
+                money(
+                    subscription.monthly_fee,
+                    subscription.currency ||
+                    currency
+                );
+
+            const paymentDay =
+                subscription.payment_day ||
+                "—";
+
+            return `
+                <div class="card">
+
+                    <div class="subscription-head">
+
+                        <div>
+                            <div class="service-name">
+                                ${escapeHtml(service)}
+                            </div>
+
+                            <div class="page-name">
+                                ${escapeHtml(page)}
+                            </div>
+                        </div>
+
+                        ${statusHtml(
+                            subscription.payment_status
+                        )}
+
+                    </div>
+
+                    <div class="details">
+
+                        <div class="detail">
+                            <div class="detail-label">
+                                المنصة
+                            </div>
+
+                            <div class="detail-value">
+                                ${escapeHtml(platform)}
+                            </div>
+                        </div>
+
+                        <div class="detail">
+                            <div class="detail-label">
+                                قيمة الاشتراك
+                            </div>
+
+                            <div class="detail-value">
+                                ${escapeHtml(fee)}
+                            </div>
+                        </div>
+
+                        <div class="detail">
+                            <div class="detail-label">
+                                يوم السداد
+                            </div>
+
+                            <div class="detail-value">
+                                يوم ${escapeHtml(paymentDay)}
+                            </div>
+                        </div>
+
+                        <div class="detail">
+                            <div class="detail-label">
+                                الحالة
+                            </div>
+
+                            <div class="detail-value">
+                                ${
+                                    escapeHtml(
+                                        subscription
+                                            .payment_status
+                                            ?.label ||
+                                        "—"
+                                    )
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+function renderPayments(
+    payments,
+    subscriptions,
+    currency
+){
+
+    const container =
+        document.getElementById("payments");
+
+    if(!payments.length){
+
+        container.innerHTML = `
+            <div class="empty">
+                لا توجد مدفوعات مسجلة حتى الآن.
+            </div>
+        `;
+
+        return;
+    }
+
+    const subMap = new Map();
+
+    subscriptions.forEach(sub => {
+
+        subMap.set(
+            Number(sub.id),
+            serviceName(sub)
+        );
+
+    });
+
+    container.innerHTML = `
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>الخدمة</th>
+                        <th>المبلغ</th>
+                        <th>الشهر</th>
+                        <th>تاريخ الدفع</th>
+                        <th>ملاحظات</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    ${payments.map(payment => `
+
+                        <tr>
+
+                            <td>
+                                ${escapeHtml(
+                                    subMap.get(
+                                        Number(
+                                            payment.subscription_id
+                                        )
+                                    ) || "—"
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    money(
+                                        payment.amount,
+                                        payment.currency ||
+                                        currency
+                                    )
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    payment.paid_month ||
+                                    "—"
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    formatDate(
+                                        payment.payment_date
+                                    )
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    payment.notes ||
+                                    "—"
+                                )}
+                            </td>
+
+                        </tr>
+
+                    `).join("")}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
+}
+
+function renderInvoices(
+    invoices,
+    invoiceItems,
+    currency
+){
+
+    const container =
+        document.getElementById("invoices");
+
+    if(!invoices.length){
+
+        container.innerHTML = `
+            <div class="empty">
+                لا توجد فواتير مسجلة حتى الآن.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        invoices.map(invoice => {
+
+            const items =
+                invoiceItems.filter(
+                    item =>
+                        Number(item.invoice_id) ===
+                        Number(invoice.id)
+                );
+
+            const itemsHtml =
+                items.length
+                    ? `
+                        <div style="
+                            margin-top:15px;
+                            color:#aaa;
+                            font-size:12px;
+                        ">
+                            ${items.map(item => `
+                                <div style="
+                                    padding:6px 0;
+                                ">
+                                    ${escapeHtml(
+                                        item.service_name
+                                    )}
+                                    —
+                                    ${escapeHtml(
+                                        money(
+                                            item.total,
+                                            invoice.currency ||
+                                            currency
+                                        )
+                                    )}
+                                </div>
+                            `).join("")}
+                        </div>
+                    `
+                    : "";
+
+            return `
+                <div class="card" style="margin-bottom:12px;">
+
+                    <div class="invoice">
+
+                        <div>
+
+                            <div class="invoice-number">
+                                ${
+                                    escapeHtml(
+                                        invoice.invoice_number ||
+                                        "فاتورة"
+                                    )
+                                }
+                            </div>
+
+                            <div class="invoice-date">
+                                تاريخ الفاتورة:
+                                ${
+                                    escapeHtml(
+                                        formatDate(
+                                            invoice.invoice_date
+                                        )
+                                    )
+                                }
+                            </div>
+
+                            ${
+                                invoice.due_date
+                                    ? `
+                                    <div class="invoice-date">
+                                        الاستحقاق:
+                                        ${
+                                            escapeHtml(
+                                                formatDate(
+                                                    invoice.due_date
+                                                )
+                                            )
+                                        }
+                                    </div>
+                                    `
+                                    : ""
+                            }
+
+                            ${itemsHtml}
+
+                        </div>
+
+                        <div>
+
+                            <div class="invoice-total">
+                                ${
+                                    escapeHtml(
+                                        money(
+                                            invoice.total,
+                                            invoice.currency ||
+                                            currency
+                                        )
+                                    )
+                                }
+                            </div>
+
+                            <div class="invoice-status">
+                                الحالة:
+                                ${
+                                    escapeHtml(
+                                        invoice.status ||
+                                        "غير محدد"
+                                    )
+                                }
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+function renderFollowups(followups){
+
+    const container =
+        document.getElementById("followups");
+
+    if(!followups.length){
+
+        container.innerHTML = `
+            <div class="empty">
+                لا توجد متابعات حالياً.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        followups.map(followup => {
+
+            return `
+                <div class="card" style="margin-bottom:12px;">
+
+                    <div class="followup">
+
+                        <div class="followup-date">
+                            ${escapeHtml(
+                                formatDate(
+                                    followup.followup_date
+                                )
+                            )}
+                        </div>
+
+                        <div>
+
+                            <div class="followup-title">
+                                ${
+                                    escapeHtml(
+                                        followup.title ||
+                                        followup.followup_type ||
+                                        "متابعة"
+                                    )
+                                }
+                            </div>
+
+                            <div class="followup-notes">
+                                ${
+                                    escapeHtml(
+                                        followup.notes ||
+                                        ""
+                                    )
+                                }
+                            </div>
+
+                            <div class="followup-notes">
+                                الحالة:
+                                ${
+                                    escapeHtml(
+                                        followup.status ||
+                                        "pending"
+                                    )
+                                }
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+loadPortal();
+
+</script>
+
+</body>
+</html>
