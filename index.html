@@ -4278,33 +4278,63 @@ onclick="openTraderPortal(${trader.id})">
 
 }
 
-    function openTraderPortal(traderId){
+async function openTraderPortal(traderId){
 
-    const trader =
-    getTrader(traderId);
+    try{
 
-    if(!trader){
+        const { data, error } = await db
+            .from("trader_portal_tokens")
+            .select("token")
+            .eq("trader_id", traderId)
+            .eq("is_active", true)
+            .limit(1)
+            .maybeSingle();
+
+        if(error){
+
+            console.error(error);
+
+            showToast(
+                "تعذر الحصول على رابط التاجر",
+                true
+            );
+
+            return;
+        }
+
+        if(!data || !data.token){
+
+            showToast(
+                "لا يوجد رابط لهذا التاجر",
+                true
+            );
+
+            return;
+        }
+
+        const portalUrl =
+            new URL(
+                "trader.html",
+                window.location.href
+            ).href
+            + "?token="
+            + encodeURIComponent(data.token);
+
+        window.open(
+            portalUrl,
+            "_blank"
+        );
+
+    }catch(error){
+
+        console.error(error);
 
         showToast(
-            "التاجر غير موجود",
+            "حدث خطأ أثناء فتح رابط التاجر",
             true
         );
 
-        return;
     }
-
-    const portalUrl =
-    new URL(
-        "trader.html",
-        window.location.href
-    ).href
-    + "?trader="
-    + encodeURIComponent(traderId);
-
-    window.open(
-        portalUrl,
-        "_blank"
-    );
 
 }
     
