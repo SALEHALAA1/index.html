@@ -3272,7 +3272,21 @@ function renderSubscriptions(){
                 `
                 :""
                 }
+${
+customer
+?
+`
+<button
+class="mini-btn"
+title="رابط العميل"
+onclick="openCustomerPortal(${customer.id})">
 
+<i class="fa-solid fa-link"></i>
+
+</button>
+`
+:""
+}
 
                 <button
                 class="mini-btn"
