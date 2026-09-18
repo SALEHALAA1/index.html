@@ -3518,7 +3518,306 @@ onclick="openCustomerPortal(${customer.id})">
 ========================================= */
 
 async function openSubscriptionModal(id=null){
+    
+function subscriptionServiceRowHTML(
+    index,
+    selectedService="",
+    price=0
+){
 
+    return `
+
+        <div
+            class="subscription-service-row"
+            data-service-row="${index}"
+
+            style="
+                display:grid;
+                grid-template-columns:
+                    minmax(180px,2fr)
+                    minmax(120px,1fr)
+                    50px;
+
+                gap:8px;
+                align-items:end;
+
+                padding:10px;
+
+                border:1px solid rgba(255,255,255,.08);
+
+                border-radius:10px;
+
+                background:rgba(255,255,255,.02);
+            "
+        >
+
+
+            <!-- الخدمة -->
+
+            <div class="field">
+
+                <label>
+                    الخدمة
+                </label>
+
+
+                <select
+                    class="subscription-service-select"
+
+                    onchange="
+                        updateSubscriptionServicePrice(this)
+                    "
+                >
+
+                    <option value="">
+                        ${t("choose")}
+                    </option>
+
+
+                    ${
+                        state.services
+                        .map(service=>`
+
+                            <option
+                                value="${service.id}"
+
+                                ${
+                                    String(selectedService)
+                                    === String(service.id)
+                                    ? "selected"
+                                    : ""
+                                }
+                            >
+
+                                ${esc(service.service_name)}
+
+                            </option>
+
+                        `)
+                        .join("")
+                    }
+
+                </select>
+
+            </div>
+
+
+            <!-- السعر -->
+
+            <div class="field">
+
+                <label>
+                    السعر
+                </label>
+
+
+                <input
+                    class="subscription-service-price"
+
+                    type="number"
+
+                    step="0.01"
+
+                    min="0"
+
+                    value="${Number(price || 0)}"
+
+                    oninput="
+                        updateSubscriptionTotal()
+                    "
+                >
+
+            </div>
+
+
+            <!-- حذف -->
+
+            <button
+                type="button"
+
+                class="ghost-btn"
+
+                title="حذف الخدمة"
+
+                onclick="
+                    removeSubscriptionServiceRow(this)
+                "
+
+                style="
+                    min-height:42px;
+                    padding:0 10px;
+                "
+            >
+
+                حذف
+
+            </button>
+
+
+        </div>
+
+    `;
+
+}
+
+    function addSubscriptionServiceRow(){
+
+    const container =
+        document.getElementById(
+            "subscriptionServicesContainer"
+        );
+
+
+    if(!container)
+        return;
+
+
+    const index =
+        container.querySelectorAll(
+            ".subscription-service-row"
+        ).length;
+
+
+    container.insertAdjacentHTML(
+
+        "beforeend",
+
+        subscriptionServiceRowHTML(
+            index,
+            "",
+            0
+        )
+
+    );
+
+
+    updateSubscriptionTotal();
+
+}
+    function removeSubscriptionServiceRow(button){
+
+    const container =
+        document.getElementById(
+            "subscriptionServicesContainer"
+        );
+
+
+    if(!container)
+        return;
+
+
+    const rows =
+        container.querySelectorAll(
+            ".subscription-service-row"
+        );
+
+
+    /*
+     * لازم يكون فيه خدمة واحدة على الأقل
+     */
+
+    if(rows.length <= 1){
+
+        showToast(
+            "يجب أن يحتوي الاشتراك على خدمة واحدة على الأقل",
+            true
+        );
+
+        return;
+
+    }
+
+
+    const row =
+        button.closest(
+            ".subscription-service-row"
+        );
+
+
+    if(row){
+
+        row.remove();
+
+    }
+
+
+    updateSubscriptionTotal();
+
+}
+    function updateSubscriptionServicePrice(select){
+
+    const row =
+        select.closest(
+            ".subscription-service-row"
+        );
+
+
+    if(!row)
+        return;
+
+
+    const service =
+        getService(select.value);
+
+
+    if(service){
+
+        const priceInput =
+            row.querySelector(
+                ".subscription-service-price"
+            );
+
+
+        if(priceInput){
+
+            priceInput.value =
+                Number(
+                    service.default_price || 0
+                );
+
+        }
+
+    }
+
+
+    updateSubscriptionTotal();
+
+}
+    function updateSubscriptionTotal(){
+
+    const inputs =
+        document.querySelectorAll(
+            ".subscription-service-price"
+        );
+
+
+    let total = 0;
+
+
+    inputs.forEach(function(input){
+
+        total +=
+            Number(
+                input.value || 0
+            );
+
+    });
+
+
+    const totalInput =
+        document.getElementById(
+            "subTotalFee"
+        );
+
+
+    if(totalInput){
+
+        totalInput.value =
+            total.toFixed(2);
+
+    }
+
+}
     const s =
         id
         ? getSubscription(id)
@@ -3528,12 +3827,16 @@ async function openSubscriptionModal(id=null){
             currency:state.settings.currency||"EGP"
         };
 
+
     let serviceRows = [];
 
+
     /*
-     * لو تعديل اشتراك موجود:
-     * نحاول تحميل الخدمات التابعة له من subscription_services
+     * =========================================
+     * تحميل الخدمات التابعة للاشتراك عند التعديل
+     * =========================================
      */
+
     if(id){
 
         try{
@@ -3545,10 +3848,14 @@ async function openSubscriptionModal(id=null){
                 .eq("subscription_id",id)
                 .order("id",{ascending:true});
 
+
             if(result.error)
                 throw result.error;
 
-            serviceRows = result.data || [];
+
+            serviceRows =
+                result.data || [];
+
 
         }catch(error){
 
@@ -3561,32 +3868,47 @@ async function openSubscriptionModal(id=null){
 
     }
 
+
     /*
-     * لو الاشتراك قديم ومفيش له خدمات في
-     * subscription_services
+     * =========================================
+     * لو الاشتراك قديم وليس له سجلات
+     * في subscription_services
      *
-     * نستخدم الخدمة الموجودة أصلًا في subscriptions
+     * نستخدم بياناته القديمة
+     * =========================================
      */
+
     if(!serviceRows.length){
 
         serviceRows = [
 
             {
+
                 app_service_id:
                     s.app_service_id || "",
 
                 price:
-                    Number(s.monthly_fee || 0),
+                    Number(
+                        s.monthly_fee || 0
+                    ),
 
                 status:
                     s.status || "active",
 
                 notes:""
+
             }
 
         ];
 
     }
+
+
+    /*
+     * =========================================
+     * فتح النافذة
+     * =========================================
+     */
 
     openModal(
 
@@ -3594,11 +3916,15 @@ async function openSubscriptionModal(id=null){
         ? t("edit")
         : t("newSubscription"),
 
+
         `
 
         <div class="form-grid">
 
-            <!-- العميل -->
+
+            <!-- =========================
+                 العميل
+            ========================== -->
 
             <div class="field">
 
@@ -3606,11 +3932,13 @@ async function openSubscriptionModal(id=null){
                     ${t("customer")}
                 </label>
 
+
                 <select id="subCustomer">
 
                     <option value="">
                         ${t("choose")}
                     </option>
+
 
                     ${
                         state.customers
@@ -3618,6 +3946,7 @@ async function openSubscriptionModal(id=null){
 
                             <option
                                 value="${c.id}"
+
                                 ${
                                     Number(s.customer_id)
                                     === Number(c.id)
@@ -3639,13 +3968,16 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- يوم الدفع -->
+            <!-- =========================
+                 يوم الدفع
+            ========================== -->
 
             <div class="field">
 
                 <label>
                     ${t("paymentDay")}
                 </label>
+
 
                 <input
                     id="subPaymentDay"
@@ -3658,7 +3990,9 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- الحالة -->
+            <!-- =========================
+                 الحالة
+            ========================== -->
 
             <div class="field">
 
@@ -3666,11 +4000,13 @@ async function openSubscriptionModal(id=null){
                     ${t("status")}
                 </label>
 
+
                 <select id="subStatus">
 
                     <option value="active">
                         ${t("active")}
                     </option>
+
 
                     <option value="inactive">
                         ${t("inactive")}
@@ -3681,13 +4017,16 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- المنصة -->
+            <!-- =========================
+                 المنصة
+            ========================== -->
 
             <div class="field">
 
                 <label>
                     ${t("platform")}
                 </label>
+
 
                 <input
                     id="subPlatform"
@@ -3697,13 +4036,16 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- الصفحة -->
+            <!-- =========================
+                 الصفحة
+            ========================== -->
 
             <div class="field">
 
                 <label>
                     ${t("page")}
                 </label>
+
 
                 <input
                     id="subPage"
@@ -3713,13 +4055,16 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- رابط الصفحة -->
+            <!-- =========================
+                 رابط الصفحة
+            ========================== -->
 
             <div class="field">
 
                 <label>
                     ${t("pageLink")}
                 </label>
+
 
                 <input
                     id="subPageLink"
@@ -3729,19 +4074,25 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- الخدمات -->
+            <!-- =========================
+                 الخدمات
+            ========================== -->
 
             <div class="field full">
 
-                <label style="
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                ">
+                <label
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        gap:10px;
+                    "
+                >
 
                     <span>
                         الخدمات داخل الاشتراك
                     </span>
+
 
                     <button
                         type="button"
@@ -3749,9 +4100,7 @@ async function openSubscriptionModal(id=null){
                         onclick="addSubscriptionServiceRow()"
                     >
 
-                        <i class="fa-solid fa-plus"></i>
-
-                        إضافة خدمة أخرى
+                        + إضافة خدمة أخرى
 
                     </button>
 
@@ -3760,6 +4109,7 @@ async function openSubscriptionModal(id=null){
 
                 <div
                     id="subscriptionServicesContainer"
+
                     style="
                         display:flex;
                         flex-direction:column;
@@ -3770,14 +4120,13 @@ async function openSubscriptionModal(id=null){
 
                     ${
                         serviceRows
-                        .map((row,index)=>
-
-                            subscriptionServiceRowHTML(
-                                index,
-                                row.app_service_id,
-                                row.price
-                            )
-
+                        .map(
+                            (row,index)=>
+                                subscriptionServiceRowHTML(
+                                    index,
+                                    row.app_service_id,
+                                    row.price
+                                )
                         )
                         .join("")
                     }
@@ -3787,13 +4136,16 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- الإجمالي -->
+            <!-- =========================
+                 الإجمالي
+            ========================== -->
 
             <div class="field">
 
                 <label>
                     إجمالي الاشتراك
                 </label>
+
 
                 <input
                     id="subTotalFee"
@@ -3806,7 +4158,9 @@ async function openSubscriptionModal(id=null){
             </div>
 
 
-            <!-- ملاحظات -->
+            <!-- =========================
+                 الملاحظات
+            ========================== -->
 
             <div class="field full">
 
@@ -3814,15 +4168,18 @@ async function openSubscriptionModal(id=null){
                     ${t("notes")}
                 </label>
 
+
                 <textarea
                     id="subNotes"
                 >${esc(s.notes || "")}</textarea>
 
             </div>
 
+
         </div>
 
         `,
+
 
         `
 
@@ -3834,6 +4191,7 @@ async function openSubscriptionModal(id=null){
             ${t("cancel")}
 
         </button>
+
 
         <button
             class="gold-btn"
@@ -3850,18 +4208,14 @@ async function openSubscriptionModal(id=null){
 
 
     /*
-     * تحديث الإجمالي
-     */
-
-    updateSubscriptionTotal();
-
-
-    /*
      * تحديد الحالة
      */
 
     const statusElement =
-        document.getElementById("subStatus");
+        document.getElementById(
+            "subStatus"
+        );
+
 
     if(statusElement){
 
@@ -3870,77 +4224,32 @@ async function openSubscriptionModal(id=null){
 
     }
 
+
+    /*
+     * حساب إجمالي الخدمات
+     */
+
+    updateSubscriptionTotal();
+
 }
 
 async function saveSubscription(id){
 
-    const data={
+    /*
+     * =========================================
+     * الحصول على العميل
+     * =========================================
+     */
 
-        customer_id:
+    const customerId =
         Number(
             document.getElementById(
                 "subCustomer"
             ).value
-        ),
+        );
 
-        app_service_id:
-        document.getElementById(
-            "subService"
-        ).value
-        ?
-        Number(
-            document.getElementById(
-                "subService"
-            ).value
-        )
-        :
-        null,
 
-        platform:
-        document.getElementById(
-            "subPlatform"
-        ).value,
-
-        page_name:
-        document.getElementById(
-            "subPage"
-        ).value,
-
-        monthly_fee:
-        Number(
-            document.getElementById(
-                "subFee"
-            ).value||0
-        ),
-
-        payment_day:
-        Number(
-            document.getElementById(
-                "subPaymentDay"
-            ).value||1
-        ),
-
-        status:
-        document.getElementById(
-            "subStatus"
-        ).value,
-
-        page_link:
-        document.getElementById(
-            "subPageLink"
-        ).value,
-
-        notes:
-        document.getElementById(
-            "subNotes"
-        ).value,
-
-        currency:
-        state.settings.currency||"EGP"
-
-    };
-
-    if(!data.customer_id){
+    if(!customerId){
 
         showToast(
             t("customer"),
@@ -3951,37 +4260,398 @@ async function saveSubscription(id){
 
     }
 
+
+    /*
+     * =========================================
+     * الحصول على كل صفوف الخدمات
+     * =========================================
+     */
+
+    const serviceRows =
+        Array.from(
+            document.querySelectorAll(
+                ".subscription-service-row"
+            )
+        );
+
+
+    const services = [];
+
+
+    /*
+     * =========================================
+     * قراءة الخدمات
+     * =========================================
+     */
+
+    for(const row of serviceRows){
+
+        const serviceSelect =
+            row.querySelector(
+                ".subscription-service-select"
+            );
+
+
+        const priceInput =
+            row.querySelector(
+                ".subscription-service-price"
+            );
+
+
+        const serviceId =
+            serviceSelect
+            ? Number(
+                serviceSelect.value
+            )
+            : null;
+
+
+        const price =
+            priceInput
+            ? Number(
+                priceInput.value || 0
+            )
+            : 0;
+
+
+        /*
+         * لو الصف فاضي نتجاهله
+         */
+
+        if(!serviceId)
+            continue;
+
+
+        services.push({
+
+            app_service_id:
+                serviceId,
+
+            price:
+                price
+
+        });
+
+    }
+
+
+    /*
+     * =========================================
+     * لازم خدمة واحدة على الأقل
+     * =========================================
+     */
+
+    if(!services.length){
+
+        showToast(
+            "اختر خدمة واحدة على الأقل",
+            true
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * منع تكرار نفس الخدمة
+     * =========================================
+     */
+
+    const serviceIds =
+        services.map(
+            x =>
+                x.app_service_id
+        );
+
+
+    const uniqueServiceIds =
+        new Set(
+            serviceIds
+        );
+
+
+    if(
+        uniqueServiceIds.size
+        !== serviceIds.length
+    ){
+
+        showToast(
+            "لا يمكن إضافة نفس الخدمة مرتين داخل الاشتراك",
+            true
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =========================================
+     * أول خدمة
+     *
+     * نحفظها في subscriptions.app_service_id
+     * للحفاظ على توافق النظام القديم
+     * =========================================
+     */
+
+    const firstService =
+        services[0];
+
+
+    /*
+     * =========================================
+     * حساب إجمالي الخدمات
+     * =========================================
+     */
+
+    const totalFee =
+        services.reduce(
+
+            function(total,item){
+
+                return total +
+                    Number(
+                        item.price || 0
+                    );
+
+            },
+
+            0
+
+        );
+
+
+    /*
+     * =========================================
+     * بيانات الاشتراك الأساسي
+     * =========================================
+     */
+
+    const data = {
+
+        customer_id:
+            customerId,
+
+
+        app_service_id:
+            firstService.app_service_id,
+
+
+        platform:
+            document.getElementById(
+                "subPlatform"
+            ).value,
+
+
+        page_name:
+            document.getElementById(
+                "subPage"
+            ).value,
+
+
+        monthly_fee:
+            totalFee,
+
+
+        payment_day:
+            Number(
+                document.getElementById(
+                    "subPaymentDay"
+                ).value || 1
+            ),
+
+
+        status:
+            document.getElementById(
+                "subStatus"
+            ).value,
+
+
+        page_link:
+            document.getElementById(
+                "subPageLink"
+            ).value,
+
+
+        notes:
+            document.getElementById(
+                "subNotes"
+            ).value,
+
+
+        currency:
+            state.settings.currency || "EGP"
+
+    };
+
+
     try{
 
-        let result;
+        let subscriptionId;
+
+
+        /*
+         * =========================================
+         * تعديل اشتراك موجود
+         * =========================================
+         */
 
         if(id){
 
-            result=
-            await db
-            .from("subscriptions")
-            .update(data)
-            .eq("id",id);
+            const result =
+                await db
+                .from("subscriptions")
+                .update(data)
+                .eq("id",id)
+                .select()
+                .single();
 
-        }else{
 
-            result=
-            await db
-            .from("subscriptions")
-            .insert(data);
+            if(result.error)
+                throw result.error;
+
+
+            subscriptionId =
+                result.data.id;
+
+
+            /*
+             * حذف الخدمات التابعة القديمة
+             */
+
+            const deleteServices =
+                await db
+                .from("subscription_services")
+                .delete()
+                .eq(
+                    "subscription_id",
+                    subscriptionId
+                );
+
+
+            if(deleteServices.error)
+                throw deleteServices.error;
 
         }
 
-        if(result.error)
-            throw result.error;
+
+        /*
+         * =========================================
+         * إنشاء اشتراك جديد
+         * =========================================
+         */
+
+        else{
+
+            const result =
+                await db
+                .from("subscriptions")
+                .insert(data)
+                .select()
+                .single();
+
+
+            if(result.error)
+                throw result.error;
+
+
+            subscriptionId =
+                result.data.id;
+
+        }
+
+
+        /*
+         * =========================================
+         * تجهيز الخدمات التابعة للاشتراك
+         * =========================================
+         */
+
+        const serviceData =
+            services.map(
+
+                function(service){
+
+                    return {
+
+                        subscription_id:
+                            subscriptionId,
+
+
+                        app_service_id:
+                            service.app_service_id,
+
+
+                        price:
+                            service.price,
+
+
+                        status:
+                            data.status,
+
+
+                        notes:
+                            data.notes || ""
+
+                    };
+
+                }
+
+            );
+
+
+        /*
+         * =========================================
+         * حفظ الخدمات
+         * =========================================
+         */
+
+        const servicesResult =
+            await db
+            .from("subscription_services")
+            .insert(
+                serviceData
+            );
+
+
+        if(servicesResult.error)
+            throw servicesResult.error;
+
+
+        /*
+         * =========================================
+         * إغلاق النافذة
+         * =========================================
+         */
 
         closeModal();
 
+
+        /*
+         * تحديث البيانات
+         */
+
         await refresh();
 
-        showToast(t("saved"));
+
+        /*
+         * رسالة نجاح
+         */
+
+        showToast(
+            t("saved")
+        );
+
 
     }catch(error){
+
+        console.error(
+            "saveSubscription error:",
+            error
+        );
+
 
         showToast(
             error.message,
@@ -3991,7 +4661,6 @@ async function saveSubscription(id){
     }
 
 }
-
 
 async function deleteSubscription(id){
 
