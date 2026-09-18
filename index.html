@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
-    <title>BADGEIFY V2 - Management System</title>
+    <title>BADGEIFY - V3</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase Client v2 -->
@@ -31,7 +31,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
-                <input type="text" id="password" value="12345678"
+                <input type="password" id="password" value="12345678"
                     class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white"
                     placeholder="••••••••">
             </div>
@@ -91,36 +91,34 @@
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
 
-            btn.textContent = 'جاري الفحص...';
+            if (!email || !password) {
+                errorMsg.textContent = 'من فضلك أدخل البيانات الكاملة';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            btn.textContent = 'جاري التحقق...';
             errorMsg.classList.add('hidden');
 
             try {
-                console.log("Starting query to Supabase for:", email);
-                
-                const { data, error, status } = await db
+                const { data, error } = await db
                     .from('admins')
                     .select('*')
                     .eq('email', email)
                     .eq('password', password);
 
-                console.log("Supabase Response Status:", status);
-                console.log("Supabase Response Data:", data);
-                console.log("Supabase Response Error:", error);
-
-                if (error) {
-                    throw new Error(error.message);
-                }
+                if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    throw new Error('لا يوجد مطابقة للبيانات في الجدول (تأكد من إدخال البيانات في قاعدة البيانات)');
+                    throw new Error('البريد أو كلمة المرور غير صحيحة في جدول admins');
                 }
 
                 localStorage.setItem('badgeify_logged', 'true');
                 showDashboard();
 
             } catch (err) {
-                console.error("Catch Error:", err);
-                errorMsg.textContent = 'خطأ تقني: ' + err.message;
+                console.error("Login Error:", err);
+                errorMsg.textContent = 'خطأ: ' + err.message;
                 errorMsg.classList.remove('hidden');
                 btn.textContent = 'دخول للنظام';
             }
