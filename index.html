@@ -2553,46 +2553,43 @@ function renderRecentPayments(){
 
 function renderCustomers(){
 
-    const search=
-    document.getElementById(
-        "customerSearch"
-    )?.value
-    ?.toLowerCase()||"";
+    const search =
+        document.getElementById("customerSearch")
+        ?.value
+        ?.toLowerCase() || "";
 
-    const rows=
-    state.customers.filter(function(c){
+    const rows =
+        state.customers.filter(function(c){
 
-        return (
-            c.client_name+
-            " "+
-            (c.phone||"")
-        )
-        .toLowerCase()
-        .includes(search);
+            return (
+                String(c.client_name || "") +
+                " " +
+                String(c.phone || "")
+            )
+            .toLowerCase()
+            .includes(search);
 
-    });
+        });
 
-    document.getElementById("content")
-    .innerHTML=`
+    document.getElementById("content").innerHTML = `
 
     <div class="page-head">
 
         <div>
-
             <h1>${t("customers")}</h1>
 
             <p>
-            ${state.customers.length}
+                ${state.customers.length}
             </p>
-
         </div>
 
         <button
-        class="gold-btn"
-        onclick="openCustomerModal()">
+            class="gold-btn"
+            onclick="openCustomerModal()">
 
-        <i class="fa-solid fa-plus"></i>
-        ${t("add")}
+            <i class="fa-solid fa-plus"></i>
+
+            ${t("add")}
 
         </button>
 
@@ -2606,10 +2603,10 @@ function renderCustomers(){
             <div class="search">
 
                 <input
-                id="customerSearch"
-                value="${esc(search)}"
-                placeholder="${t("name")} / ${t("phone")}"
-                oninput="renderCustomers()"
+                    id="customerSearch"
+                    value="${esc(search)}"
+                    placeholder="${t("name")} / ${t("phone")}"
+                    oninput="renderCustomers()"
                 >
 
             </div>
@@ -2617,135 +2614,308 @@ function renderCustomers(){
 
             <div class="table-wrap">
 
-            <table class="table">
+                <table class="table">
 
-            <thead>
+                    <thead>
 
-            <tr>
+                        <tr>
 
-                <th>${t("name")}</th>
-                <th>${t("phone")}</th>
-                <th>${t("trader")}</th>
-                <th>${t("status")}</th>
-                <th>${t("actions")}</th>
+                            <th>
+                                ${t("name")}
+                            </th>
 
-            </tr>
+                            <th>
+                                ${t("phone")}
+                            </th>
 
-            </thead>
+                            <th>
+                                ${t("trader")}
+                            </th>
 
-            <tbody>
+                            <th>
+                                الاشتراكات
+                            </th>
 
-            ${
-            rows.length
-            ?
-            rows.map(function(c){
+                            <th>
+                                ${t("status")}
+                            </th>
 
-                return `
+                            <th>
+                                ${t("actions")}
+                            </th>
 
-                <tr>
+                        </tr>
 
-                    <td
-                    onclick="openCustomerProfile(${c.id})"
-                    style="cursor:pointer">
+                    </thead>
 
-                    <b>
-                    ${esc(c.client_name)}
-                    </b>
 
-                    </td>
-
-                    <td>
-                    ${esc(c.phone||"-")}
-                    </td>
-
-                    <td>
-                    ${esc(
-                        getTrader(
-                            c.trader_id
-                        )?.trader_name||"-"
-                    )}
-                    </td>
-
-                    <td>
-
-                    <span class="badge
-                    ${c.status==="active"
-                    ?"paid"
-                    :"inactive"}">
+                    <tbody>
 
                     ${
-                        c.status==="active"
-                        ?t("active")
-                        :t("inactive")
-                    }
-
-                    </span>
-
-                    </td>
-
-                    <td>
-
-                    <div class="actions">
-
-                    ${
-                    c.phone
+                    rows.length
                     ?
-                    `
-                    <button
-                    class="mini-btn wa"
-                    onclick="sendCustomerWhatsApp(${c.id})">
 
-                    <i class="fa-brands fa-whatsapp"></i>
+                    rows.map(function(c){
 
-                    </button>
+                        /*
+                         * جميع اشتراكات العميل
+                         */
+                        const customerSubscriptions =
+                            state.subscriptions.filter(function(s){
+
+                                return Number(s.customer_id)
+                                    === Number(c.id);
+
+                            });
+
+
+                        /*
+                         * عدد الاشتراكات النشطة
+                         */
+                        const activeSubscriptions =
+                            customerSubscriptions.filter(function(s){
+
+                                return s.status === "active";
+
+                            }).length;
+
+
+                        return `
+
+                        <tr>
+
+                            <!-- اسم العميل -->
+
+                            <td
+                                onclick="openCustomerProfile(${c.id})"
+                                style="
+                                    cursor:pointer;
+                                    color:var(--gold2);
+                                "
+                            >
+
+                                <b>
+                                    ${esc(c.client_name)}
+                                </b>
+
+                                <div
+                                    class="muted"
+                                    style="font-size:9px;margin-top:3px"
+                                >
+                                    اضغط لفتح حساب العميل
+                                </div>
+
+                            </td>
+
+
+                            <!-- الهاتف -->
+
+                            <td>
+
+                                ${esc(c.phone || "-")}
+
+                            </td>
+
+
+                            <!-- التاجر -->
+
+                            <td>
+
+                                ${esc(
+                                    getTrader(c.trader_id)
+                                    ?.trader_name || "-"
+                                )}
+
+                            </td>
+
+
+                            <!-- الاشتراكات -->
+
+                            <td>
+
+                                <div
+                                    style="
+                                        display:flex;
+                                        align-items:center;
+                                        gap:6px;
+                                        flex-wrap:wrap;
+                                    "
+                                >
+
+                                    <span
+                                        class="badge due"
+                                    >
+
+                                        ${customerSubscriptions.length}
+                                        اشتراك
+
+                                    </span>
+
+
+                                    ${
+                                        activeSubscriptions > 0
+                                        ?
+
+                                        `
+                                        <span
+                                            class="badge paid"
+                                        >
+
+                                            ${activeSubscriptions}
+                                            نشط
+
+                                        </span>
+                                        `
+
+                                        :
+
+                                        ""
+                                    }
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- الحالة -->
+
+                            <td>
+
+                                <span
+                                    class="badge
+                                    ${
+                                        c.status === "active"
+                                        ? "paid"
+                                        : "inactive"
+                                    }"
+                                >
+
+                                    ${
+                                        c.status === "active"
+                                        ? t("active")
+                                        : t("inactive")
+                                    }
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- الإجراءات -->
+
+                            <td>
+
+                                <div class="actions">
+
+
+                                    ${
+                                        c.phone
+                                        ?
+
+                                        `
+                                        <button
+                                            class="mini-btn wa"
+                                            title="واتساب"
+                                            onclick="
+                                                event.stopPropagation();
+                                                sendCustomerWhatsApp(${c.id})
+                                            "
+                                        >
+
+                                            <i
+                                                class="fa-brands fa-whatsapp"
+                                            ></i>
+
+                                        </button>
+                                        `
+
+                                        :
+
+                                        ""
+                                    }
+
+
+                                    <button
+                                        class="mini-btn"
+                                        title="فتح حساب العميل"
+                                        onclick="
+                                            event.stopPropagation();
+                                            openCustomerProfile(${c.id})
+                                        "
+                                    >
+
+                                        <i
+                                            class="fa-solid fa-folder-open"
+                                        ></i>
+
+                                    </button>
+
+
+                                    <button
+                                        class="mini-btn"
+                                        title="تعديل العميل"
+                                        onclick="
+                                            event.stopPropagation();
+                                            openCustomerModal(${c.id})
+                                        "
+                                    >
+
+                                        <i
+                                            class="fa-solid fa-pen"
+                                        ></i>
+
+                                    </button>
+
+
+                                    <button
+                                        class="mini-btn"
+                                        title="حذف العميل"
+                                        onclick="
+                                            event.stopPropagation();
+                                            deleteCustomer(${c.id})
+                                        "
+                                    >
+
+                                        <i
+                                            class="fa-solid fa-trash"
+                                        ></i>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        `;
+
+                    }).join("")
+
+                    :
+
                     `
-                    :""
+
+                    <tr>
+
+                        <td colspan="6">
+
+                            <div class="empty">
+
+                                ${t("noData")}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    `
                     }
 
-                    <button
-                    class="mini-btn"
-                    onclick="openCustomerModal(${c.id})">
+                    </tbody>
 
-                    <i class="fa-solid fa-pen"></i>
-
-                    </button>
-
-                    <button
-                    class="mini-btn"
-                    onclick="deleteCustomer(${c.id})">
-
-                    <i class="fa-solid fa-trash"></i>
-
-                    </button>
-
-                    </div>
-
-                    </td>
-
-                </tr>
-
-                `;
-
-            }).join("")
-            :
-            `
-            <tr>
-
-                <td colspan="5">
-
-                    <div class="empty">
-                    ${t("noData")}
-                    </div>
-
-                </td>
-
-            </tr>
-            `
-            }
-
-            </tbody>
-
-            </table>
+                </table>
 
             </div>
 
@@ -2754,9 +2924,7 @@ function renderCustomers(){
     </div>
 
     `;
-
 }
-
 
 function sendCustomerWhatsApp(customerId){
 
