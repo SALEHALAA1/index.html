@@ -4278,15 +4278,34 @@ onclick="openTraderPortal(${trader.id})">
 
 }
 
-    function openTraderPortal(traderId){
+async function openTraderPortal(traderId){
 
-    const trader =
-    getTrader(traderId);
+    const { data, error } =
+    await db
+    .from("trader_portal_tokens")
+    .select("token,is_active")
+    .eq("trader_id", traderId)
+    .eq("is_active", true)
+    .order("id", { ascending:false })
+    .limit(1)
+    .maybeSingle();
 
-    if(!trader){
+    if(error){
+
+        console.error(error);
 
         showToast(
-            "التاجر غير موجود",
+            "حدث خطأ أثناء الحصول على رابط التاجر",
+            true
+        );
+
+        return;
+    }
+
+    if(!data){
+
+        showToast(
+            "لا يوجد رابط لهذا التاجر حتى الآن",
             true
         );
 
@@ -4298,8 +4317,8 @@ onclick="openTraderPortal(${trader.id})">
         "trader.html",
         window.location.href
     ).href
-    + "?trader="
-    + encodeURIComponent(traderId);
+    + "?token="
+    + encodeURIComponent(data.token);
 
     window.open(
         portalUrl,
@@ -4307,193 +4326,6 @@ onclick="openTraderPortal(${trader.id})">
     );
 
 }
-    
-/* =========================================
-   TRADER MODAL
-========================================= */
-
-function openTraderModal(id=null){
-
-    const trader=
-    id
-    ?getTrader(id)
-    :{};
-
-    openModal(
-
-        id?t("edit"):t("newTrader"),
-
-        `
-
-        <div class="form-grid">
-
-            <div class="field">
-
-                <label>
-                ${t("name")}
-                </label>
-
-                <input
-                id="traderName"
-                value="${esc(trader.trader_name||"")}"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("phone")}
-                </label>
-
-                <input
-                id="traderPhone"
-                value="${esc(trader.phone||"")}"
-                >
-
-            </div>
-
-
-            <div class="field full">
-
-                <label>
-                ${t("notes")}
-                </label>
-
-                <textarea
-                id="traderNotes"
-                >${esc(trader.notes||"")}</textarea>
-
-            </div>
-
-        </div>
-
-        `,
-
-        `
-
-        <button
-        class="ghost-btn"
-        onclick="closeModal()">
-
-        ${t("cancel")}
-
-        </button>
-
-        <button
-        class="gold-btn"
-        onclick="saveTrader(${id||"null"})">
-
-        ${t("save")}
-
-        </button>
-
-        `
-
-    );
-
-}
-
-
-async function saveTrader(id){
-
-    const data={
-
-        trader_name:
-        document.getElementById(
-            "traderName"
-        ).value.trim(),
-
-        phone:
-        document.getElementById(
-            "traderPhone"
-        ).value,
-
-        notes:
-        document.getElementById(
-            "traderNotes"
-        ).value
-
-    };
-
-    if(!data.trader_name)
-        return;
-
-    try{
-
-        let result;
-
-        if(id){
-
-            result=
-            await db
-            .from("traders")
-            .update(data)
-            .eq("id",id);
-
-        }else{
-
-            result=
-            await db
-            .from("traders")
-            .insert(data);
-
-        }
-
-        if(result.error)
-            throw result.error;
-
-        closeModal();
-
-        await refresh();
-
-        showToast(t("saved"));
-
-    }catch(error){
-
-        showToast(
-            error.message,
-            true
-        );
-
-    }
-
-}
-
-
-async function deleteTrader(id){
-
-    if(!confirm("Delete trader?"))
-        return;
-
-    try{
-
-        const result=
-        await db
-        .from("traders")
-        .delete()
-        .eq("id",id);
-
-        if(result.error)
-            throw result.error;
-
-        await refresh();
-
-        showToast(t("deleted"));
-
-    }catch(error){
-
-        showToast(
-            error.message,
-            true
-        );
-
-    }
-
-}
-
-
 /* =========================================
    TRADER ACCOUNT
 ========================================= */
