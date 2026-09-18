@@ -2685,41 +2685,45 @@ function renderCustomers(){
 
                     <td>
 
-                    <div class="actions">
+                   <div class="actions">
 
-                    ${
-                    c.phone
-                    ?
-                    `
-                    <button
-                    class="mini-btn wa"
-                    onclick="sendCustomerWhatsApp(${c.id})">
+    <button
+    class="mini-btn"
+    onclick="openTraderAccount(${trader.id})">
 
-                    <i class="fa-brands fa-whatsapp"></i>
+    ${t("open")}
 
-                    </button>
-                    `
-                    :""
-                    }
+    </button>
 
-                    <button
-                    class="mini-btn"
-                    onclick="openCustomerModal(${c.id})">
 
-                    <i class="fa-solid fa-pen"></i>
+    <button
+    class="mini-btn"
+    title="رابط بوابة التاجر"
+    onclick="openTraderPortal(${trader.id})">
 
-                    </button>
+    <i class="fa-solid fa-link"></i>
 
-                    <button
-                    class="mini-btn"
-                    onclick="deleteCustomer(${c.id})">
+    </button>
 
-                    <i class="fa-solid fa-trash"></i>
 
-                    </button>
+    <button
+    class="mini-btn"
+    onclick="openTraderModal(${trader.id})">
 
-                    </div>
+    <i class="fa-solid fa-pen"></i>
 
+    </button>
+
+
+    <button
+    class="mini-btn"
+    onclick="deleteTrader(${trader.id})">
+
+    <i class="fa-solid fa-trash"></i>
+
+    </button>
+
+</div>
                     </td>
 
                 </tr>
