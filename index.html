@@ -33,7 +33,7 @@
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col">
 
-    <!-- شاشة تسجيل الدخول (فارغة تماماً وآمنة) -->
+    <!-- شاشة تسجيل الدخول -->
     <div id="login-screen" class="fixed inset-0 bg-zinc-950 flex items-center justify-center z-50 p-4">
         <div class="w-full max-w-md bg-zinc-900 border gold-border p-8 rounded-2xl shadow-2xl relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-gold/10 rounded-full blur-2xl"></div>
@@ -46,14 +46,14 @@
             <div class="space-y-5">
                 <div>
                     <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase">البريد الإلكتروني</label>
-                    <input type="email" id="email" 
+                    <input type="email" id="email" autocomplete="off"
                         class="w-full px-4 py-3 bg-zinc-950 border gold-border rounded-xl focus:ring-2 focus:ring-gold focus:outline-none text-white text-sm"
                         placeholder="أدخل البريد الإلكتروني...">
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase">كلمة المرور</label>
-                    <input type="password" id="password" 
+                    <input type="password" id="password" autocomplete="new-password"
                         class="w-full px-4 py-3 bg-zinc-950 border gold-border rounded-xl focus:ring-2 focus:ring-gold focus:outline-none text-white text-sm"
                         placeholder="أدخل كلمة المرور...">
                 </div>
@@ -91,7 +91,6 @@
             </div>
         </header>
 
-        <!-- التنقل السفلي للموبايل -->
         <div class="md:hidden bg-zinc-900 border-t gold-border fixed bottom-0 left-0 right-0 z-40 flex justify-around p-3 text-xs">
             <button onclick="switchTab('dashboard')" class="mob-nav text-gold flex flex-col items-center gap-1" data-tab="dashboard"><i class="fa-solid fa-chart-pie"><span>الرئيسية</span></i></button>
             <button onclick="switchTab('clients')" class="mob-nav text-zinc-400 flex flex-col items-center gap-1" data-tab="clients"><i class="fa-solid fa-users"><span>العملاء</span></i></button>
@@ -101,7 +100,6 @@
         </div>
 
         <main class="flex-1 p-4 md:p-8 pb-20 md:pb-8 max-w-7xl mx-auto w-full">
-            <!-- الرئيسية -->
             <section id="tab-dashboard" class="tab-content space-y-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
@@ -142,7 +140,6 @@
                 </div>
             </section>
 
-            <!-- العملاء -->
             <section id="tab-clients" class="tab-content hidden space-y-6">
                 <div class="flex flex-col md:flex-row justify-between gap-4 items-center">
                     <div class="w-full md:w-96 relative">
@@ -176,7 +173,6 @@
                 </div>
             </section>
 
-            <!-- التحصيل -->
             <section id="tab-collection" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
                     <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-wallet ml-2 text-gold"></i>متابعة وتحصيل الاشتراكات</h2>
@@ -199,7 +195,6 @@
                 </div>
             </section>
 
-            <!-- تجديد البيدجات -->
             <section id="tab-renewals" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
                     <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-calendar-days ml-2 text-gold"></i>مواعيد تجديد البيدجات المستقلة</h2>
@@ -221,7 +216,6 @@
                 </div>
             </section>
 
-            <!-- سجل المدفوعات -->
             <section id="tab-payments" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
                     <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-receipt ml-2 text-gold"></i>سجل المدفوعات الشامل</h2>
@@ -331,14 +325,13 @@
         </div>
     </div>
 
-    <!-- السكريبت البرمجي للتحقق من الإيميل والباسورد المخصصين -->
+    <!-- السكريبت البرمجي -->
     <script>
         const SUPABASE_URL = "https://rsvzachgbqsucqgrwguv.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
 
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // البيانات المعتمدة الخاصة بك
         const ADMIN_EMAIL = "salehalaa01551096629@gmail.com";
         const ADMIN_PASS = "F775DB0A09";
 
@@ -346,7 +339,6 @@
         let paymentsData = [];
 
         window.addEventListener('DOMContentLoaded', () => {
-            // التحقق من الجلسة المخزنة محلياً لعدم إعادة كتابة الدخول كل مرة
             if (localStorage.getItem('badgeify_logged') === 'true') {
                 showApp();
                 loadAllData();
@@ -357,7 +349,6 @@
             const emailInput = document.getElementById('email').value.trim();
             const passInput = document.getElementById('password').value.trim();
             const errorMsg = document.getElementById('login-error');
-            const btn = document.getElementById('login-btn');
 
             errorMsg.classList.add('hidden');
 
@@ -657,7 +648,7 @@
                 <div class="col-span-2"><span class="text-zinc-500 block">ملاحظات:</span> <span class="text-zinc-300">${client.notes || 'لا توجد'}</span></div>
             `;
 
-            const clientPayments = paymentsData.filter(p => p.client_id === client.id);
+            const clientPayments = paymentsData.payments || paymentsData.filter(p => p.client_id === client.id);
             document.getElementById('det-payments-body').innerHTML = clientPayments.length ? clientPayments.map(p => `
                 <tr>
                     <td class="p-2.5 font-semibold text-white">${p.paid_month}</td>
