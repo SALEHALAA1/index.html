@@ -78,6 +78,7 @@
                     <button onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-gold bg-gold/10" data-tab="dashboard"><i class="fa-solid fa-chart-pie ml-1"></i><span data-i18n="tab_dash">الرئيسية</span></button>
                     <button onclick="switchTab('clients')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="clients"><i class="fa-solid fa-users ml-1"></i><span data-i18n="tab_clients">العملاء</span></button>
                     <button onclick="switchTab('merchants')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="merchants"><i class="fa-solid fa-store ml-1"></i><span data-i18n="tab_merchants">التجار وعملائهم</span></button>
+                    <button onclick="switchTab('services_catalog')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="services_catalog"><i class="fa-solid fa-list-check ml-1"></i><span data-i18n="tab_catalog">قائمة الخدمات والتوثيق</span></button>
                     <button onclick="switchTab('agenda')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="agenda"><i class="fa-solid fa-calendar-alt ml-1"></i><span data-i18n="tab_agenda">أجندة 30 يوم</span></button>
                     <button onclick="switchTab('collection')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="collection"><i class="fa-solid fa-wallet ml-1"></i><span data-i18n="tab_collection">التحصيل</span></button>
                     <button onclick="switchTab('renewals')" class="nav-btn px-3 py-2 rounded-lg text-xs font-medium transition-all text-zinc-400 hover:text-white" data-tab="renewals"><i class="fa-solid fa-calendar-days ml-1"></i><span data-i18n="tab_renewals">التجديد</span></button>
@@ -102,8 +103,8 @@
             <button onclick="switchTab('dashboard')" class="mob-nav text-gold flex flex-col items-center gap-0.5" data-tab="dashboard"><i class="fa-solid fa-chart-pie"></i><span data-i18n="tab_dash">الرئيسية</span></button>
             <button onclick="switchTab('clients')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="clients"><i class="fa-solid fa-users"></i><span data-i18n="tab_clients">العملاء</span></button>
             <button onclick="switchTab('merchants')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="merchants"><i class="fa-solid fa-store"></i><span data-i18n="tab_merchants">التجار</span></button>
+            <button onclick="switchTab('services_catalog')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="services_catalog"><i class="fa-solid fa-list-check"></i><span data-i18n="tab_catalog">الخدمات</span></button>
             <button onclick="switchTab('agenda')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="agenda"><i class="fa-solid fa-calendar-alt"></i><span data-i18n="tab_agenda">الأجندة</span></button>
-            <button onclick="switchTab('collection')" class="mob-nav text-zinc-400 flex flex-col items-center gap-0.5" data-tab="collection"><i class="fa-solid fa-wallet"></i><span data-i18n="tab_collection">التحصيل</span></button>
         </div>
 
         <main class="flex-1 p-4 md:p-8 pb-20 md:pb-8 max-w-7xl mx-auto w-full">
@@ -194,6 +195,35 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="merchants-grid"></div>
             </section>
 
+            <!-- قائمة الخدمات والتوثيق المتاحة للاختيار منها -->
+            <section id="tab-services_catalog" class="tab-content hidden space-y-6">
+                <div class="flex flex-col md:flex-row justify-between gap-4 items-center bg-zinc-900 border gold-border p-6 rounded-2xl">
+                    <div>
+                        <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check ml-2 text-gold"></i><span data-i18n="catalog_title">قائمة خدمات التوثيق والاشتراكات المتاحة</span></h2>
+                        <p class="text-xs text-zinc-400 mt-1" data-i18n="catalog_desc">قم بإضافة وتجهيز أنواع الخدمات لتظهر لك تلقائياً وتسهل اختيارها عند إضافة أو تعديل العميل.</p>
+                    </div>
+                    <button onclick="openAddCatalogModal()" class="px-5 py-3 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-xl text-sm transition cursor-pointer">
+                        <i class="fa-solid fa-plus ml-2"></i><span data-i18n="add_catalog_btn">إضافة خدمة جديدة للقائمة</span>
+                    </button>
+                </div>
+
+                <div class="bg-zinc-900 border gold-border rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
+                                <tr>
+                                    <th class="p-4" data-i18n="th_service_name">اسم الخدمة</th>
+                                    <th class="p-4" data-i18n="th_platform">المنصة الافتراضية</th>
+                                    <th class="p-4" data-i18n="th_default_amount">السعر الافتراضي</th>
+                                    <th class="p-4 text-center" data-i18n="th_actions">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalog-table-body" class="divide-y divide-zinc-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- أجندة 30 يوم -->
             <section id="tab-agenda" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
@@ -281,7 +311,7 @@
         </main>
     </div>
 
-    <!-- نافذة إضافة أو تعديل العميل مع خدمات متعددة -->
+    <!-- نافذة إضافة أو تعديل العميل مع اختيار الخدمات من القائمة المجهزة والدمج -->
     <div id="client-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div class="bg-zinc-900 border gold-border w-full max-w-2xl rounded-2xl p-6 relative max-h-[90vh] overflow-y-auto">
             <h3 id="modal-title" class="text-lg font-bold text-gold mb-4" data-i18n="modal_add_title">إضافة عميل جديد</h3>
@@ -289,8 +319,8 @@
                 <input type="hidden" id="client-id">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_name">اسم العميل</label>
-                        <input type="text" id="c-name" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
+                        <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_name">اسم العميل (أو دمج مع جهة)</label>
+                        <input type="text" id="c-name" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="مثال: محمد أحمد (Elite Verification)">
                     </div>
                     <div>
                         <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_phone">رقم الموبايل / واتساب</label>
@@ -309,7 +339,7 @@
 
                 <div class="border-t border-zinc-800 pt-4 mt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <h4 class="text-sm font-bold text-gold" data-i18n="sec_services_list">خدمات العميل المرتبطة</h4>
+                        <h4 class="text-sm font-bold text-gold" data-i18n="sec_services_list">خدمات العميل المرتبطة (اختر من القائمة أو أضف يديك)</h4>
                         <button type="button" onclick="addServiceRow()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-gold rounded-xl text-xs font-bold cursor-pointer">
                             <i class="fa-solid fa-plus ml-1"></i> <span data-i18n="btn_add_service">إضافة خدمة أخرى</span>
                         </button>
@@ -350,6 +380,32 @@
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="closeModal('merchant-modal')" class="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-medium cursor-pointer" data-i18n="btn_cancel">إلغاء</button>
                     <button type="submit" class="px-5 py-2 bg-gold text-zinc-950 font-bold rounded-xl text-sm hover:bg-gold-600 transition cursor-pointer" data-i18n="btn_save">حفظ التاجر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة إدارة وتعديل خدمة في القائمة الرئيسية (الكتالوج) -->
+    <div id="catalog-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-zinc-900 border gold-border w-full max-w-md rounded-2xl p-6 relative">
+            <h3 id="catalog-modal-title" class="text-lg font-bold text-gold mb-4" data-i18n="modal_catalog_title">إضافة خدمة للقائمة</h3>
+            <form onsubmit="saveCatalogService(event)" class="space-y-4">
+                <input type="hidden" id="catalog-id">
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_cat_name">اسم الخدمة (مثل: توثيق فيسبوك، بادج ذهبي...)</label>
+                    <input type="text" id="cat-name" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_cat_platform">المنصة الافتراضية</label>
+                    <input type="text" id="cat-platform" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none" placeholder="Facebook / Instagram / Web">
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="lbl_cat_amount">السعر الافتراضي (جنيه)</label>
+                    <input type="number" id="cat-amount" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('catalog-modal')" class="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-medium cursor-pointer" data-i18n="btn_cancel">إلغاء</button>
+                    <button type="submit" class="px-5 py-2 bg-gold text-zinc-950 font-bold rounded-xl text-sm hover:bg-gold-600 transition cursor-pointer" data-i18n="btn_save">حفظ في القائمة</button>
                 </div>
             </form>
         </div>
@@ -417,7 +473,6 @@
 
     <!-- السكريبت البرمجي والترجمات والتحكم -->
     <script>
-        // ضع هنا رابط مشروعك ومفتاح الـ Anon الصحيح الخاص بك في Supabase
         const SUPABASE_URL = "https://rsvzachgbqsucqgrwguv.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
 
@@ -430,6 +485,7 @@
         let servicesData = [];
         let paymentsData = [];
         let merchantsData = [];
+        let serviceCatalogData = [];
         let currentLang = localStorage.getItem('badgeify_lang') || 'ar';
         let currentTheme = localStorage.getItem('badgeify_theme') || 'dark';
 
@@ -443,12 +499,16 @@
                 tab_dash: "الرئيسية",
                 tab_clients: "العملاء",
                 tab_merchants: "التجار وعملائهم",
+                tab_catalog: "قائمة الخدمات والتوثيق",
                 tab_agenda: "أجندة 30 يوم",
                 tab_collection: "التحصيل",
                 tab_renewals: "تجديد الخدمات",
                 tab_payments: "سجل المدفوعات",
                 add_client_btn: "إضافة عميل",
                 add_merchant_btn: "إضافة تاجر",
+                add_catalog_btn: "إضافة خدمة جديدة للقائمة",
+                catalog_title: "قائمة خدمات التوثيق والاشتراكات المتاحة",
+                catalog_desc: "قم بإضافة وتجهيز أنواع الخدمات لتظهر لك تلقائياً وتسهل اختيارها عند إضافة أو تعديل العميل.",
                 stat_total: "كل العملاء",
                 stat_merchants: "إجمالي التجار",
                 stat_paid: "مدفوع هذا الشهر",
@@ -464,6 +524,8 @@
                 th_services_count: "عدد الخدمات",
                 th_total_sub: "إجمالي الاشتراكات",
                 th_actions: "إجراءات وكشف حساب",
+                th_service_name: "اسم الخدمة",
+                th_default_amount: "السعر الافتراضي",
                 agenda_desc: "توزيع مواعيد الاستحقاق على أيام الشهر لتنظيم جدول أعمالك بدقة.",
                 all_days: "كل أيام الشهر (1-31)",
                 today_only: "استحقاقات اليوم فقط",
@@ -479,11 +541,15 @@
                 th_real_date: "تاريخ الدفع الحقيقي",
                 modal_add_title: "إضافة عميل جديد",
                 modal_merchant_title: "إضافة تاجر جديد",
-                lbl_name: "اسم العميل",
+                modal_catalog_title: "إضافة / تعديل خدمة في القائمة",
+                lbl_name: "اسم العميل (أو دمج مع جهة)",
                 lbl_phone: "رقم الموبايل / واتساب",
                 lbl_merchant_assign: "التاجر التابع له (اختياري)",
                 lbl_merchant_name: "اسم التاجر / الشركة",
-                sec_services_list: "خدمات العميل المرتبطة",
+                lbl_cat_name: "اسم الخدمة (مثل: توثيق فيسبوك، بادج ذهبي...)",
+                lbl_cat_platform: "المنصة الافتراضية",
+                lbl_cat_amount: "السعر الافتراضي (جنيه)",
+                sec_services_list: "خدمات العميل المرتبطة (اختر من القائمة أو أضف يديك)",
                 btn_add_service: "إضافة خدمة أخرى",
                 lbl_notes: "ملاحظات عامة",
                 btn_cancel: "إلغاء",
@@ -510,12 +576,16 @@
                 tab_dash: "Dashboard",
                 tab_clients: "Clients",
                 tab_merchants: "Merchants & Clients",
+                tab_catalog: "Services Catalog",
                 tab_agenda: "30-Day Agenda",
                 tab_collection: "Collection",
                 tab_renewals: "Renewals",
                 tab_payments: "Payments Log",
                 add_client_btn: "Add Client",
                 add_merchant_btn: "Add Merchant",
+                add_catalog_btn: "Add Service to Catalog",
+                catalog_title: "Verification & Services Catalog",
+                catalog_desc: "Setup and manage service types for easy selection when assigning to clients.",
                 stat_total: "Total Clients",
                 stat_merchants: "Total Merchants",
                 stat_paid: "Paid This Month",
@@ -531,6 +601,8 @@
                 th_services_count: "Services Count",
                 th_total_sub: "Total Subscriptions",
                 th_actions: "Actions & Statement",
+                th_service_name: "Service Name",
+                th_default_amount: "Default Amount",
                 agenda_desc: "Distribution of due dates across the month for precise scheduling.",
                 all_days: "All Days (1-31)",
                 today_only: "Today's Dues Only",
@@ -546,11 +618,15 @@
                 th_real_date: "Real Payment Date",
                 modal_add_title: "Add New Client",
                 modal_merchant_title: "Add New Merchant",
-                lbl_name: "Client Name",
+                modal_catalog_title: "Add / Edit Catalog Service",
+                lbl_name: "Client Name (or Merge with Entity)",
                 lbl_phone: "Mobile / WhatsApp",
                 lbl_merchant_assign: "Associated Merchant (Optional)",
                 lbl_merchant_name: "Merchant Name",
-                sec_services_list: "Associated Services",
+                lbl_cat_name: "Service Name (e.g., Facebook Verification...)",
+                lbl_cat_platform: "Default Platform",
+                lbl_cat_amount: "Default Amount (EGP)",
+                sec_services_list: "Client Services (Select from Catalog or Custom)",
                 btn_add_service: "Add Another Service",
                 lbl_notes: "General Notes",
                 btn_cancel: "Cancel",
@@ -667,17 +743,19 @@
 
         async function loadAllData() {
             try {
-                const [clientsRes, servicesRes, paymentsRes, merchantsRes] = await Promise.all([
+                const [clientsRes, servicesRes, paymentsRes, merchantsRes, catalogRes] = await Promise.all([
                     db.from('clients').select('*').order('id', { ascending: false }),
                     db.from('client_services').select('*').order('id', { ascending: false }),
                     db.from('payments').select('*').order('id', { ascending: false }),
-                    db.from('merchants').select('*').order('id', { ascending: false })
+                    db.from('merchants').select('*').order('id', { ascending: false }),
+                    db.from('services_catalog').select('*').order('id', { ascending: false })
                 ]);
 
                 clientsData = clientsRes.data || [];
                 servicesData = servicesRes.data || [];
                 paymentsData = paymentsRes.data || [];
                 merchantsData = merchantsRes.data || [];
+                serviceCatalogData = catalogRes.data || [];
 
                 populateMerchantsDropdown();
                 renderAll();
@@ -696,6 +774,7 @@
             renderDashboard();
             renderClients();
             renderMerchants();
+            renderServiceCatalog();
             renderAgenda();
             renderCollection();
             renderRenewals();
@@ -834,6 +913,26 @@
             }).join('');
         }
 
+        function renderServiceCatalog() {
+            const tbody = document.getElementById('catalog-table-body');
+            if (!serviceCatalogData.length) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-zinc-500">${currentLang === 'ar' ? 'لا توجد خدمات مضافة في القائمة بعد.' : 'No catalog services.'}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = serviceCatalogData.map(item => `
+                <tr class="hover:bg-zinc-800/50">
+                    <td class="p-4 font-semibold text-white">${item.name}</td>
+                    <td class="p-4 text-zinc-300">${item.platform || '-'}</td>
+                    <td class="p-4 text-gold font-bold">${item.default_amount} EGP</td>
+                    <td class="p-4 text-center space-x-1 space-x-reverse">
+                        <button onclick="editCatalogService(${item.id})" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-bold"><i class="fa-solid fa-pen ml-1"></i> تعديل</button>
+                        <button onclick="deleteCatalogService(${item.id})" class="px-3 py-1.5 bg-zinc-800 hover:bg-rose-950 text-rose-400 rounded-lg text-xs font-bold"><i class="fa-solid fa-trash ml-1"></i> حذف</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
         function renderAgenda() {
             const filterVal = document.getElementById('agenda-day-filter').value;
             const today = new Date().getDate();
@@ -953,12 +1052,24 @@
         function addServiceRow(data = {}) {
             const container = document.getElementById('services-container');
             const rowId = 'srv_' + Date.now() + Math.random().toString(36).substr(2, 4);
+            
+            const catalogOptions = serviceCatalogData.map(cat => 
+                `<option value="${cat.name}" data-platform="${cat.platform || ''}" data-amount="${cat.default_amount || 0}">${cat.name} (${cat.default_amount} EGP)</option>`
+            ).join('');
+
             const html = `
                 <div class="service-row bg-zinc-950 p-4 rounded-xl border gold-border space-y-3 relative" id="${rowId}">
                     <input type="hidden" class="s-id" value="${data.id || ''}">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-gold">خدمة مرتبطة بالعميل</span>
                         <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i> حذف الخدمة</button>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-400 mb-1">اختر من قائمة الخدمات الجاهزة:</label>
+                        <select onchange="onCatalogSelect(this, '${rowId}')" class="w-full p-2.5 bg-zinc-900 border gold-border rounded-xl text-xs text-white focus:outline-none">
+                            <option value="">-- اختر خدمة من القائمة أو أدخل يدوياً أدناه --</option>
+                            ${catalogOptions}
+                        </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <input type="text" class="s-name w-full p-2.5 bg-zinc-900 border gold-border rounded-xl text-xs text-white" placeholder="اسم الخدمة / البيدج" value="${data.page_name || ''}" required>
@@ -972,6 +1083,15 @@
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function onCatalogSelect(selectEl, rowId) {
+            const selectedOpt = selectEl.options[selectEl.selectedIndex];
+            if (!selectedOpt.value) return;
+            const row = document.getElementById(rowId);
+            row.querySelector('.s-name').value = selectedOpt.value;
+            row.querySelector('.s-platform').value = selectedOpt.dataset.platform || '';
+            row.querySelector('.s-amount').value = selectedOpt.dataset.amount || '';
         }
 
         function openAddClientModal(merchantId = '') {
@@ -1109,6 +1229,54 @@
         async function deleteMerchant(id) {
             if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف التاجر؟' : 'Delete merchant?')) return;
             const { error } = await db.from('merchants').delete().eq('id', id);
+            if (error) { alert('Error: ' + error.message); return; }
+            await loadAllData();
+        }
+
+        function openAddCatalogModal() {
+            document.getElementById('catalog-id').value = '';
+            document.getElementById('catalog-modal-title').textContent = currentLang === 'ar' ? 'إضافة خدمة جديدة للقائمة' : 'Add Catalog Service';
+            document.getElementById('cat-name').value = '';
+            document.getElementById('cat-platform').value = '';
+            document.getElementById('cat-amount').value = '';
+            document.getElementById('catalog-modal').classList.remove('hidden');
+        }
+
+        function editCatalogService(id) {
+            const item = serviceCatalogData.find(c => c.id === id);
+            if (!item) return;
+            document.getElementById('catalog-id').value = item.id;
+            document.getElementById('catalog-modal-title').textContent = currentLang === 'ar' ? 'تعديل خدمة القائمة' : 'Edit Catalog Service';
+            document.getElementById('cat-name').value = item.name;
+            document.getElementById('cat-platform').value = item.platform || '';
+            document.getElementById('cat-amount').value = item.default_amount;
+            document.getElementById('catalog-modal').classList.remove('hidden');
+        }
+
+        async function saveCatalogService(e) {
+            e.preventDefault();
+            const id = document.getElementById('catalog-id').value;
+            const obj = {
+                name: document.getElementById('cat-name').value.trim(),
+                platform: document.getElementById('cat-platform').value.trim(),
+                default_amount: parseFloat(document.getElementById('cat-amount').value)
+            };
+
+            if (id) {
+                const { error } = await db.from('services_catalog').update(obj).eq('id', id);
+                if (error) { alert('Error: ' + error.message); return; }
+            } else {
+                const { error } = await db.from('services_catalog').insert([obj]);
+                if (error) { alert('Error: ' + error.message); return; }
+            }
+
+            closeModal('catalog-modal');
+            await loadAllData();
+        }
+
+        async function deleteCatalogService(id) {
+            if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف هذه الخدمة من القائمة؟' : 'Delete catalog service?')) return;
+            const { error } = await db.from('services_catalog').delete().eq('id', id);
             if (error) { alert('Error: ' + error.message); return; }
             await loadAllData();
         }
