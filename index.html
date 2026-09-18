@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
-    <title>BADGEIFY - Management System</title>
+    <title>BADGEIFY V2 - Management System</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase Client v2 -->
@@ -24,19 +24,19 @@
         <div class="space-y-6">
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-2">البريد الإلكتروني</label>
-                <input type="email" id="email" 
+                <input type="email" id="email" value="admin@badgeify.com"
                     class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white"
                     placeholder="admin@badgeify.com">
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
-                <input type="password" id="password" 
+                <input type="text" id="password" value="12345678"
                     class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white"
                     placeholder="••••••••">
             </div>
 
-            <div id="login-error" class="hidden text-rose-400 text-sm text-center bg-rose-950/50 py-2 rounded-lg border border-rose-900"></div>
+            <div id="login-error" class="hidden text-rose-400 text-sm text-center bg-rose-950/50 p-3 rounded-lg border border-rose-900 break-words"></div>
 
             <button type="button" id="login-btn" onclick="handleLogin()" 
                 class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 cursor-pointer">
@@ -45,7 +45,7 @@
         </div>
     </div>
 
-    <!-- لوحة التحكم (مخفية افتراضياً) -->
+    <!-- لوحة التحكم -->
     <div id="dashboard-screen" class="hidden w-full min-h-screen bg-slate-900 flex flex-col">
         <header class="bg-slate-800 border-b border-slate-700 px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -61,23 +61,20 @@
             <div class="max-w-7xl mx-auto">
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
                     <h2 class="text-xl font-bold text-white mb-2">مرحباً بك يا فنان في النظام</h2>
-                    <p class="text-slate-400">تم تسجيل الدخول بنجاح والاتصال بقاعدة بيانات Supabase يعمل بكفاءة تامة.</p>
+                    <p class="text-slate-400">تم تسجيل الدخول بنجاح تام!</p>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- كود المنطق والاتصال بجدول البيانات -->
     <script>
         const SUPABASE_URL = "https://rsvzachgbqsucqgrwguv.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
 
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // التحقق من الجلسة المخزنة محلياً عند فتح الصفحة
         window.addEventListener('DOMContentLoaded', () => {
-            const isLogged = localStorage.getItem('badgeify_logged');
-            if (isLogged === 'true') {
+            if (localStorage.getItem('badgeify_logged') === 'true') {
                 showDashboard();
             }
         });
@@ -88,48 +85,48 @@
             document.getElementById('dashboard-screen').classList.remove('hidden');
         }
 
-        // دالة تسجيل الدخول بالتحقق المباشر من الجدول
         async function handleLogin() {
             const btn = document.getElementById('login-btn');
             const errorMsg = document.getElementById('login-error');
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
 
-            if (!email || !password) {
-                errorMsg.textContent = 'من فضلك أدخل البريد الإلكتروني وكلمة المرور';
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-
-            btn.textContent = 'جاري التحقق والدخول...';
+            btn.textContent = 'جاري الفحص...';
             errorMsg.classList.add('hidden');
 
             try {
-                // البحث في جدول admins مباشرة
-                const { data, error } = await db
+                console.log("Starting query to Supabase for:", email);
+                
+                const { data, error, status } = await db
                     .from('admins')
                     .select('*')
                     .eq('email', email)
-                    .eq('password', password)
-                    .single();
+                    .eq('password', password);
 
-                if (error || !data) {
-                    throw new Error('بيانات الدخول غير صحيحة');
+                console.log("Supabase Response Status:", status);
+                console.log("Supabase Response Data:", data);
+                console.log("Supabase Response Error:", error);
+
+                if (error) {
+                    throw new Error(error.message);
                 }
 
-                // حفظ حالة الدخول محلياً وفتح الداشبورد
+                if (!data || data.length === 0) {
+                    throw new Error('لا يوجد مطابقة للبيانات في الجدول (تأكد من إدخال البيانات في قاعدة البيانات)');
+                }
+
                 localStorage.setItem('badgeify_logged', 'true');
                 showDashboard();
 
-            } catch (error) {
-                console.error("Login Error:", error.message);
-                errorMsg.textContent = 'البريد الإلكتروني أو كلمة المرور غير صحيحة!';
+            } catch (err) {
+                console.error("Catch Error:", err);
+                errorMsg.textContent = 'خطأ تقني: ' + err.message;
                 errorMsg.classList.remove('hidden');
                 btn.textContent = 'دخول للنظام';
             }
         }
 
-        async function handleLogout() {
+        function handleLogout() {
             localStorage.removeItem('badgeify_logged');
             location.reload();
         }
