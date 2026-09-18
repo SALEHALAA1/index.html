@@ -1,81 +1,59 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b0b0b">
 
-    <title>BADGEIFY | Subscription Manager</title>
+    <title>BADGEIFY | إدارة العملاء والاشتراكات</title>
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        dark: '#0B0B0B',
-                        card: '#151515',
-                        card2: '#1C1C1C',
-                        gold: '#D4AF37',
-                        gold2: '#F1D675',
-                        goldhover: '#B89425'
-                    },
-                    boxShadow: {
-                        gold: '0 0 35px rgba(212,175,55,.10)'
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         * {
+            font-family: "Tajawal", sans-serif;
             box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
         }
 
         body {
             margin: 0;
-            font-family: 'Tajawal', sans-serif;
             background:
-                radial-gradient(circle at top right, rgba(212,175,55,.07), transparent 30%),
-                radial-gradient(circle at bottom left, rgba(212,175,55,.04), transparent 25%),
-                #0B0B0B;
+                radial-gradient(circle at top right, rgba(212,175,55,.10), transparent 30%),
+                radial-gradient(circle at bottom left, rgba(212,175,55,.06), transparent 30%),
+                #080808;
             color: #fff;
+            min-height: 100vh;
         }
 
-        body.login-mode {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .gold {
+            color: #d4af37;
+        }
+
+        .gold-bg {
+            background: linear-gradient(135deg, #d4af37, #f4d77d, #b88a14);
         }
 
         .glass {
-            background: rgba(21,21,21,.94);
+            background: rgba(20,20,20,.78);
             border: 1px solid rgba(212,175,55,.15);
-            box-shadow: 0 15px 50px rgba(0,0,0,.35);
+            backdrop-filter: blur(15px);
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(25,25,25,.96), rgba(12,12,12,.96));
+            border: 1px solid rgba(212,175,55,.13);
+            box-shadow: 0 15px 45px rgba(0,0,0,.25);
         }
 
         .input {
             width: 100%;
-            background: #0D0D0D;
-            border: 1px solid #303030;
-            color: white;
+            background: #111;
+            border: 1px solid #292929;
+            color: #fff;
             border-radius: 12px;
             padding: 12px 14px;
             outline: none;
@@ -83,47 +61,60 @@
         }
 
         .input:focus {
-            border-color: #D4AF37;
+            border-color: #d4af37;
             box-shadow: 0 0 0 3px rgba(212,175,55,.08);
         }
 
-        .btn-gold {
-            background: linear-gradient(135deg, #D4AF37, #B89425);
-            color: #090909;
-            font-weight: 800;
-            transition: .2s;
+        select.input option {
+            background: #111;
+            color: white;
         }
 
-        .btn-gold:hover {
+        .btn {
+            border-radius: 12px;
+            padding: 11px 16px;
+            font-weight: 700;
+            transition: .2s;
+            cursor: pointer;
+        }
+
+        .btn:hover {
             transform: translateY(-1px);
-            filter: brightness(1.08);
         }
 
-        .sidebar {
-            background: rgba(15,15,15,.97);
-            border-left: 1px solid rgba(212,175,55,.12);
+        .btn-gold {
+            background: linear-gradient(135deg,#d4af37,#f0d46c);
+            color: #080808;
         }
 
-        .nav-item {
-            transition: .2s;
+        .btn-dark {
+            background: #171717;
+            border: 1px solid #303030;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: rgba(220,38,38,.12);
+            color: #f87171;
+            border: 1px solid rgba(220,38,38,.25);
+        }
+
+        .nav-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
             color: #aaa;
-        }
-
-        .nav-item:hover,
-        .nav-item.active {
-            background: rgba(212,175,55,.11);
-            color: #D4AF37;
-        }
-
-        .stat-card {
-            background: linear-gradient(145deg, #171717, #101010);
-            border: 1px solid rgba(255,255,255,.06);
             transition: .2s;
+            text-align: right;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(212,175,55,.22);
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: rgba(212,175,55,.1);
+            color: #d4af37;
         }
 
         .modal-bg {
@@ -131,28 +122,31 @@
             backdrop-filter: blur(8px);
         }
 
-        .toast {
-            animation: toastIn .25s ease;
+        .modal-box {
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        ::-webkit-scrollbar {
+            width: 7px;
         }
 
-        .spinner {
-            width: 19px;
-            height: 19px;
-            border: 2px solid rgba(0,0,0,.25);
-            border-top-color: #111;
+        ::-webkit-scrollbar-track {
+            background: #090909;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        .loader-ring {
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
-            animation: spin .7s linear infinite;
+            border: 3px solid rgba(212,175,55,.15);
+            border-top-color: #d4af37;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
@@ -161,340 +155,1015 @@
             }
         }
 
-        .table-scroll {
-            overflow-x: auto;
+        .fade-in {
+            animation: fadeIn .35s ease;
         }
 
-        .table-scroll::-webkit-scrollbar {
-            height: 7px;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .table-scroll::-webkit-scrollbar-track {
-            background: #111;
+        .pulse-gold {
+            animation: pulseGold 1.8s infinite;
         }
 
-        .table-scroll::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 10px;
+        @keyframes pulseGold {
+            0%,100% {
+                box-shadow: 0 0 0 0 rgba(212,175,55,.20);
+            }
+            50% {
+                box-shadow: 0 0 0 12px rgba(212,175,55,0);
+            }
         }
 
-        .custom-scroll::-webkit-scrollbar {
-            width: 6px;
+        .table-row:hover {
+            background: rgba(255,255,255,.025);
         }
 
-        .custom-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 10px;
-        }
-
-        .status-paid {
-            background: rgba(34,197,94,.12);
+        .status-active {
             color: #4ade80;
+            background: rgba(74,222,128,.08);
+            border: 1px solid rgba(74,222,128,.15);
         }
 
-        .status-pending {
-            background: rgba(234,179,8,.12);
-            color: #facc15;
-        }
-
-        .status-overdue {
-            background: rgba(239,68,68,.12);
+        .status-expired {
             color: #f87171;
+            background: rgba(248,113,113,.08);
+            border: 1px solid rgba(248,113,113,.15);
         }
 
-        .service-chip {
-            background: rgba(212,175,55,.08);
-            color: #e8ca62;
-            border: 1px solid rgba(212,175,55,.14);
+        .status-paused {
+            color: #fbbf24;
+            background: rgba(251,191,36,.08);
+            border: 1px solid rgba(251,191,36,.15);
         }
 
-        .hidden-force {
-            display: none !important;
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: .25s;
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
         }
     </style>
 </head>
 
-<body class="login-mode">
+<body>
 
-<!-- =========================================================
-     LOGIN
-========================================================= -->
+<!-- LOADING -->
+<div id="loadingScreen"
+     class="fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center">
 
-<div id="login-screen" class="w-full px-5">
+    <div class="text-center">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-3xl gold-bg flex items-center justify-center shadow-2xl">
+            <span class="text-3xl font-black text-black">B</span>
+        </div>
 
-    <div class="glass max-w-md mx-auto rounded-3xl p-7 md:p-9 shadow-gold">
+        <div class="text-3xl font-black tracking-[.2em] gold">
+            BADGEIFY
+        </div>
+
+        <div class="text-gray-500 mt-2">
+            CRM & Subscription Management
+        </div>
+
+        <div class="loader-ring mx-auto mt-8"></div>
+    </div>
+</div>
+
+
+<!-- LOGIN -->
+<div id="loginScreen" class="hidden min-h-screen items-center justify-center p-5">
+
+    <div class="w-full max-w-md card rounded-3xl p-8">
 
         <div class="text-center mb-8">
 
-            <div class="w-20 h-20 mx-auto mb-5 rounded-2xl
-                        bg-gradient-to-br from-gold to-goldhover
-                        flex items-center justify-center
-                        shadow-lg shadow-yellow-900/20">
-
-                <span class="text-3xl font-black text-black">B</span>
-
+            <div class="w-20 h-20 mx-auto rounded-3xl gold-bg flex items-center justify-center mb-5">
+                <span class="text-4xl font-black text-black">B</span>
             </div>
 
-            <h1 class="text-4xl font-black tracking-[.15em] text-gold">
+            <h1 class="text-3xl font-black gold">
                 BADGEIFY
             </h1>
 
-            <p class="text-xs text-gray-500 mt-2 tracking-[.18em]">
-                DIGITAL SERVICES & SUBSCRIPTIONS
+            <p class="text-gray-500 mt-2">
+                نظام إدارة العملاء والاشتراكات
             </p>
-
-            <div class="w-16 h-px bg-gold/40 mx-auto mt-5"></div>
-
         </div>
 
-        <form id="login-form" class="space-y-5">
+        <form id="loginForm">
 
-            <div>
-                <label class="block text-sm text-gray-300 mb-2">
-                    البريد الإلكتروني
-                </label>
+            <label class="block text-sm text-gray-400 mb-2">
+                البريد الإلكتروني
+            </label>
+
+            <input
+                id="loginEmail"
+                type="email"
+                class="input mb-5"
+                placeholder="example@email.com"
+                required
+            >
+
+            <label class="block text-sm text-gray-400 mb-2">
+                كلمة المرور
+            </label>
+
+            <div class="relative">
 
                 <input
-                    id="email"
-                    type="email"
-                    autocomplete="email"
+                    id="loginPassword"
+                    type="password"
+                    class="input pl-12"
+                    placeholder="••••••••"
                     required
-                    class="input"
-                    placeholder="البريد الإلكتروني">
-            </div>
+                >
 
-            <div>
-
-                <label class="block text-sm text-gray-300 mb-2">
-                    كلمة المرور
-                </label>
-
-                <div class="relative">
-
-                    <input
-                        id="password"
-                        type="password"
-                        autocomplete="current-password"
-                        required
-                        class="input pl-12"
-                        placeholder="كلمة المرور">
-
-                    <button
-                        type="button"
-                        onclick="togglePassword()"
-                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gold">
-
-                        <span id="eye-icon">إظهار</span>
-
-                    </button>
-
-                </div>
+                <button
+                    type="button"
+                    onclick="togglePassword()"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                    👁
+                </button>
 
             </div>
 
             <button
-                id="login-btn"
                 type="submit"
-                class="btn-gold w-full rounded-xl py-3.5 flex items-center justify-center gap-3">
-
-                <span id="login-btn-text">
-                    دخول إلى النظام
-                </span>
-
-                <span id="login-spinner" class="spinner hidden-force"></span>
-
+                class="btn btn-gold w-full mt-6">
+                تسجيل الدخول
             </button>
 
-            <div
-                id="login-error"
-                class="hidden text-center text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+            <div id="loginError"
+                 class="hidden mt-4 text-center text-red-400 text-sm">
             </div>
 
         </form>
+    </div>
+</div>
 
-        <p class="text-center text-[11px] text-gray-600 mt-7">
-            BADGEIFY Subscription Management System
+
+<!-- APP -->
+<div id="app" class="hidden min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar"
+           class="fixed right-0 top-0 bottom-0 w-72 bg-[#0b0b0b] border-l border-[#202020] z-50 hidden lg:block">
+
+        <div class="p-6 border-b border-[#202020]">
+
+            <div class="flex items-center gap-3">
+
+                <div class="w-12 h-12 rounded-2xl gold-bg flex items-center justify-center">
+                    <span class="text-2xl font-black text-black">B</span>
+                </div>
+
+                <div>
+                    <div class="font-black gold text-xl">
+                        BADGEIFY
+                    </div>
+
+                    <div class="text-xs text-gray-500">
+                        Management System
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <nav class="p-4 space-y-1">
+
+            <button class="nav-btn active" data-page="dashboard">
+                <span>⌂</span>
+                <span>الرئيسية</span>
+            </button>
+
+            <button class="nav-btn" data-page="customers">
+                <span>♙</span>
+                <span>العملاء</span>
+            </button>
+
+            <button class="nav-btn" data-page="subscriptions">
+                <span>◈</span>
+                <span>الاشتراكات</span>
+            </button>
+
+            <button class="nav-btn" data-page="payments">
+                <span>▣</span>
+                <span>المدفوعات</span>
+            </button>
+
+            <button class="nav-btn" data-page="services">
+                <span>◇</span>
+                <span>الخدمات</span>
+            </button>
+
+            <div class="pt-5 pb-2 px-3 text-xs text-gray-600">
+                قريباً
+            </div>
+
+            <button class="nav-btn" disabled>
+                <span>▤</span>
+                <span>الفواتير</span>
+            </button>
+
+            <button class="nav-btn" disabled>
+                <span>✓</span>
+                <span>المهام والمتابعة</span>
+            </button>
+
+            <button class="nav-btn" disabled>
+                <span>◷</span>
+                <span>سجل النشاط</span>
+            </button>
+
+            <button class="nav-btn" disabled>
+                <span>⚙</span>
+                <span>الإعدادات</span>
+            </button>
+
+        </nav>
+
+        <div class="absolute bottom-0 right-0 left-0 p-4 border-t border-[#202020]">
+
+            <div class="flex items-center gap-3 mb-3">
+
+                <div class="w-10 h-10 rounded-full bg-[#181818] flex items-center justify-center gold">
+                    U
+                </div>
+
+                <div class="min-w-0">
+                    <div id="userEmail"
+                         class="text-sm truncate text-gray-300">
+                    </div>
+
+                    <div class="text-xs text-gray-600">
+                        مستخدم النظام
+                    </div>
+                </div>
+
+            </div>
+
+            <button onclick="logout()"
+                    class="btn btn-dark w-full text-sm">
+                تسجيل الخروج
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MOBILE SIDEBAR -->
+    <div id="mobileMenu"
+         class="mobile-menu fixed right-0 top-0 bottom-0 w-72 bg-[#0b0b0b] z-[100] lg:hidden border-l border-[#222]">
+
+        <div class="p-5 flex justify-between items-center border-b border-[#222]">
+
+            <span class="gold font-black text-xl">
+                BADGEIFY
+            </span>
+
+            <button onclick="toggleMobileMenu()"
+                    class="text-gray-400 text-2xl">
+                ×
+            </button>
+
+        </div>
+
+        <div class="p-4 space-y-1">
+
+            <button class="nav-btn active" data-page="dashboard">
+                ⌂ <span>الرئيسية</span>
+            </button>
+
+            <button class="nav-btn" data-page="customers">
+                ♙ <span>العملاء</span>
+            </button>
+
+            <button class="nav-btn" data-page="subscriptions">
+                ◈ <span>الاشتراكات</span>
+            </button>
+
+            <button class="nav-btn" data-page="payments">
+                ▣ <span>المدفوعات</span>
+            </button>
+
+            <button class="nav-btn" data-page="services">
+                ◇ <span>الخدمات</span>
+            </button>
+
+            <button onclick="logout()" class="nav-btn text-red-400 mt-5">
+                ⇥ <span>تسجيل الخروج</span>
+            </button>
+
+        </div>
+    </div>
+
+
+    <!-- MAIN -->
+    <main class="lg:mr-72 min-h-screen">
+
+        <!-- HEADER -->
+        <header class="sticky top-0 z-40 bg-[#080808]/90 backdrop-blur-xl border-b border-[#202020]">
+
+            <div class="px-4 md:px-7 py-4 flex items-center justify-between">
+
+                <div class="flex items-center gap-3">
+
+                    <button onclick="toggleMobileMenu()"
+                            class="lg:hidden btn btn-dark px-3">
+                        ☰
+                    </button>
+
+                    <div>
+                        <h1 id="pageTitle"
+                            class="font-black text-xl md:text-2xl">
+                            الرئيسية
+                        </h1>
+
+                        <p id="pageSubtitle"
+                           class="text-xs md:text-sm text-gray-600">
+                            نظرة عامة على النظام
+                        </p>
+                    </div>
+
+                </div>
+
+                <button
+                    onclick="refreshCurrentPage()"
+                    class="btn btn-dark">
+                    تحديث
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+        <div id="content"
+             class="p-4 md:p-7">
+        </div>
+
+    </main>
+</div>
+
+
+<!-- MODAL -->
+<div id="modal"
+     class="hidden fixed inset-0 z-[200] modal-bg items-center justify-center p-4">
+
+    <div id="modalContent"
+         class="modal-box w-full max-w-2xl card rounded-3xl p-6 fade-in">
+    </div>
+
+</div>
+
+
+<!-- CONFIRM -->
+<div id="confirmModal"
+     class="hidden fixed inset-0 z-[300] modal-bg items-center justify-center p-4">
+
+    <div class="card rounded-3xl p-7 w-full max-w-md text-center">
+
+        <div class="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-5 text-2xl">
+            !
+        </div>
+
+        <h3 id="confirmTitle"
+            class="font-black text-xl">
+            تأكيد العملية
+        </h3>
+
+        <p id="confirmText"
+           class="text-gray-500 mt-2">
+            هل أنت متأكد؟
         </p>
+
+        <div class="flex gap-3 mt-7">
+
+            <button
+                onclick="closeConfirm()"
+                class="btn btn-dark flex-1">
+                إلغاء
+            </button>
+
+            <button
+                id="confirmButton"
+                class="btn btn-danger flex-1">
+                تأكيد
+            </button>
+
+        </div>
 
     </div>
 
 </div>
 
 
-<!-- =========================================================
-     DASHBOARD
-========================================================= -->
+<!-- TOAST -->
+<div id="toast"
+     class="fixed bottom-5 left-5 z-[500] hidden">
 
-<div id="dashboard-screen" class="hidden-force w-full min-h-screen">
+    <div id="toastBox"
+         class="card rounded-2xl px-5 py-4 min-w-[280px]">
 
-    <div class="min-h-screen flex flex-col md:flex-row">
+        <div id="toastMessage"
+             class="text-sm">
+        </div>
 
-        <!-- SIDEBAR -->
+    </div>
 
-        <aside class="sidebar w-full md:w-64 md:min-h-screen p-4 md:p-5 flex flex-col">
-
-            <div class="flex items-center justify-between md:block mb-5">
-
-                <div class="flex items-center gap-3">
-
-                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-gold to-goldhover flex items-center justify-center">
-                        <span class="font-black text-black text-xl">B</span>
-                    </div>
-
-                    <div>
-                        <h2 class="font-black text-gold tracking-wider">
-                            BADGEIFY
-                        </h2>
-
-                        <p class="text-[10px] text-gray-600">
-                            MANAGER
-                        </p>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="hidden md:block border-t border-gray-800 my-3"></div>
-
-            <nav class="flex md:flex-col gap-2 overflow-x-auto">
-
-                <button
-                    class="nav-item active rounded-xl px-4 py-3 text-right flex items-center gap-3 whitespace-nowrap">
-
-                    <span>⌂</span>
-                    <span>لوحة التحكم</span>
-
-                </button>
-
-                <button
-                    onclick="openAddModal()"
-                    class="nav-item rounded-xl px-4 py-3 text-right flex items-center gap-3 whitespace-nowrap">
-
-                    <span>＋</span>
-                    <span>إضافة اشتراك</span>
-
-                </button>
-
-                <button
-                    onclick="focusSearch()"
-                    class="nav-item rounded-xl px-4 py-3 text-right flex items-center gap-3 whitespace-nowrap">
-
-                    <span>⌕</span>
-                    <span>البحث</span>
-
-                </button>
-
-            </nav>
-
-            <div class="hidden md:block mt-auto">
-
-                <div class="border-t border-gray-800 pt-4 mb-3">
-
-                    <p class="text-[11px] text-gray-600 mb-1">
-                        الحساب الحالي
-                    </p>
-
-                    <p id="current-user" class="text-xs text-gray-300 truncate">
-                        -
-                    </p>
-
-                </div>
-
-                <button
-                    onclick="handleLogout()"
-                    class="w-full border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl py-2.5 transition">
-
-                    تسجيل الخروج
-
-                </button>
-
-            </div>
-
-        </aside>
+</div>
 
 
-        <!-- MAIN -->
+<script>
 
-        <main class="flex-1 min-w-0 p-4 md:p-7">
+const SUPABASE_URL =
+    "https://rsvzachgbqsucqgrwguv.supabase.co";
 
-            <!-- HEADER -->
+const SUPABASE_KEY =
+    "sb_publishable_jn8QNpKQ8v7awUj2wYANdw_wcliO986";
 
-            <header class="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-7">
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+let currentPage = "dashboard";
+
+let customers = [];
+let subscriptions = [];
+let payments = [];
+let services = [];
+
+let currentUser = null;
+
+
+/* =========================
+   INITIALIZATION
+========================= */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    const {
+        data: { session }
+    } = await supabaseClient.auth.getSession();
+
+    document.getElementById("loadingScreen").classList.add("hidden");
+
+    if (session) {
+
+        currentUser = session.user;
+
+        showApp();
+
+    } else {
+
+        showLogin();
+
+    }
+
+});
+
+
+/* =========================
+   AUTH
+========================= */
+
+function showLogin() {
+
+    document.getElementById("loginScreen")
+        .classList.remove("hidden");
+
+    document.getElementById("loginScreen")
+        .classList.add("flex");
+
+    document.getElementById("app")
+        .classList.add("hidden");
+}
+
+
+function showApp() {
+
+    document.getElementById("loginScreen")
+        .classList.add("hidden");
+
+    document.getElementById("loginScreen")
+        .classList.remove("flex");
+
+    document.getElementById("app")
+        .classList.remove("hidden");
+
+    document.getElementById("userEmail").textContent =
+        currentUser?.email || "";
+
+    loadPage("dashboard");
+}
+
+
+async function login(event) {
+
+    event.preventDefault();
+
+    const email =
+        document.getElementById("loginEmail").value.trim();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    const error =
+        document.getElementById("loginError");
+
+    error.classList.add("hidden");
+
+    const { data, error: authError } =
+        await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+
+    if (authError) {
+
+        error.textContent =
+            "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+
+        error.classList.remove("hidden");
+
+        return;
+    }
+
+    currentUser = data.user;
+
+    showApp();
+}
+
+
+async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    currentUser = null;
+
+    document.getElementById("app")
+        .classList.add("hidden");
+
+    showLogin();
+}
+
+
+function togglePassword() {
+
+    const input =
+        document.getElementById("loginPassword");
+
+    input.type =
+        input.type === "password"
+            ? "text"
+            : "password";
+}
+
+
+document
+    .getElementById("loginForm")
+    .addEventListener("submit", login);
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+document.querySelectorAll(".nav-btn[data-page]")
+.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const page =
+            button.dataset.page;
+
+        loadPage(page);
+
+        toggleMobileMenu(false);
+    });
+
+});
+
+
+function setActiveNav(page) {
+
+    document
+        .querySelectorAll(".nav-btn[data-page]")
+        .forEach(btn => {
+
+            btn.classList.toggle(
+                "active",
+                btn.dataset.page === page
+            );
+
+        });
+
+}
+
+
+async function loadPage(page) {
+
+    currentPage = page;
+
+    setActiveNav(page);
+
+    const titles = {
+
+        dashboard: [
+            "الرئيسية",
+            "نظرة عامة على النظام"
+        ],
+
+        customers: [
+            "العملاء",
+            "إدارة بيانات العملاء"
+        ],
+
+        subscriptions: [
+            "الاشتراكات",
+            "إدارة اشتراكات العملاء"
+        ],
+
+        payments: [
+            "المدفوعات",
+            "متابعة عمليات الدفع"
+        ],
+
+        services: [
+            "الخدمات",
+            "إدارة الخدمات والباقات"
+        ]
+
+    };
+
+    document.getElementById("pageTitle").textContent =
+        titles[page][0];
+
+    document.getElementById("pageSubtitle").textContent =
+        titles[page][1];
+
+    if (page === "dashboard")
+        await renderDashboard();
+
+    if (page === "customers")
+        await renderCustomers();
+
+    if (page === "subscriptions")
+        await renderSubscriptions();
+
+    if (page === "payments")
+        await renderPayments();
+
+    if (page === "services")
+        await renderServices();
+}
+
+
+async function refreshCurrentPage() {
+
+    await loadPage(currentPage);
+
+    toast("تم تحديث البيانات");
+}
+
+
+/* =========================
+   DATA
+========================= */
+
+async function loadCustomers() {
+
+    const { data, error } =
+        await supabaseClient
+            .from("customers")
+            .select("*")
+            .order("created_at", {
+                ascending: false
+            });
+
+    if (error) {
+
+        console.error(error);
+
+        toast(
+            "حدث خطأ أثناء تحميل العملاء",
+            "error"
+        );
+
+        return [];
+
+    }
+
+    customers = data || [];
+
+    return customers;
+}
+
+
+async function loadSubscriptions() {
+
+    const { data, error } =
+        await supabaseClient
+            .from("subscriptions")
+            .select(`
+                *,
+                customers (
+                    id,
+                    client_name,
+                    phone
+                )
+            `)
+            .order("created_at", {
+                ascending: false
+            });
+
+    if (error) {
+
+        console.error(error);
+
+        toast(
+            "حدث خطأ أثناء تحميل الاشتراكات",
+            "error"
+        );
+
+        return [];
+
+    }
+
+    subscriptions = data || [];
+
+    return subscriptions;
+}
+
+
+async function loadPayments() {
+
+    const { data, error } =
+        await supabaseClient
+            .from("subscription_payments")
+            .select(`
+                *,
+                subscriptions (
+                    id,
+                    page_name,
+                    monthly_fee,
+                    customers (
+                        id,
+                        client_name,
+                        phone
+                    )
+                )
+            `)
+            .order("payment_date", {
+                ascending: false
+            });
+
+    if (error) {
+
+        console.error(error);
+
+        toast(
+            "حدث خطأ أثناء تحميل المدفوعات",
+            "error"
+        );
+
+        return [];
+
+    }
+
+    payments = data || [];
+
+    return payments;
+}
+
+
+async function loadServices() {
+
+    const { data, error } =
+        await supabaseClient
+            .from("services")
+            .select("*")
+            .order("id", {
+                ascending: false
+            });
+
+    if (error) {
+
+        console.error(error);
+
+        toast(
+            "تعذر تحميل الخدمات",
+            "error"
+        );
+
+        return [];
+
+    }
+
+    services = data || [];
+
+    return services;
+}
+
+
+/* =========================
+   DASHBOARD
+========================= */
+
+async function renderDashboard() {
+
+    const [
+        customersData,
+        subscriptionsData,
+        paymentsData
+    ] = await Promise.all([
+        loadCustomers(),
+        loadSubscriptions(),
+        loadPayments()
+    ]);
+
+    const activeSubscriptions =
+        subscriptionsData.filter(
+            s => s.status === "active"
+        );
+
+    const today =
+        new Date();
+
+    const dueSoon =
+        subscriptionsData.filter(s => {
+
+            if (!s.renewal_date)
+                return false;
+
+            const date =
+                new Date(s.renewal_date);
+
+            const diff =
+                Math.ceil(
+                    (date - today) /
+                    (1000 * 60 * 60 * 24)
+                );
+
+            return diff >= 0 && diff <= 7;
+
+        });
+
+    const totalMonthly =
+        activeSubscriptions.reduce(
+            (sum, s) =>
+                sum + Number(s.monthly_fee || 0),
+            0
+        );
+
+    const totalPayments =
+        paymentsData.reduce(
+            (sum, p) =>
+                sum + Number(p.amount || 0),
+            0
+        );
+
+    document.getElementById("content").innerHTML = `
+
+        <div class="fade-in">
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-7">
 
                 <div>
+                    <h2 class="text-2xl font-black">
+                        أهلاً بك في <span class="gold">BADGEIFY</span>
+                    </h2>
 
-                    <p class="text-gray-500 text-xs mb-1">
-                        BADGEIFY MANAGEMENT
+                    <p class="text-gray-600 mt-1">
+                        هذه نظرة سريعة على حالة النظام.
                     </p>
-
-                    <h1 class="text-2xl md:text-3xl font-black">
-                        إدارة الاشتراكات
-                    </h1>
-
-                    <p class="text-gray-500 text-sm mt-1">
-                        تحكم في العملاء والاشتراكات والمدفوعات من مكان واحد
-                    </p>
-
                 </div>
 
-                <div class="flex gap-2">
+                <button
+                    onclick="openCustomerModal()"
+                    class="btn btn-gold">
+                    + إضافة عميل
+                </button>
 
-                    <button
-                        onclick="loadData()"
-                        class="border border-gray-700 hover:border-gold text-gray-300 hover:text-gold rounded-xl px-4 py-2.5 text-sm">
-
-                        تحديث
-
-                    </button>
-
-                    <button
-                        onclick="openAddModal()"
-                        class="btn-gold rounded-xl px-5 py-2.5 text-sm">
-
-                        + اشتراك جديد
-
-                    </button>
-
-                    <button
-                        onclick="handleLogout()"
-                        class="md:hidden border border-red-500/50 text-red-400 rounded-xl px-3 py-2.5">
-
-                        خروج
-
-                    </button>
-
-                </div>
-
-            </header>
+            </div>
 
 
-            <!-- ALERT -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
-            <div id="alerts-container" class="hidden mb-6">
+                ${statCard(
+                    "إجمالي العملاء",
+                    customersData.length,
+                    "♙"
+                )}
 
-                <div class="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
+                ${statCard(
+                    "الاشتراكات النشطة",
+                    activeSubscriptions.length,
+                    "◈"
+                )}
 
-                    <div class="flex items-start gap-3">
+                ${statCard(
+                    "دخل الاشتراكات الشهري",
+                    formatMoney(totalMonthly),
+                    "₤"
+                )}
 
-                        <div class="text-red-400 text-xl">
-                            !
-                        </div>
+                ${statCard(
+                    "إجمالي المدفوعات",
+                    formatMoney(totalPayments),
+                    "▣"
+                )}
+
+            </div>
+
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
+
+                <div class="xl:col-span-2 card rounded-3xl p-5">
+
+                    <div class="flex justify-between items-center mb-5">
 
                         <div>
+                            <h3 class="font-black text-lg">
+                                الاشتراكات القريبة من التجديد
+                            </h3>
 
-                            <p class="font-bold text-red-400">
-                                تنبيه بالتحصيل
+                            <p class="text-xs text-gray-600 mt-1">
+                                خلال 7 أيام
                             </p>
-
-                            <p id="alerts-text" class="text-sm text-gray-400 mt-1">
-                            </p>
-
                         </div>
+
+                        <button
+                            onclick="loadPage('subscriptions')"
+                            class="text-sm gold">
+                            عرض الكل
+                        </button>
+
+                    </div>
+
+                    ${
+                        dueSoon.length
+                        ? dueSoon.slice(0,6).map(subscriptionRow).join("")
+                        : `
+                            <div class="text-center py-12 text-gray-600">
+                                لا توجد اشتراكات مستحقة خلال 7 أيام.
+                            </div>
+                        `
+                    }
+
+                </div>
+
+
+                <div class="card rounded-3xl p-5">
+
+                    <h3 class="font-black text-lg mb-5">
+                        إجراءات سريعة
+                    </h3>
+
+                    <div class="space-y-3">
+
+                        <button
+                            onclick="openCustomerModal()"
+                            class="btn btn-dark w-full text-right">
+                            + إضافة عميل جديد
+                        </button>
+
+                        <button
+                            onclick="openSubscriptionModal()"
+                            class="btn btn-dark w-full text-right">
+                            + إضافة اشتراك
+                        </button>
+
+                        <button
+                            onclick="openPaymentModal()"
+                            class="btn btn-dark w-full text-right">
+                            + تسجيل دفعة
+                        </button>
+
+                        <button
+                            onclick="loadPage('customers')"
+                            class="btn btn-dark w-full text-right">
+                            عرض العملاء
+                        </button>
 
                     </div>
 
@@ -502,214 +1171,114 @@
 
             </div>
 
-
-            <!-- STATS -->
-
-            <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 mb-6">
-
-                <div class="stat-card rounded-2xl p-4 md:p-5">
-
-                    <p class="text-xs text-gray-500">
-                        إجمالي الاشتراكات
-                    </p>
-
-                    <p id="stat-active-count" class="text-2xl md:text-3xl font-black text-gold mt-2">
-                        0
-                    </p>
-
-                    <p class="text-[11px] text-gray-600 mt-1">
-                        عميل / تاجر
-                    </p>
-
-                </div>
+        </div>
+    `;
+}
 
 
-                <div class="stat-card rounded-2xl p-4 md:p-5">
+function statCard(title, value, icon) {
 
-                    <p class="text-xs text-gray-500">
-                        إجمالي الدخل المتوقع
-                    </p>
+    return `
+        <div class="card rounded-3xl p-5">
 
-                    <p id="stat-total-money" class="text-2xl md:text-3xl font-black mt-2">
-                        0 ج
-                    </p>
+            <div class="flex items-start justify-between">
 
-                    <p class="text-[11px] text-gray-600 mt-1">
-                        للشهر الحالي
-                    </p>
-
-                </div>
-
-
-                <div class="stat-card rounded-2xl p-4 md:p-5">
-
-                    <p class="text-xs text-gray-500">
-                        تم تحصيله
-                    </p>
-
-                    <p id="stat-collected" class="text-2xl md:text-3xl font-black text-green-400 mt-2">
-                        0 ج
-                    </p>
-
-                    <p class="text-[11px] text-gray-600 mt-1">
-                        مدفوع هذا الشهر
-                    </p>
-
-                </div>
-
-
-                <div class="stat-card rounded-2xl p-4 md:p-5">
-
-                    <p class="text-xs text-gray-500">
-                        مستحق التحصيل
-                    </p>
-
-                    <p id="stat-pending-money" class="text-2xl md:text-3xl font-black text-yellow-400 mt-2">
-                        0 ج
-                    </p>
-
-                    <p class="text-[11px] text-gray-600 mt-1">
-                        لم يتم دفعه
-                    </p>
-
-                </div>
-
-            </section>
-
-
-            <!-- SEARCH -->
-
-            <section class="glass rounded-2xl p-4 mb-6">
-
-                <div class="flex flex-col xl:flex-row gap-4">
-
-                    <div class="flex-1">
-
-                        <div class="relative">
-
-                            <input
-                                id="search-input"
-                                oninput="filterTable()"
-                                type="text"
-                                class="input pr-12"
-                                placeholder="ابحث باسم العميل أو الحساب أو رقم الهاتف...">
-
-                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600">
-                                ⌕
-                            </span>
-
-                        </div>
-
+                <div>
+                    <div class="text-gray-500 text-sm">
+                        ${title}
                     </div>
 
-                    <div class="flex gap-2 overflow-x-auto">
-
-                        <button
-                            onclick="setFilter('all')"
-                            id="filter-all"
-                            class="filter-btn bg-gold text-black font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">
-
-                            الكل
-
-                        </button>
-
-                        <button
-                            onclick="setFilter('merchant')"
-                            id="filter-merchant"
-                            class="filter-btn bg-[#0D0D0D] border border-gray-700 text-gray-400 px-4 py-2 rounded-xl text-xs whitespace-nowrap">
-
-                            التجار
-
-                        </button>
-
-                        <button
-                            onclick="setFilter('direct')"
-                            id="filter-direct"
-                            class="filter-btn bg-[#0D0D0D] border border-gray-700 text-gray-400 px-4 py-2 rounded-xl text-xs whitespace-nowrap">
-
-                            مباشر
-
-                        </button>
-
-                        <button
-                            onclick="setFilter('overdue')"
-                            id="filter-overdue"
-                            class="filter-btn bg-[#0D0D0D] border border-gray-700 text-gray-400 px-4 py-2 rounded-xl text-xs whitespace-nowrap">
-
-                            المتأخرين
-
-                        </button>
-
+                    <div class="text-2xl font-black mt-3">
+                        ${value}
                     </div>
+                </div>
+
+                <div class="w-11 h-11 rounded-2xl bg-[#d4af37]/10 gold flex items-center justify-center text-xl">
+                    ${icon}
+                </div>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+/* =========================
+   CUSTOMERS
+========================= */
+
+async function renderCustomers() {
+
+    await loadCustomers();
+
+    document.getElementById("content").innerHTML = `
+
+        <div class="fade-in">
+
+            <div class="flex flex-col md:flex-row gap-3 justify-between mb-5">
+
+                <div class="relative flex-1">
+
+                    <input
+                        id="customerSearch"
+                        oninput="filterCustomers()"
+                        class="input"
+                        placeholder="ابحث باسم العميل أو الهاتف..."
+                    >
 
                 </div>
 
-            </section>
+                <button
+                    onclick="openCustomerModal()"
+                    class="btn btn-gold whitespace-nowrap">
+                    + إضافة عميل
+                </button>
+
+            </div>
 
 
-            <!-- TABLE -->
+            <div class="card rounded-3xl overflow-hidden">
 
-            <section class="glass rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
 
-                <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+                    <table class="w-full text-sm">
 
-                    <div>
-
-                        <h2 class="font-bold">
-                            الاشتراكات
-                        </h2>
-
-                        <p id="table-count" class="text-xs text-gray-600 mt-1">
-                            0 اشتراك
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="table-scroll">
-
-                    <table class="w-full text-right text-sm whitespace-nowrap">
-
-                        <thead class="text-gray-500 border-b border-gray-800">
+                        <thead class="bg-[#111] text-gray-500">
 
                             <tr>
 
-                                <th class="py-4 px-4">
+                                <th class="text-right p-4">
                                     العميل
                                 </th>
 
-                                <th class="py-4 px-4">
+                                <th class="text-right p-4">
+                                    النوع
+                                </th>
+
+                                <th class="text-right p-4">
                                     الهاتف
                                 </th>
 
-                                <th class="py-4 px-4">
-                                    الخدمات
-                                </th>
-
-                                <th class="py-4 px-4">
-                                    الاشتراك
-                                </th>
-
-                                <th class="py-4 px-4">
-                                    الدفع
-                                </th>
-
-                                <th class="py-4 px-4">
+                                <th class="text-right p-4">
                                     الحالة
                                 </th>
 
-                                <th class="py-4 px-4">
-                                    الإجراءات
+                                <th class="text-right p-4">
+                                    تاريخ الإضافة
+                                </th>
+
+                                <th class="text-right p-4">
+                                    إجراءات
                                 </th>
 
                             </tr>
 
                         </thead>
 
-                        <tbody
-                            id="clients-table-body"
-                            class="divide-y divide-gray-800">
+                        <tbody id="customersTable">
+
+                            ${customersRows(customers)}
 
                         </tbody>
 
@@ -717,2165 +1286,2113 @@
 
                 </div>
 
-                <div
-                    id="empty-state"
-                    class="hidden text-center py-16">
+            </div>
 
-                    <div class="text-4xl mb-3">
-                        ◇
-                    </div>
+        </div>
+    `;
+}
 
-                    <p class="text-gray-400">
-                        لا توجد اشتراكات مطابقة
-                    </p>
+
+function customersRows(list) {
+
+    if (!list.length) {
+
+        return `
+            <tr>
+                <td colspan="6"
+                    class="p-12 text-center text-gray-600">
+                    لا يوجد عملاء.
+                </td>
+            </tr>
+        `;
+
+    }
+
+    return list.map(c => `
+
+        <tr class="table-row border-t border-[#1d1d1d]">
+
+            <td class="p-4">
+
+                <button
+                    onclick="openCustomerProfile(${c.id})"
+                    class="font-bold hover:text-[#d4af37]">
+                    ${escapeHtml(c.client_name || "-")}
+                </button>
+
+            </td>
+
+            <td class="p-4 text-gray-400">
+                ${escapeHtml(c.client_type || "-")}
+            </td>
+
+            <td class="p-4 text-gray-400">
+                ${escapeHtml(c.phone || "-")}
+            </td>
+
+            <td class="p-4">
+
+                <span class="px-3 py-1 rounded-full text-xs status-active">
+                    ${escapeHtml(c.status || "active")}
+                </span>
+
+            </td>
+
+            <td class="p-4 text-gray-500">
+                ${formatDate(c.created_at)}
+            </td>
+
+            <td class="p-4">
+
+                <div class="flex gap-2">
 
                     <button
-                        onclick="openAddModal()"
-                        class="text-gold text-sm mt-2 hover:underline">
+                        onclick="openCustomerModal(${c.id})"
+                        class="btn btn-dark text-xs">
+                        تعديل
+                    </button>
 
-                        إضافة أول اشتراك
-
+                    <button
+                        onclick="confirmDeleteCustomer(${c.id})"
+                        class="btn btn-danger text-xs">
+                        حذف
                     </button>
 
                 </div>
 
-            </section>
+            </td>
 
-        </main>
+        </tr>
 
-    </div>
+    `).join("");
+}
 
-</div>
+
+function filterCustomers() {
+
+    const value =
+        document
+            .getElementById("customerSearch")
+            .value
+            .toLowerCase()
+            .trim();
+
+    const filtered =
+        customers.filter(c =>
+
+            String(c.client_name || "")
+                .toLowerCase()
+                .includes(value)
+
+            ||
+
+            String(c.phone || "")
+                .toLowerCase()
+                .includes(value)
+
+        );
+
+    document.getElementById("customersTable")
+        .innerHTML =
+        customersRows(filtered);
+}
 
 
-<!-- =========================================================
-     ADD / EDIT MODAL
-========================================================= -->
+/* =========================
+   CUSTOMER MODAL
+========================= */
 
-<div
-    id="add-modal"
-    class="hidden fixed inset-0 modal-bg z-50 p-4 flex items-center justify-center">
+function openCustomerModal(id = null) {
 
-    <div class="glass rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto custom-scroll">
+    const customer =
+        id
+        ? customers.find(c => Number(c.id) === Number(id))
+        : null;
 
-        <div class="p-6 border-b border-gray-800 flex items-center justify-between sticky top-0 bg-[#151515]/95 backdrop-blur z-10">
+    openModal(`
+
+        <div class="flex items-center justify-between mb-6">
 
             <div>
+                <h2 class="text-xl font-black">
+                    ${customer ? "تعديل العميل" : "إضافة عميل جديد"}
+                </h2>
 
-                <p class="text-xs text-gray-500">
-                    SUBSCRIPTION
+                <p class="text-gray-600 text-sm mt-1">
+                    بيانات العميل الأساسية مستقلة عن الاشتراكات.
                 </p>
-
-                <h3 id="modal-title" class="text-xl font-black text-gold mt-1">
-                    إضافة اشتراك جديد
-                </h3>
-
             </div>
 
-            <button
-                onclick="closeAddModal()"
-                class="w-9 h-9 rounded-xl bg-gray-900 text-gray-400 hover:text-white">
-
+            <button onclick="closeModal()"
+                    class="text-gray-500 text-2xl">
                 ×
-
             </button>
 
         </div>
 
 
-        <form id="add-form" class="p-6 space-y-5">
-
-            <input type="hidden" id="edit-client-id">
-
-
-            <!-- TYPE -->
-
-            <div>
-
-                <label class="block text-sm text-gray-300 mb-2">
-                    نوع العميل
-                </label>
-
-                <select
-                    id="add-client-type"
-                    onchange="toggleMerchantField()"
-                    class="input">
-
-                    <option value="direct">
-                        عميل مباشر
-                    </option>
-
-                    <option value="merchant">
-                        تاجر / شريك
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <!-- BASIC DATA -->
+        <form onsubmit="saveCustomer(event, ${id || "null"})">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 <div>
-
-                    <label
-                        id="client-name-label"
-                        class="block text-sm text-gray-300 mb-2">
-
+                    <label class="label">
                         اسم العميل
-
                     </label>
 
                     <input
-                        id="add-client-name"
+                        id="customerName"
+                        class="input"
                         required
-                        class="input"
-                        placeholder="محمد أحمد">
+                        value="${escapeAttr(customer?.client_name || "")}">
+                </div>
+
+
+                <div>
+                    <label class="label">
+                        نوع العميل
+                    </label>
+
+                    <select id="customerType" class="input">
+
+                        <option value="person"
+                            ${customer?.client_type === "person" ? "selected" : ""}>
+                            شخص
+                        </option>
+
+                        <option value="business"
+                            ${customer?.client_type === "business" ? "selected" : ""}>
+                            شركة / نشاط تجاري
+                        </option>
+
+                    </select>
 
                 </div>
 
 
                 <div>
-
-                    <label class="block text-sm text-gray-300 mb-2">
-                        اسم الحساب / النشاط
+                    <label class="label">
+                        رقم الهاتف
                     </label>
 
                     <input
-                        id="add-page-name"
-                        required
+                        id="customerPhone"
                         class="input"
-                        placeholder="اسم الصفحة أو النشاط">
-
+                        value="${escapeAttr(customer?.phone || "")}">
                 </div>
 
 
                 <div>
+                    <label class="label">
+                        الحالة
+                    </label>
 
-                    <label class="block text-sm text-gray-300 mb-2">
-                        رقم الهاتف / واتساب
+                    <select id="customerStatus" class="input">
+
+                        <option value="active"
+                            ${customer?.status === "active" || !customer ? "selected" : ""}>
+                            نشط
+                        </option>
+
+                        <option value="inactive"
+                            ${customer?.status === "inactive" ? "selected" : ""}>
+                            غير نشط
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="md:col-span-2">
+
+                    <label class="label">
+                        رابط الصفحة / الحساب
                     </label>
 
                     <input
-                        id="add-phone"
-                        required
+                        id="customerLink"
                         class="input"
-                        placeholder="01000000000">
-
-                </div>
-
-
-                <div>
-
-                    <label class="block text-sm text-gray-300 mb-2">
-                        قيمة الاشتراك
-                    </label>
-
-                    <div class="relative">
-
-                        <input
-                            id="add-fee"
-                            type="number"
-                            min="0"
-                            required
-                            class="input pl-12"
-                            placeholder="0">
-
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600">
-                            ج
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- SERVICES -->
-
-            <div>
-
-                <label class="block text-sm text-gray-300 mb-2">
-                    الخدمات والمنصات
-                </label>
-
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 bg-[#0D0D0D] border border-gray-800 rounded-xl p-3">
-
-                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
-                        <input type="checkbox" name="platforms" value="فيس بوك" class="accent-yellow-500">
-                        فيس بوك
-                    </label>
-
-                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
-                        <input type="checkbox" name="platforms" value="انستجرام" class="accent-yellow-500">
-                        انستجرام
-                    </label>
-
-                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
-                        <input type="checkbox" name="platforms" value="واتساب بيزنس" class="accent-yellow-500">
-                        واتساب بيزنس
-                    </label>
-
-                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
-                        <input type="checkbox" name="platforms" value="تروكولر" class="accent-yellow-500">
-                        تروكولر
-                    </label>
-
-                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
-                        <input type="checkbox" name="platforms" value="جيت كونتاكت" class="accent-yellow-500">
-                        جيت كونتاكت
-                    </label>
-
-                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
-                        <input type="checkbox" name="platforms" value="مساحة جوجل" class="accent-yellow-500">
-                        مساحة جوجل
-                    </label>
-
-                </div>
-
-                <p class="text-[11px] text-gray-600 mt-2">
-                    اختر خدمة واحدة على الأقل.
-                </p>
-
-            </div>
-
-
-            <!-- DATES -->
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                <div>
-
-                    <label class="block text-sm text-gray-300 mb-2">
-                        يوم الدفع
-                    </label>
-
-                    <input
-                        id="add-payment-day"
-                        type="number"
-                        min="1"
-                        max="31"
-                        required
-                        class="input"
-                        placeholder="1">
-
-                </div>
-
-
-                <div>
-
-                    <label class="block text-sm text-gray-300 mb-2">
-                        يوم التجديد
-                    </label>
-
-                    <input
-                        id="add-renewal-day"
-                        type="number"
-                        min="1"
-                        max="31"
-                        required
-                        class="input"
-                        placeholder="1">
-
-                </div>
-
-
-                <div>
-
-                    <label class="block text-sm text-gray-300 mb-2">
-                        رابط الحساب
-                    </label>
-
-                    <input
-                        id="add-link"
-                        class="input"
+                        value="${escapeAttr(customer?.page_link || "")}"
                         placeholder="https://...">
 
                 </div>
 
-            </div>
 
+                <div class="md:col-span-2">
 
-            <!-- NOTES -->
+                    <label class="label">
+                        ملاحظات
+                    </label>
 
-            <div>
+                    <textarea
+                        id="customerNotes"
+                        class="input"
+                        rows="4">${escapeHtml(customer?.notes || "")}</textarea>
 
-                <label class="block text-sm text-gray-300 mb-2">
-                    ملاحظات
-                </label>
-
-                <textarea
-                    id="add-notes"
-                    rows="3"
-                    class="input resize-none"
-                    placeholder="أي ملاحظات خاصة بالعميل..."></textarea>
+                </div>
 
             </div>
 
 
-            <!-- BUTTONS -->
-
-            <div class="flex gap-3 pt-2">
-
-                <button
-                    id="submit-add-btn"
-                    type="submit"
-                    class="btn-gold flex-1 rounded-xl py-3">
-
-                    حفظ الاشتراك
-
-                </button>
+            <div class="flex gap-3 mt-7">
 
                 <button
                     type="button"
-                    onclick="closeAddModal()"
-                    class="flex-1 bg-gray-800 hover:bg-gray-700 rounded-xl py-3">
-
+                    onclick="closeModal()"
+                    class="btn btn-dark flex-1">
                     إلغاء
+                </button>
 
+                <button
+                    type="submit"
+                    class="btn btn-gold flex-1">
+                    حفظ العميل
+                </button>
+
+            </div>
+
+        </form>
+    `);
+
+}
+
+
+async function saveCustomer(event, id) {
+
+    event.preventDefault();
+
+    const payload = {
+
+        client_name:
+            document.getElementById("customerName").value.trim(),
+
+        client_type:
+            document.getElementById("customerType").value,
+
+        phone:
+            document.getElementById("customerPhone").value.trim(),
+
+        page_link:
+            document.getElementById("customerLink").value.trim(),
+
+        notes:
+            document.getElementById("customerNotes").value.trim(),
+
+        status:
+            document.getElementById("customerStatus").value
+
+    };
+
+
+    let result;
+
+    if (id) {
+
+        result =
+            await supabaseClient
+                .from("customers")
+                .update(payload)
+                .eq("id", id);
+
+    } else {
+
+        result =
+            await supabaseClient
+                .from("customers")
+                .insert(payload);
+
+    }
+
+
+    if (result.error) {
+
+        console.error(result.error);
+
+        toast(
+            result.error.message,
+            "error"
+        );
+
+        return;
+    }
+
+
+    closeModal();
+
+    toast(
+        id
+        ? "تم تعديل العميل"
+        : "تم إضافة العميل"
+    );
+
+    await loadPage("customers");
+}
+
+
+function confirmDeleteCustomer(id) {
+
+    const customer =
+        customers.find(
+            c => Number(c.id) === Number(id)
+        );
+
+    showConfirm(
+        "حذف العميل",
+        `سيتم حذف العميل "${customer?.client_name || ""}" وجميع اشتراكاته المرتبطة به. هل تريد المتابعة؟`,
+        async () => {
+
+            const { error } =
+                await supabaseClient
+                    .from("customers")
+                    .delete()
+                    .eq("id", id);
+
+            if (error) {
+
+                toast(
+                    error.message,
+                    "error"
+                );
+
+                return;
+            }
+
+            closeConfirm();
+
+            toast("تم حذف العميل");
+
+            await loadPage("customers");
+
+        }
+    );
+}
+
+
+/* =========================
+   CUSTOMER PROFILE
+========================= */
+
+async function openCustomerProfile(id) {
+
+    const customer =
+        customers.find(
+            c => Number(c.id) === Number(id)
+        );
+
+    if (!customer)
+        return;
+
+
+    const { data: customerSubs } =
+        await supabaseClient
+            .from("subscriptions")
+            .select(`
+                *,
+                services (*)
+            `)
+            .eq("customer_id", id)
+            .order("created_at", {
+                ascending: false
+            });
+
+
+    const { data: customerPayments } =
+        await supabaseClient
+            .from("subscription_payments")
+            .select(`
+                *,
+                subscriptions (
+                    page_name
+                )
+            `)
+            .in(
+                "subscription_id",
+                (customerSubs || []).map(s => s.id).length
+                    ? (customerSubs || []).map(s => s.id)
+                    : [-1]
+            )
+            .order("payment_date", {
+                ascending: false
+            });
+
+
+    openModal(`
+
+        <div class="flex justify-between items-start mb-6">
+
+            <div>
+
+                <div class="text-xs gold mb-1">
+                    ملف العميل
+                </div>
+
+                <h2 class="text-2xl font-black">
+                    ${escapeHtml(customer.client_name)}
+                </h2>
+
+                <p class="text-gray-500 mt-1">
+                    ${escapeHtml(customer.phone || "بدون رقم هاتف")}
+                </p>
+
+            </div>
+
+            <button
+                onclick="closeModal()"
+                class="text-gray-500 text-2xl">
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+
+            ${profileStat(
+                "الاشتراكات",
+                customerSubs?.length || 0
+            )}
+
+            ${profileStat(
+                "المدفوعات",
+                customerPayments?.length || 0
+            )}
+
+            ${profileStat(
+                "الحالة",
+                customer.status || "active"
+            )}
+
+        </div>
+
+
+        <div class="flex gap-2 mb-6">
+
+            <button
+                onclick="closeModal(); openSubscriptionModal(${customer.id})"
+                class="btn btn-gold">
+                + إضافة اشتراك
+            </button>
+
+            ${
+                customer.phone
+                ? `
+                    <button
+                        onclick="openWhatsApp('${escapeAttr(customer.phone)}','${escapeAttr(customer.client_name)}')"
+                        class="btn btn-dark">
+                        WhatsApp
+                    </button>
+                `
+                : ""
+            }
+
+        </div>
+
+
+        <h3 class="font-black text-lg mb-3">
+            اشتراكات العميل
+        </h3>
+
+        <div class="space-y-2">
+
+            ${
+                customerSubs?.length
+                ? customerSubs.map(subscriptionRow).join("")
+                : `
+                    <div class="text-gray-600 text-center py-8">
+                        لا توجد اشتراكات لهذا العميل.
+                    </div>
+                `
+            }
+
+        </div>
+
+    `);
+}
+
+
+function profileStat(title, value) {
+
+    return `
+        <div class="bg-[#111] rounded-2xl p-4 border border-[#222]">
+            <div class="text-xs text-gray-600">
+                ${title}
+            </div>
+            <div class="font-black text-xl mt-2">
+                ${value}
+            </div>
+        </div>
+    `;
+}
+
+
+/* =========================
+   SUBSCRIPTIONS
+========================= */
+
+async function renderSubscriptions() {
+
+    await Promise.all([
+        loadCustomers(),
+        loadSubscriptions()
+    ]);
+
+    document.getElementById("content").innerHTML = `
+
+        <div class="fade-in">
+
+            <div class="flex flex-col md:flex-row gap-3 justify-between mb-5">
+
+                <input
+                    id="subscriptionSearch"
+                    oninput="filterSubscriptions()"
+                    class="input flex-1"
+                    placeholder="ابحث باسم العميل أو الصفحة...">
+
+                <button
+                    onclick="openSubscriptionModal()"
+                    class="btn btn-gold">
+                    + إضافة اشتراك
+                </button>
+
+            </div>
+
+
+            <div class="card rounded-3xl overflow-hidden">
+
+                <div class="overflow-x-auto">
+
+                    <table class="w-full text-sm">
+
+                        <thead class="bg-[#111] text-gray-500">
+
+                            <tr>
+
+                                <th class="text-right p-4">
+                                    العميل
+                                </th>
+
+                                <th class="text-right p-4">
+                                    الصفحة
+                                </th>
+
+                                <th class="text-right p-4">
+                                    المنصة
+                                </th>
+
+                                <th class="text-right p-4">
+                                    الرسوم
+                                </th>
+
+                                <th class="text-right p-4">
+                                    التجديد
+                                </th>
+
+                                <th class="text-right p-4">
+                                    الحالة
+                                </th>
+
+                                <th class="text-right p-4">
+                                    إجراءات
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="subscriptionsTable">
+
+                            ${subscriptionsRows(subscriptions)}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+function subscriptionsRows(list) {
+
+    if (!list.length) {
+
+        return `
+            <tr>
+                <td colspan="7"
+                    class="p-12 text-center text-gray-600">
+                    لا توجد اشتراكات.
+                </td>
+            </tr>
+        `;
+
+    }
+
+    return list.map(s => `
+
+        <tr class="table-row border-t border-[#1d1d1d]">
+
+            <td class="p-4">
+
+                <button
+                    onclick="openCustomerProfile(${s.customer_id})"
+                    class="font-bold hover:text-[#d4af37]">
+                    ${escapeHtml(
+                        s.customers?.client_name || "-"
+                    )}
+                </button>
+
+            </td>
+
+            <td class="p-4 text-gray-400">
+                ${escapeHtml(s.page_name || "-")}
+            </td>
+
+            <td class="p-4 text-gray-400">
+                ${escapeHtml(s.platform || "-")}
+            </td>
+
+            <td class="p-4 gold font-bold">
+                ${formatMoney(s.monthly_fee)}
+                ${escapeHtml(s.currency || "EGP")}
+            </td>
+
+            <td class="p-4 text-gray-400">
+                ${formatDate(s.renewal_date)}
+            </td>
+
+            <td class="p-4">
+
+                ${statusBadge(s)}
+
+            </td>
+
+            <td class="p-4">
+
+                <div class="flex gap-2">
+
+                    <button
+                        onclick="openSubscriptionModal(${s.id})"
+                        class="btn btn-dark text-xs">
+                        تعديل
+                    </button>
+
+                    <button
+                        onclick="openPaymentModal(${s.id})"
+                        class="btn btn-dark text-xs">
+                        دفعة
+                    </button>
+
+                    <button
+                        onclick="confirmDeleteSubscription(${s.id})"
+                        class="btn btn-danger text-xs">
+                        حذف
+                    </button>
+
+                </div>
+
+            </td>
+
+        </tr>
+
+    `).join("");
+}
+
+
+function filterSubscriptions() {
+
+    const value =
+        document
+            .getElementById("subscriptionSearch")
+            .value
+            .toLowerCase()
+            .trim();
+
+    const filtered =
+        subscriptions.filter(s => {
+
+            const client =
+                s.customers?.client_name || "";
+
+            const page =
+                s.page_name || "";
+
+            return (
+                client.toLowerCase().includes(value)
+                ||
+                page.toLowerCase().includes(value)
+            );
+
+        });
+
+    document.getElementById("subscriptionsTable")
+        .innerHTML =
+        subscriptionsRows(filtered);
+}
+
+
+/* =========================
+   SUBSCRIPTION MODAL
+========================= */
+
+async function openSubscriptionModal(id = null, presetCustomerId = null) {
+
+    await Promise.all([
+        loadCustomers(),
+        loadServices()
+    ]);
+
+    const subscription =
+        id
+        ? subscriptions.find(
+            s => Number(s.id) === Number(id)
+        )
+        : null;
+
+    const selectedCustomer =
+        subscription?.customer_id ||
+        presetCustomerId ||
+        "";
+
+
+    const serviceOptions =
+        services.map(service => {
+
+            const serviceName =
+                service.name ||
+                service.service_name ||
+                service.title ||
+                `خدمة #${service.id}`;
+
+            return `
+                <option
+                    value="${service.id}"
+                    ${subscription?.service_id === service.id ? "selected" : ""}>
+                    ${escapeHtml(serviceName)}
+                </option>
+            `;
+
+        }).join("");
+
+
+    const customerOptions =
+        customers.map(c => `
+
+            <option
+                value="${c.id}"
+                ${Number(selectedCustomer) === Number(c.id) ? "selected" : ""}>
+                ${escapeHtml(c.client_name)}
+                ${c.phone ? " - " + escapeHtml(c.phone) : ""}
+            </option>
+
+        `).join("");
+
+
+    openModal(`
+
+        <div class="flex items-center justify-between mb-6">
+
+            <div>
+
+                <h2 class="text-xl font-black">
+                    ${subscription ? "تعديل الاشتراك" : "إضافة اشتراك جديد"}
+                </h2>
+
+                <p class="text-gray-600 text-sm mt-1">
+                    الاشتراك مرتبط بعميل موجود بالفعل.
+                </p>
+
+            </div>
+
+            <button
+                onclick="closeModal()"
+                class="text-gray-500 text-2xl">
+                ×
+            </button>
+
+        </div>
+
+
+        <form onsubmit="saveSubscription(event, ${id || "null"})">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+
+                <div class="md:col-span-2">
+
+                    <label class="label">
+                        العميل
+                    </label>
+
+                    <select
+                        id="subscriptionCustomer"
+                        class="input"
+                        required>
+
+                        <option value="">
+                            اختر العميل
+                        </option>
+
+                        ${customerOptions}
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        الخدمة
+                    </label>
+
+                    <select
+                        id="subscriptionService"
+                        class="input">
+
+                        <option value="">
+                            بدون تحديد خدمة
+                        </option>
+
+                        ${serviceOptions}
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        اسم الصفحة / الحساب
+                    </label>
+
+                    <input
+                        id="subscriptionPage"
+                        class="input"
+                        value="${escapeAttr(subscription?.page_name || "")}"
+                        placeholder="مثال: BADGEIFY">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        المنصة
+                    </label>
+
+                    <select
+                        id="subscriptionPlatform"
+                        class="input">
+
+                        <option value="">
+                            اختر المنصة
+                        </option>
+
+                        <option value="Facebook"
+                            ${subscription?.platform === "Facebook" ? "selected" : ""}>
+                            Facebook
+                        </option>
+
+                        <option value="Instagram"
+                            ${subscription?.platform === "Instagram" ? "selected" : ""}>
+                            Instagram
+                        </option>
+
+                        <option value="WhatsApp"
+                            ${subscription?.platform === "WhatsApp" ? "selected" : ""}>
+                            WhatsApp
+                        </option>
+
+                        <option value="Facebook + Instagram"
+                            ${subscription?.platform === "Facebook + Instagram" ? "selected" : ""}>
+                            Facebook + Instagram
+                        </option>
+
+                        <option value="Facebook + Instagram + WhatsApp"
+                            ${subscription?.platform === "Facebook + Instagram + WhatsApp" ? "selected" : ""}>
+                            Facebook + Instagram + WhatsApp
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        الرسوم الشهرية
+                    </label>
+
+                    <input
+                        id="subscriptionFee"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        class="input"
+                        value="${subscription?.monthly_fee ?? 0}">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        العملة
+                    </label>
+
+                    <select
+                        id="subscriptionCurrency"
+                        class="input">
+
+                        <option value="EGP"
+                            ${subscription?.currency === "EGP" || !subscription ? "selected" : ""}>
+                            EGP - جنيه مصري
+                        </option>
+
+                        <option value="USD"
+                            ${subscription?.currency === "USD" ? "selected" : ""}>
+                            USD - دولار
+                        </option>
+
+                        <option value="EUR"
+                            ${subscription?.currency === "EUR" ? "selected" : ""}>
+                            EUR - يورو
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        يوم الدفع
+                    </label>
+
+                    <input
+                        id="subscriptionPaymentDay"
+                        type="number"
+                        min="1"
+                        max="31"
+                        class="input"
+                        value="${subscription?.payment_day ?? ""}">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        يوم التجديد
+                    </label>
+
+                    <input
+                        id="subscriptionRenewalDay"
+                        type="number"
+                        min="1"
+                        max="31"
+                        class="input"
+                        value="${subscription?.renewal_day ?? ""}">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        تاريخ البداية
+                    </label>
+
+                    <input
+                        id="subscriptionStartDate"
+                        type="date"
+                        class="input"
+                        value="${subscription?.start_date || ""}">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        تاريخ التجديد
+                    </label>
+
+                    <input
+                        id="subscriptionRenewalDate"
+                        type="date"
+                        class="input"
+                        value="${subscription?.renewal_date || ""}">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        الحالة
+                    </label>
+
+                    <select
+                        id="subscriptionStatus"
+                        class="input">
+
+                        <option value="active"
+                            ${subscription?.status === "active" || !subscription ? "selected" : ""}>
+                            نشط
+                        </option>
+
+                        <option value="paused"
+                            ${subscription?.status === "paused" ? "selected" : ""}>
+                            متوقف مؤقتاً
+                        </option>
+
+                        <option value="expired"
+                            ${subscription?.status === "expired" ? "selected" : ""}>
+                            منتهي
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="md:col-span-2">
+
+                    <label class="label">
+                        رابط الصفحة / الحساب
+                    </label>
+
+                    <input
+                        id="subscriptionLink"
+                        class="input"
+                        value="${escapeAttr(subscription?.page_link || "")}"
+                        placeholder="https://...">
+
+                </div>
+
+
+                <div class="md:col-span-2">
+
+                    <label class="label">
+                        ملاحظات
+                    </label>
+
+                    <textarea
+                        id="subscriptionNotes"
+                        class="input"
+                        rows="3">${escapeHtml(subscription?.notes || "")}</textarea>
+
+                </div>
+
+            </div>
+
+
+            <div class="flex gap-3 mt-7">
+
+                <button
+                    type="button"
+                    onclick="closeModal()"
+                    class="btn btn-dark flex-1">
+                    إلغاء
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-gold flex-1">
+                    حفظ الاشتراك
+                </button>
+
+            </div>
+
+        </form>
+    `);
+}
+
+
+async function saveSubscription(event, id) {
+
+    event.preventDefault();
+
+
+    const customerId =
+        document
+            .getElementById("subscriptionCustomer")
+            .value;
+
+
+    if (!customerId) {
+
+        toast(
+            "يجب اختيار العميل",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const payload = {
+
+        customer_id:
+            Number(customerId),
+
+        service_id:
+            document.getElementById("subscriptionService").value
+                || null,
+
+        page_name:
+            document.getElementById("subscriptionPage").value.trim(),
+
+        platform:
+            document.getElementById("subscriptionPlatform").value,
+
+        page_link:
+            document.getElementById("subscriptionLink").value.trim(),
+
+        monthly_fee:
+            Number(
+                document.getElementById("subscriptionFee").value
+                || 0
+            ),
+
+        currency:
+            document.getElementById("subscriptionCurrency").value,
+
+        payment_day:
+            numberOrNull(
+                document.getElementById("subscriptionPaymentDay").value
+            ),
+
+        renewal_day:
+            numberOrNull(
+                document.getElementById("subscriptionRenewalDay").value
+            ),
+
+        start_date:
+            document.getElementById("subscriptionStartDate").value
+            || null,
+
+        renewal_date:
+            document.getElementById("subscriptionRenewalDate").value
+            || null,
+
+        status:
+            document.getElementById("subscriptionStatus").value,
+
+        notes:
+            document.getElementById("subscriptionNotes").value.trim()
+
+    };
+
+
+    let result;
+
+    if (id) {
+
+        result =
+            await supabaseClient
+                .from("subscriptions")
+                .update(payload)
+                .eq("id", id);
+
+    } else {
+
+        result =
+            await supabaseClient
+                .from("subscriptions")
+                .insert(payload);
+
+    }
+
+
+    if (result.error) {
+
+        console.error(result.error);
+
+        toast(
+            result.error.message,
+            "error"
+        );
+
+        return;
+    }
+
+
+    closeModal();
+
+    toast(
+        id
+        ? "تم تعديل الاشتراك"
+        : "تم إضافة الاشتراك"
+    );
+
+    await loadPage("subscriptions");
+}
+
+
+function confirmDeleteSubscription(id) {
+
+    showConfirm(
+        "حذف الاشتراك",
+        "هل أنت متأكد من حذف هذا الاشتراك؟",
+        async () => {
+
+            const { error } =
+                await supabaseClient
+                    .from("subscriptions")
+                    .delete()
+                    .eq("id", id);
+
+            if (error) {
+
+                toast(
+                    error.message,
+                    "error"
+                );
+
+                return;
+            }
+
+            closeConfirm();
+
+            toast("تم حذف الاشتراك");
+
+            await loadPage("subscriptions");
+
+        }
+    );
+}
+
+
+/* =========================
+   PAYMENTS
+========================= */
+
+async function renderPayments() {
+
+    await Promise.all([
+        loadPayments(),
+        loadCustomers(),
+        loadSubscriptions()
+    ]);
+
+    document.getElementById("content").innerHTML = `
+
+        <div class="fade-in">
+
+            <div class="flex flex-col md:flex-row gap-3 justify-between mb-5">
+
+                <input
+                    id="paymentSearch"
+                    oninput="filterPayments()"
+                    class="input flex-1"
+                    placeholder="ابحث باسم العميل أو الصفحة...">
+
+                <button
+                    onclick="openPaymentModal()"
+                    class="btn btn-gold">
+                    + تسجيل دفعة
+                </button>
+
+            </div>
+
+
+            <div class="card rounded-3xl overflow-hidden">
+
+                <div class="overflow-x-auto">
+
+                    <table class="w-full text-sm">
+
+                        <thead class="bg-[#111] text-gray-500">
+
+                            <tr>
+
+                                <th class="text-right p-4">
+                                    العميل
+                                </th>
+
+                                <th class="text-right p-4">
+                                    الاشتراك
+                                </th>
+
+                                <th class="text-right p-4">
+                                    المبلغ
+                                </th>
+
+                                <th class="text-right p-4">
+                                    الشهر
+                                </th>
+
+                                <th class="text-right p-4">
+                                    تاريخ الدفع
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="paymentsTable">
+
+                            ${paymentsRows(payments)}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+function paymentsRows(list) {
+
+    if (!list.length) {
+
+        return `
+            <tr>
+                <td colspan="5"
+                    class="p-12 text-center text-gray-600">
+                    لا توجد مدفوعات.
+                </td>
+            </tr>
+        `;
+
+    }
+
+    return list.map(p => `
+
+        <tr class="table-row border-t border-[#1d1d1d]">
+
+            <td class="p-4 font-bold">
+                ${escapeHtml(
+                    p.subscriptions?.customers?.client_name || "-"
+                )}
+            </td>
+
+            <td class="p-4 text-gray-400">
+                ${escapeHtml(
+                    p.subscriptions?.page_name || "-"
+                )}
+            </td>
+
+            <td class="p-4 gold font-black">
+                ${formatMoney(p.amount)}
+                ${escapeHtml(p.currency || "EGP")}
+            </td>
+
+            <td class="p-4 text-gray-400">
+                ${escapeHtml(p.paid_month || "-")}
+            </td>
+
+            <td class="p-4 text-gray-500">
+                ${formatDate(p.payment_date)}
+            </td>
+
+        </tr>
+
+    `).join("");
+}
+
+
+function filterPayments() {
+
+    const value =
+        document
+            .getElementById("paymentSearch")
+            .value
+            .toLowerCase()
+            .trim();
+
+    const filtered =
+        payments.filter(p => {
+
+            const client =
+                p.subscriptions?.customers?.client_name || "";
+
+            const page =
+                p.subscriptions?.page_name || "";
+
+            return (
+                client.toLowerCase().includes(value)
+                ||
+                page.toLowerCase().includes(value)
+            );
+
+        });
+
+    document.getElementById("paymentsTable")
+        .innerHTML =
+        paymentsRows(filtered);
+}
+
+
+/* =========================
+   PAYMENT MODAL
+========================= */
+
+async function openPaymentModal(subscriptionId = null) {
+
+    await Promise.all([
+        loadSubscriptions(),
+        loadCustomers()
+    ]);
+
+
+    const options =
+        subscriptions.map(s => `
+
+            <option
+                value="${s.id}"
+                ${Number(subscriptionId) === Number(s.id) ? "selected" : ""}>
+
+                ${escapeHtml(
+                    s.customers?.client_name || "بدون اسم"
+                )}
+
+                —
+                ${escapeHtml(
+                    s.page_name || "اشتراك"
+                )}
+
+            </option>
+
+        `).join("");
+
+
+    openModal(`
+
+        <div class="flex items-center justify-between mb-6">
+
+            <h2 class="text-xl font-black">
+                تسجيل دفعة
+            </h2>
+
+            <button
+                onclick="closeModal()"
+                class="text-gray-500 text-2xl">
+                ×
+            </button>
+
+        </div>
+
+
+        <form onsubmit="savePayment(event)">
+
+            <div class="space-y-4">
+
+
+                <div>
+
+                    <label class="label">
+                        الاشتراك
+                    </label>
+
+                    <select
+                        id="paymentSubscription"
+                        class="input"
+                        required>
+
+                        <option value="">
+                            اختر الاشتراك
+                        </option>
+
+                        ${options}
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        المبلغ
+                    </label>
+
+                    <input
+                        id="paymentAmount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        class="input"
+                        required>
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        العملة
+                    </label>
+
+                    <select
+                        id="paymentCurrency"
+                        class="input">
+
+                        <option value="EGP">
+                            EGP - جنيه مصري
+                        </option>
+
+                        <option value="USD">
+                            USD - دولار
+                        </option>
+
+                        <option value="EUR">
+                            EUR - يورو
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        تاريخ الدفع
+                    </label>
+
+                    <input
+                        id="paymentDate"
+                        type="date"
+                        class="input"
+                        value="${todayDate()}">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        الشهر المدفوع
+                    </label>
+
+                    <input
+                        id="paymentMonth"
+                        class="input"
+                        placeholder="مثال: سبتمبر 2026">
+
+                </div>
+
+
+                <div>
+
+                    <label class="label">
+                        ملاحظات
+                    </label>
+
+                    <textarea
+                        id="paymentNotes"
+                        class="input"
+                        rows="3"></textarea>
+
+                </div>
+
+            </div>
+
+
+            <div class="flex gap-3 mt-7">
+
+                <button
+                    type="button"
+                    onclick="closeModal()"
+                    class="btn btn-dark flex-1">
+                    إلغاء
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-gold flex-1">
+                    حفظ الدفعة
                 </button>
 
             </div>
 
         </form>
 
-    </div>
+    `);
+}
 
-</div>
 
+async function savePayment(event) {
 
-<!-- =========================================================
-     PROFILE MODAL
-========================================================= -->
+    event.preventDefault();
 
-<div
-    id="profile-modal"
-    class="hidden fixed inset-0 modal-bg z-50 p-4 flex items-center justify-center">
 
-    <div class="glass rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scroll">
+    const subscriptionId =
+        document
+            .getElementById("paymentSubscription")
+            .value;
 
-        <div class="p-6 border-b border-gray-800 flex items-center justify-between sticky top-0 bg-[#151515]/95 backdrop-blur z-10">
 
-            <div>
+    const payload = {
 
-                <p class="text-xs text-gray-500">
-                    CUSTOMER PROFILE
-                </p>
+        subscription_id:
+            Number(subscriptionId),
 
-                <h3
-                    id="profile-client-name"
-                    class="text-xl font-black text-gold mt-1">
+        amount:
+            Number(
+                document.getElementById("paymentAmount").value
+            ),
 
-                    ملف العميل
+        currency:
+            document.getElementById("paymentCurrency").value,
 
-                </h3>
+        payment_date:
+            document.getElementById("paymentDate").value
+            || todayDate(),
 
-            </div>
+        paid_month:
+            document.getElementById("paymentMonth").value.trim()
+            || null,
 
-            <button
-                onclick="closeProfileModal()"
-                class="w-9 h-9 rounded-xl bg-gray-900 text-gray-400 hover:text-white">
+        notes:
+            document.getElementById("paymentNotes").value.trim()
 
-                ×
+    };
 
-            </button>
 
-        </div>
+    const { error } =
+        await supabaseClient
+            .from("subscription_payments")
+            .insert(payload);
 
-        <div id="profile-content" class="p-6 space-y-4">
-        </div>
 
-    </div>
+    if (error) {
 
-</div>
+        console.error(error);
 
-
-<!-- =========================================================
-     CONFIRM MODAL
-========================================================= -->
-
-<div
-    id="confirm-modal"
-    class="hidden fixed inset-0 modal-bg z-[60] p-4 flex items-center justify-center">
-
-    <div class="glass rounded-3xl w-full max-w-sm p-6 text-center">
-
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 text-2xl mb-4">
-            ?
-        </div>
-
-        <h3 id="confirm-title" class="font-black text-lg">
-            تأكيد العملية
-        </h3>
-
-        <p id="confirm-text" class="text-sm text-gray-500 mt-2">
-            هل أنت متأكد؟
-        </p>
-
-        <div class="flex gap-3 mt-6">
-
-            <button
-                id="confirm-yes"
-                class="btn-gold flex-1 rounded-xl py-3 font-bold">
-
-                تأكيد
-
-            </button>
-
-            <button
-                onclick="closeConfirm()"
-                class="flex-1 bg-gray-800 hover:bg-gray-700 rounded-xl py-3">
-
-                إلغاء
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     TOAST
-========================================================= -->
-
-<div
-    id="toast-container"
-    class="fixed bottom-5 left-5 z-[100] space-y-3 max-w-sm">
-</div>
-
-
-<!-- =========================================================
-     JAVASCRIPT
-========================================================= -->
-
-<script>
-
-    /* =====================================================
-       SUPABASE
-    ===================================================== */
-
-    const SUPABASE_URL =
-        'https://rsvzachgbqsucqgrwguv.supabase.co';
-
-    const SUPABASE_ANON_KEY =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ';
-
-    const db = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-    );
-
-
-    /* =====================================================
-       GLOBAL VARIABLES
-    ===================================================== */
-
-    let clientsData = [];
-    let currentFilter = 'all';
-    let confirmCallback = null;
-
-
-    /* =====================================================
-       HELPERS
-    ===================================================== */
-
-    function $(id) {
-        return document.getElementById(id);
-    }
-
-
-    function escapeHtml(value) {
-
-        if (value === null || value === undefined) {
-            return '';
-        }
-
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-    }
-
-
-    function money(value) {
-
-        return new Intl.NumberFormat('ar-EG').format(
-            Number(value) || 0
-        ) + ' ج';
-
-    }
-
-
-    function showToast(message, type = 'success') {
-
-        const container = $('toast-container');
-
-        const toast = document.createElement('div');
-
-        const color =
-            type === 'success'
-                ? 'border-green-500/30 text-green-400 bg-green-500/10'
-                : type === 'error'
-                    ? 'border-red-500/30 text-red-400 bg-red-500/10'
-                    : 'border-yellow-500/30 text-yellow-400 bg-yellow-500/10';
-
-        toast.className =
-            `toast border ${color} rounded-2xl px-4 py-3 text-sm shadow-xl`;
-
-        toast.textContent = message;
-
-        container.appendChild(toast);
-
-        setTimeout(() => {
-
-            toast.style.opacity = '0';
-
-            setTimeout(() => {
-                toast.remove();
-            }, 250);
-
-        }, 3000);
-    }
-
-
-    function formatPlatforms(value) {
-
-        if (!value) {
-            return 'غير محدد';
-        }
-
-        try {
-
-            const parsed = JSON.parse(value);
-
-            if (Array.isArray(parsed)) {
-                return parsed.join(' + ');
-            }
-
-        } catch (e) {}
-
-        return value;
-    }
-
-
-    function getCurrentMonth() {
-
-        const now = new Date();
-
-        return `${now.getFullYear()}-${String(
-            now.getMonth() + 1
-        ).padStart(2, '0')}`;
-
-    }
-
-
-    function getTodayDay() {
-
-        return new Date().getDate();
-
-    }
-
-
-    /* =====================================================
-       LOGIN
-    ===================================================== */
-
-    function togglePassword() {
-
-        const input = $('password');
-        const eye = $('eye-icon');
-
-        if (input.type === 'password') {
-
-            input.type = 'text';
-            eye.textContent = 'إخفاء';
-
-        } else {
-
-            input.type = 'password';
-            eye.textContent = 'إظهار';
-
-        }
-
-    }
-
-
-    async function checkUser() {
-
-        const {
-            data: { session },
-            error
-        } = await db.auth.getSession();
-
-        if (error) {
-
-            console.error(error);
-
-            showLogin();
-
-            return;
-
-        }
-
-
-        if (session) {
-
-            showDashboard(session);
-
-        } else {
-
-            showLogin();
-
-        }
-
-    }
-
-
-    function showLogin() {
-
-        document.body.classList.add('login-mode');
-
-        $('login-screen').classList.remove('hidden-force');
-
-        $('dashboard-screen').classList.add('hidden-force');
-
-    }
-
-
-    async function showDashboard(session) {
-
-        document.body.classList.remove('login-mode');
-
-        $('login-screen').classList.add('hidden-force');
-
-        $('dashboard-screen').classList.remove('hidden-force');
-
-        $('current-user').textContent =
-            session?.user?.email || 'الحساب الحالي';
-
-        await loadData();
-
-    }
-
-
-    $('login-form').addEventListener('submit', async function(e) {
-
-        e.preventDefault();
-
-        const btn = $('login-btn');
-        const text = $('login-btn-text');
-        const spinner = $('login-spinner');
-        const errorBox = $('login-error');
-
-        errorBox.classList.add('hidden');
-
-        btn.disabled = true;
-        text.textContent = 'جاري تسجيل الدخول...';
-        spinner.classList.remove('hidden-force');
-
-        const email = $('email').value.trim();
-        const password = $('password').value;
-
-        const { data, error } =
-            await db.auth.signInWithPassword({
-                email,
-                password
-            });
-
-        btn.disabled = false;
-        text.textContent = 'دخول إلى النظام';
-        spinner.classList.add('hidden-force');
-
-        if (error) {
-
-            errorBox.textContent =
-                'تعذر تسجيل الدخول. تأكد من البريد الإلكتروني وكلمة المرور.';
-
-            errorBox.classList.remove('hidden');
-
-            return;
-        }
-
-        if (data.session) {
-
-            await showDashboard(data.session);
-
-            showToast('تم تسجيل الدخول بنجاح');
-
-        }
-
-    });
-
-
-    db.auth.onAuthStateChange((event, session) => {
-
-        if (event === 'SIGNED_OUT') {
-
-            showLogin();
-
-        }
-
-    });
-
-
-    async function handleLogout() {
-
-        const confirmed = await askConfirm(
-            'تسجيل الخروج',
-            'هل تريد تسجيل الخروج من النظام؟'
+        toast(
+            error.message,
+            "error"
         );
 
-        if (!confirmed) {
-            return;
-        }
-
-        const { error } = await db.auth.signOut();
-
-        if (error) {
-
-            showToast(
-                'تعذر تسجيل الخروج',
-                'error'
-            );
-
-            return;
-
-        }
-
-        showLogin();
-
-        showToast('تم تسجيل الخروج');
-
+        return;
     }
 
 
-    /* =====================================================
-       LOAD DATA
-    ===================================================== */
+    closeModal();
 
-    async function loadData() {
+    toast("تم تسجيل الدفعة");
 
-        $('clients-table-body').innerHTML = `
-            <tr>
-                <td colspan="7" class="py-12 text-center text-gray-500">
-                    جاري تحميل البيانات...
-                </td>
-            </tr>
-        `;
+    await loadPage("payments");
+}
 
-        try {
 
-            const {
-                data,
-                error
-            } = await db
-                .from('clients')
-                .select('*, payments(*)')
-                .order('created_at', {
-                    ascending: false
-                });
+/* =========================
+   SERVICES
+========================= */
 
+async function renderServices() {
 
-            if (error) {
+    await loadServices();
 
-                console.error(error);
+    document.getElementById("content").innerHTML = `
 
-                $('clients-table-body').innerHTML = `
-                    <tr>
-                        <td colspan="7" class="py-12 text-center text-red-400">
-                            حدث خطأ أثناء تحميل البيانات
-                        </td>
-                    </tr>
-                `;
+        <div class="fade-in">
 
-                showToast(
-                    'تعذر تحميل البيانات: ' + error.message,
-                    'error'
-                );
+            <div class="card rounded-3xl p-6">
 
-                return;
+                <div class="flex justify-between items-center mb-5">
 
-            }
+                    <div>
+                        <h2 class="font-black text-xl">
+                            الخدمات الحالية
+                        </h2>
 
-
-            clientsData = data || [];
-
-            renderTable();
-
-        } catch (error) {
-
-            console.error(error);
-
-            showToast(
-                'حدث خطأ غير متوقع',
-                'error'
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       FILTERS
-    ===================================================== */
-
-    function setFilter(filter) {
-
-        currentFilter = filter;
-
-        document
-            .querySelectorAll('.filter-btn')
-            .forEach(btn => {
-
-                btn.classList.remove(
-                    'bg-gold',
-                    'text-black',
-                    'font-bold'
-                );
-
-                btn.classList.add(
-                    'bg-[#0D0D0D]',
-                    'border',
-                    'border-gray-700',
-                    'text-gray-400'
-                );
-
-            });
-
-
-        const active = $(`filter-${filter}`);
-
-        if (active) {
-
-            active.classList.remove(
-                'bg-[#0D0D0D]',
-                'border',
-                'border-gray-700',
-                'text-gray-400'
-            );
-
-            active.classList.add(
-                'bg-gold',
-                'text-black',
-                'font-bold'
-            );
-
-        }
-
-        renderTable();
-
-    }
-
-
-    function filterTable() {
-
-        renderTable();
-
-    }
-
-
-    function focusSearch() {
-
-        $('search-input').focus();
-
-        $('search-input').scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
-
-    }
-
-
-    /* =====================================================
-       RENDER TABLE
-    ===================================================== */
-
-    function renderTable() {
-
-        const tbody = $('clients-table-body');
-        const empty = $('empty-state');
-
-        tbody.innerHTML = '';
-
-        const search =
-            $('search-input')
-                .value
-                .trim()
-                .toLowerCase();
-
-        const month = getCurrentMonth();
-        const day = getTodayDay();
-
-        let totalMoney = 0;
-        let collectedMoney = 0;
-        let pendingMoney = 0;
-
-        let overdueNames = [];
-
-
-        const filtered = clientsData.filter(client => {
-
-            const name =
-                String(client.client_name || '').toLowerCase();
-
-            const phone =
-                String(client.phone || '').toLowerCase();
-
-            const page =
-                String(client.page_name || '').toLowerCase();
-
-            const matchesSearch =
-                name.includes(search) ||
-                phone.includes(search) ||
-                page.includes(search);
-
-            if (!matchesSearch) {
-                return false;
-            }
-
-
-            const paid =
-                Array.isArray(client.payments) &&
-                client.payments.some(
-                    payment =>
-                        payment.paid_month === month
-                );
-
-
-            const overdue =
-                !paid &&
-                day > Number(client.payment_day);
-
-
-            if (currentFilter === 'merchant') {
-                return client.client_type === 'merchant';
-            }
-
-            if (currentFilter === 'direct') {
-                return client.client_type === 'direct';
-            }
-
-            if (currentFilter === 'overdue') {
-                return overdue;
-            }
-
-            return true;
-
-        });
-
-
-        filtered.forEach(client => {
-
-            const paid =
-                Array.isArray(client.payments) &&
-                client.payments.some(
-                    payment =>
-                        payment.paid_month === month
-                );
-
-            const fee =
-                Number(client.monthly_fee) || 0;
-
-            totalMoney += fee;
-
-            if (paid) {
-
-                collectedMoney += fee;
-
-            } else {
-
-                pendingMoney += fee;
-
-            }
-
-
-            const overdue =
-                !paid &&
-                day > Number(client.payment_day);
-
-
-            if (overdue) {
-                overdueNames.push(client.client_name);
-            }
-
-
-            let statusText;
-            let statusClass;
-
-            if (paid) {
-
-                statusText = 'مدفوع';
-                statusClass = 'status-paid';
-
-            } else if (overdue) {
-
-                statusText = 'متأخر';
-                statusClass = 'status-overdue';
-
-            } else {
-
-                statusText = 'مستحق';
-                statusClass = 'status-pending';
-
-            }
-
-
-            const platforms =
-                formatPlatforms(client.platform);
-
-
-            const merchant =
-                client.client_type === 'merchant';
-
-
-            const badge =
-                merchant
-                    ? `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full text-[10px]">تاجر</span>`
-                    : `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[10px]">مباشر</span>`;
-
-
-            const phone =
-                String(client.phone || '')
-                    .replace(/\D/g, '')
-                    .replace(/^0/, '20');
-
-
-            const waMessage = encodeURIComponent(
-                `مرحباً ${client.client_name}،\n\n` +
-                `تذكير بخصوص اشتراك خدمات ${platforms} ` +
-                `لحساب ${client.page_name}.\n` +
-                `قيمة الاشتراك: ${client.monthly_fee} جنيه.\n` +
-                `موعد الدفع: يوم ${client.payment_day} من الشهر.\n\n` +
-                `برجاء تأكيد الدفع. شكراً لك.`
-            );
-
-
-            const waUrl =
-                `https://wa.me/${phone}?text=${waMessage}`;
-
-
-            const notes =
-                client.notes
-                    ? `<div class="text-[11px] text-yellow-500 mt-1 truncate max-w-[220px]">ملاحظة: ${escapeHtml(client.notes)}</div>`
-                    : '';
-
-
-            const row = document.createElement('tr');
-
-            row.className =
-                'hover:bg-white/[.025] transition';
-
-
-            row.innerHTML = `
-
-                <td class="py-4 px-4">
-
-                    <button
-                        onclick="openProfile('${client.id}')"
-                        class="text-right">
-
-                        <div class="flex items-center gap-2">
-
-                            <span class="font-bold text-white hover:text-gold">
-                                ${escapeHtml(client.client_name)}
-                            </span>
-
-                            ${badge}
-
-                        </div>
-
-                        <div class="text-xs text-gray-500 mt-1">
-                            ${escapeHtml(client.page_name || '')}
-                        </div>
-
-                        ${notes}
-
-                    </button>
-
-                </td>
-
-
-                <td class="py-4 px-4 text-gray-300">
-                    ${escapeHtml(client.phone)}
-                </td>
-
-
-                <td class="py-4 px-4">
-
-                    <div class="flex flex-wrap gap-1 max-w-[220px]">
-
-                        ${platforms
-                            .split(' + ')
-                            .map(service =>
-                                `<span class="service-chip px-2 py-1 rounded-md text-[10px]">${escapeHtml(service)}</span>`
-                            )
-                            .join('')}
-
+                        <p class="text-gray-600 text-sm mt-1">
+                            الخدمات الموجودة في قاعدة البيانات.
+                        </p>
                     </div>
 
-                </td>
+                </div>
 
 
-                <td class="py-4 px-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
-                    <span class="font-black text-gold">
-                        ${money(client.monthly_fee)}
-                    </span>
+                    ${
+                        services.length
+                        ? services.map(service => `
 
-                </td>
+                            <div class="bg-[#111] border border-[#222] rounded-2xl p-5">
 
+                                <div class="gold font-black text-lg">
+                                    ${escapeHtml(
+                                        service.name ||
+                                        service.service_name ||
+                                        service.title ||
+                                        "خدمة"
+                                    )}
+                                </div>
 
-                <td class="py-4 px-4 text-xs">
+                                <div class="text-xs text-gray-600 mt-2">
+                                    ID: ${escapeHtml(service.id)}
+                                </div>
 
-                    <span class="text-gray-400">
-                        دفع: يوم ${escapeHtml(client.payment_day)}
-                    </span>
+                            </div>
 
-                    <br>
-
-                    <span class="text-gray-600">
-                        تجديد: يوم ${escapeHtml(client.renewal_day)}
-                    </span>
-
-                </td>
-
-
-                <td class="py-4 px-4">
-
-                    <span class="${statusClass} px-3 py-1.5 rounded-full text-xs font-bold">
-                        ${statusText}
-                    </span>
-
-                </td>
-
-
-                <td class="py-4 px-4">
-
-                    <div class="flex gap-1.5 items-center">
-
-                        ${
-                            !paid
-                                ? `
-                                    <button
-                                        onclick="markAsPaid('${client.id}', ${fee})"
-                                        class="bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
-                                        دفع
-                                    </button>
-                                  `
-                                : `
-                                    <span class="text-xs text-green-500">
-                                        ✓ تم
-                                    </span>
-                                  `
-                        }
-
-
-                        <a
-                            href="${waUrl}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
-
-                            واتساب
-
-                        </a>
-
-
-                        <button
-                            onclick="openEditModal('${client.id}')"
-                            class="bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
-
-                            تعديل
-
-                        </button>
-
-
-                        <button
-                            onclick="deleteClient('${client.id}')"
-                            class="bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
-
-                            حذف
-
-                        </button>
-
-                    </div>
-
-                </td>
-
-            `;
-
-
-            tbody.appendChild(row);
-
-        });
-
-
-        $('stat-active-count').textContent =
-            clientsData.length;
-
-
-        $('stat-total-money').textContent =
-            money(totalMoney);
-
-
-        $('stat-collected').textContent =
-            money(collectedMoney);
-
-
-        $('stat-pending-money').textContent =
-            money(pendingMoney);
-
-
-        $('table-count').textContent =
-            `${filtered.length} اشتراك`;
-
-
-        if (filtered.length === 0) {
-
-            empty.classList.remove('hidden');
-
-        } else {
-
-            empty.classList.add('hidden');
-
-        }
-
-
-        if (overdueNames.length > 0) {
-
-            $('alerts-container').classList.remove('hidden');
-
-            const names =
-                overdueNames.slice(0, 5).join('، ');
-
-            const more =
-                overdueNames.length > 5
-                    ? ` و ${overdueNames.length - 5} آخرين`
-                    : '';
-
-            $('alerts-text').textContent =
-                `يوجد ${overdueNames.length} اشتراك متأخر عن موعد الدفع: ${names}${more}`;
-
-        } else {
-
-            $('alerts-container').classList.add('hidden');
-
-        }
-
-    }
-
-
-    /* =====================================================
-       ADD / EDIT
-    ===================================================== */
-
-    function toggleMerchantField() {
-
-        const type =
-            $('add-client-type').value;
-
-        const label =
-            $('client-name-label');
-
-        const input =
-            $('add-client-name');
-
-
-        if (type === 'merchant') {
-
-            label.textContent =
-                'اسم التاجر / الشريك';
-
-            input.placeholder =
-                'مثال: مكتب فلان';
-
-        } else {
-
-            label.textContent =
-                'اسم العميل';
-
-            input.placeholder =
-                'محمد أحمد';
-
-        }
-
-    }
-
-
-    function clearPlatformCheckboxes() {
-
-        document
-            .querySelectorAll('input[name="platforms"]')
-            .forEach(cb => cb.checked = false);
-
-    }
-
-
-    function openAddModal() {
-
-        $('add-form').reset();
-
-        $('edit-client-id').value = '';
-
-        $('modal-title').textContent =
-            'إضافة اشتراك جديد';
-
-        $('submit-add-btn').textContent =
-            'حفظ الاشتراك';
-
-        clearPlatformCheckboxes();
-
-        toggleMerchantField();
-
-        $('add-modal').classList.remove('hidden');
-
-    }
-
-
-    function openEditModal(id) {
-
-        const client =
-            clientsData.find(c => c.id === id);
-
-        if (!client) {
-            return;
-        }
-
-
-        $('edit-client-id').value =
-            client.id;
-
-        $('modal-title').textContent =
-            'تعديل بيانات الاشتراك';
-
-        $('submit-add-btn').textContent =
-            'حفظ التعديلات';
-
-
-        $('add-client-type').value =
-            client.client_type || 'direct';
-
-        toggleMerchantField();
-
-
-        $('add-client-name').value =
-            client.client_name || '';
-
-        $('add-page-name').value =
-            client.page_name || '';
-
-        $('add-phone').value =
-            client.phone || '';
-
-        $('add-fee').value =
-            client.monthly_fee || '';
-
-        $('add-link').value =
-            client.page_link || '';
-
-        $('add-payment-day').value =
-            client.payment_day || '';
-
-        $('add-renewal-day').value =
-            client.renewal_day || '';
-
-        $('add-notes').value =
-            client.notes || '';
-
-
-        clearPlatformCheckboxes();
-
-
-        try {
-
-            const list =
-                JSON.parse(client.platform);
-
-            if (Array.isArray(list)) {
-
-                list.forEach(platform => {
-
-                    const checkbox =
-                        Array.from(
-                            document.querySelectorAll(
-                                'input[name="platforms"]'
-                            )
-                        ).find(
-                            cb => cb.value === platform
-                        );
-
-                    if (checkbox) {
-                        checkbox.checked = true;
+                        `).join("")
+                        : `
+                            <div class="text-gray-600">
+                                لا توجد خدمات.
+                            </div>
+                        `
                     }
 
-                });
+                </div>
 
-            }
+            </div>
 
-        } catch (e) {}
+        </div>
+    `;
+}
 
 
-        $('add-modal').classList.remove('hidden');
+/* =========================
+   HELPERS
+========================= */
 
-    }
+function subscriptionRow(s) {
 
+    return `
+        <div class="bg-[#111] border border-[#202020] rounded-2xl p-4">
 
-    function closeAddModal() {
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
 
-        $('add-modal').classList.add('hidden');
+                <div>
 
-        $('add-form').reset();
+                    <div class="font-bold">
+                        ${escapeHtml(
+                            s.customers?.client_name || "-"
+                        )}
+                    </div>
 
-        clearPlatformCheckboxes();
+                    <div class="text-xs text-gray-600 mt-1">
+                        ${escapeHtml(s.page_name || "بدون اسم صفحة")}
+                    </div>
 
-    }
+                </div>
 
+                <div class="flex items-center gap-4">
 
-    $('add-form').addEventListener(
-        'submit',
-        async function(e) {
+                    <div class="text-right">
 
-            e.preventDefault();
-
-            const btn =
-                $('submit-add-btn');
-
-            const selectedPlatforms = [];
-
-
-            document
-                .querySelectorAll(
-                    'input[name="platforms"]:checked'
-                )
-                .forEach(cb => {
-
-                    selectedPlatforms.push(
-                        cb.value
-                    );
-
-                });
-
-
-            if (selectedPlatforms.length === 0) {
-
-                showToast(
-                    'اختر منصة واحدة على الأقل',
-                    'error'
-                );
-
-                return;
-
-            }
-
-
-            const fee =
-                Number($('add-fee').value);
-
-            const paymentDay =
-                Number($('add-payment-day').value);
-
-            const renewalDay =
-                Number($('add-renewal-day').value);
-
-
-            if (fee < 0) {
-
-                showToast(
-                    'قيمة الاشتراك غير صحيحة',
-                    'error'
-                );
-
-                return;
-
-            }
-
-
-            if (
-                paymentDay < 1 ||
-                paymentDay > 31 ||
-                renewalDay < 1 ||
-                renewalDay > 31
-            ) {
-
-                showToast(
-                    'أيام الدفع والتجديد يجب أن تكون من 1 إلى 31',
-                    'error'
-                );
-
-                return;
-
-            }
-
-
-            const editId =
-                $('edit-client-id').value;
-
-
-            const clientData = {
-
-                client_type:
-                    $('add-client-type').value,
-
-                client_name:
-                    $('add-client-name').value.trim(),
-
-                page_name:
-                    $('add-page-name').value.trim(),
-
-                phone:
-                    $('add-phone').value.trim(),
-
-                platform:
-                    JSON.stringify(selectedPlatforms),
-
-                page_link:
-                    $('add-link').value.trim(),
-
-                monthly_fee:
-                    fee,
-
-                payment_day:
-                    paymentDay,
-
-                renewal_day:
-                    renewalDay,
-
-                notes:
-                    $('add-notes').value.trim()
-
-            };
-
-
-            btn.disabled = true;
-
-            btn.textContent =
-                'جاري الحفظ...';
-
-
-            let error;
-
-
-            if (editId) {
-
-                const result =
-                    await db
-                        .from('clients')
-                        .update(clientData)
-                        .eq('id', editId);
-
-                error = result.error;
-
-            } else {
-
-                const result =
-                    await db
-                        .from('clients')
-                        .insert([clientData]);
-
-                error = result.error;
-
-            }
-
-
-            btn.disabled = false;
-
-            btn.textContent =
-                editId
-                    ? 'حفظ التعديلات'
-                    : 'حفظ الاشتراك';
-
-
-            if (error) {
-
-                console.error(error);
-
-                showToast(
-                    'حدث خطأ: ' + error.message,
-                    'error'
-                );
-
-                return;
-
-            }
-
-
-            closeAddModal();
-
-            await loadData();
-
-            showToast(
-                editId
-                    ? 'تم تعديل الاشتراك بنجاح'
-                    : 'تم إضافة الاشتراك بنجاح'
-            );
-
-        }
-    );
-
-
-    /* =====================================================
-       PAYMENT
-    ===================================================== */
-
-    async function markAsPaid(clientId, amount) {
-
-        const confirmed =
-            await askConfirm(
-                'تسجيل دفعة',
-                'هل تريد تسجيل دفعة هذا الشهر لهذا العميل؟'
-            );
-
-
-        if (!confirmed) {
-            return;
-        }
-
-
-        const now =
-            new Date();
-
-        const dateStr =
-            now.toISOString().split('T')[0];
-
-        const monthStr =
-            getCurrentMonth();
-
-
-        const {
-            error
-        } = await db
-            .from('payments')
-            .insert([
-                {
-                    client_id: clientId,
-                    amount: amount,
-                    payment_date: dateStr,
-                    paid_month: monthStr
-                }
-            ]);
-
-
-        if (error) {
-
-            console.error(error);
-
-            showToast(
-                'تعذر تسجيل الدفعة: ' + error.message,
-                'error'
-            );
-
-            return;
-
-        }
-
-
-        await loadData();
-
-        showToast(
-            'تم تسجيل الدفعة بنجاح'
-        );
-
-    }
-
-
-    /* =====================================================
-       DELETE
-    ===================================================== */
-
-    async function deleteClient(id) {
-
-        const client =
-            clientsData.find(
-                c => c.id === id
-            );
-
-        if (!client) {
-            return;
-        }
-
-
-        const confirmed =
-            await askConfirm(
-                'حذف الاشتراك',
-                `هل أنت متأكد من حذف اشتراك ${client.client_name}؟ لا يُنصح بهذه العملية إذا كنت تريد الاحتفاظ بالسجل.`
-            );
-
-
-        if (!confirmed) {
-            return;
-        }
-
-
-        const {
-            error
-        } = await db
-            .from('clients')
-            .delete()
-            .eq('id', id);
-
-
-        if (error) {
-
-            console.error(error);
-
-            showToast(
-                'تعذر حذف الاشتراك: ' + error.message,
-                'error'
-            );
-
-            return;
-
-        }
-
-
-        await loadData();
-
-        showToast(
-            'تم حذف الاشتراك'
-        );
-
-    }
-
-
-    /* =====================================================
-       PROFILE
-    ===================================================== */
-
-    function openProfile(id) {
-
-        const client =
-            clientsData.find(
-                c => c.id === id
-            );
-
-        if (!client) {
-            return;
-        }
-
-
-        $('profile-client-name').textContent =
-            client.client_name;
-
-
-        const platforms =
-            formatPlatforms(
-                client.platform
-            );
-
-
-        let paymentsHtml = '';
-
-
-        if (
-            Array.isArray(client.payments) &&
-            client.payments.length
-        ) {
-
-            const sorted =
-                [...client.payments].sort(
-                    (a, b) =>
-                        String(b.payment_date)
-                            .localeCompare(
-                                String(a.payment_date)
-                            )
-                );
-
-
-            paymentsHtml = sorted
-                .map(payment => `
-
-                    <div class="flex items-center justify-between bg-[#0D0D0D] border border-gray-800 rounded-xl p-3">
-
-                        <div>
-
-                            <p class="text-green-400 font-bold">
-                                ${money(payment.amount)}
-                            </p>
-
-                            <p class="text-[11px] text-gray-600 mt-1">
-                                شهر ${escapeHtml(payment.paid_month)}
-                            </p>
-
+                        <div class="gold font-bold">
+                            ${formatMoney(s.monthly_fee)}
+                            ${escapeHtml(s.currency || "EGP")}
                         </div>
 
-                        <p class="text-xs text-gray-500">
-                            ${escapeHtml(payment.payment_date)}
-                        </p>
+                        <div class="text-xs text-gray-600">
+                            التجديد:
+                            ${formatDate(s.renewal_date)}
+                        </div>
 
                     </div>
 
-                `)
-                .join('');
+                    ${statusBadge(s)}
 
-        } else {
-
-            paymentsHtml = `
-                <div class="text-center text-gray-600 py-5">
-                    لا توجد دفعات مسجلة حتى الآن
                 </div>
-            `;
 
-        }
+            </div>
 
-
-        const phone =
-            String(client.phone || '')
-                .replace(/\D/g, '')
-                .replace(/^0/, '20');
+        </div>
+    `;
+}
 
 
-        const waMessage =
-            encodeURIComponent(
-                `مرحباً ${client.client_name}، بخصوص اشتراكك في ${platforms}.`
+function statusBadge(s) {
+
+    let cls = "status-active";
+    let text = "نشط";
+
+    if (s.status === "expired") {
+        cls = "status-expired";
+        text = "منتهي";
+    }
+
+    if (s.status === "paused") {
+        cls = "status-paused";
+        text = "متوقف";
+    }
+
+    if (s.renewal_date) {
+
+        const date =
+            new Date(s.renewal_date);
+
+        const today =
+            new Date();
+
+        const diff =
+            Math.ceil(
+                (date - today) /
+                (1000 * 60 * 60 * 24)
             );
 
+        if (diff < 0) {
 
-        const waUrl =
-            `https://wa.me/${phone}?text=${waMessage}`;
+            cls = "status-expired";
+            text = "منتهي";
 
+        } else if (diff <= 7) {
 
-        $('profile-content').innerHTML = `
+            cls = "status-paused";
+            text = "قريب التجديد";
 
-            <div class="grid grid-cols-2 gap-3">
-
-                <div class="bg-[#0D0D0D] rounded-xl p-3 border border-gray-800">
-                    <p class="text-[11px] text-gray-600">
-                        نوع العميل
-                    </p>
-
-                    <p class="font-bold mt-1">
-                        ${
-                            client.client_type === 'merchant'
-                                ? 'تاجر / شريك'
-                                : 'عميل مباشر'
-                        }
-                    </p>
-                </div>
-
-
-                <div class="bg-[#0D0D0D] rounded-xl p-3 border border-gray-800">
-                    <p class="text-[11px] text-gray-600">
-                        الهاتف
-                    </p>
-
-                    <p class="font-bold mt-1">
-                        ${escapeHtml(client.phone)}
-                    </p>
-                </div>
-
-            </div>
-
-
-            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
-
-                <p class="text-xs text-gray-600">
-                    الحساب / النشاط
-                </p>
-
-                <p class="font-bold mt-1">
-                    ${escapeHtml(client.page_name)}
-                </p>
-
-            </div>
-
-
-            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
-
-                <p class="text-xs text-gray-600 mb-2">
-                    الخدمات
-                </p>
-
-                <div class="flex flex-wrap gap-2">
-
-                    ${platforms
-                        .split(' + ')
-                        .map(p =>
-                            `<span class="service-chip px-2.5 py-1 rounded-lg text-xs">${escapeHtml(p)}</span>`
-                        )
-                        .join('')}
-
-                </div>
-
-            </div>
-
-
-            <div class="grid grid-cols-2 gap-3">
-
-                <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
-
-                    <p class="text-xs text-gray-600">
-                        قيمة الاشتراك
-                    </p>
-
-                    <p class="text-gold font-black text-xl mt-1">
-                        ${money(client.monthly_fee)}
-                    </p>
-
-                </div>
-
-
-                <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
-
-                    <p class="text-xs text-gray-600">
-                        موعد الدفع
-                    </p>
-
-                    <p class="font-bold text-xl mt-1">
-                        يوم ${escapeHtml(client.payment_day)}
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
-
-                <p class="text-xs text-gray-600">
-                    موعد التجديد
-                </p>
-
-                <p class="font-bold mt-1">
-                    يوم ${escapeHtml(client.renewal_day)}
-                </p>
-
-            </div>
-
-
-            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
-
-                <p class="text-xs text-gray-600">
-                    الملاحظات
-                </p>
-
-                <p class="text-sm mt-1 text-gray-300">
-                    ${escapeHtml(client.notes || 'لا توجد ملاحظات')}
-                </p>
-
-            </div>
-
-
-            ${
-                client.page_link
-                    ? `
-                        <a
-                            href="${escapeHtml(client.page_link)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="block text-center border border-gold/30 text-gold hover:bg-gold hover:text-black rounded-xl py-3">
-                            فتح رابط الحساب
-                        </a>
-                      `
-                    : ''
-            }
-
-
-            <a
-                href="${waUrl}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="block text-center bg-green-600 hover:bg-green-500 text-white rounded-xl py-3">
-
-                التواصل عبر واتساب
-
-            </a>
-
-
-            <div>
-
-                <div class="flex items-center justify-between mb-3">
-
-                    <h4 class="font-bold text-gold">
-                        سجل المدفوعات
-                    </h4>
-
-                    <span class="text-xs text-gray-600">
-                        ${
-                            Array.isArray(client.payments)
-                                ? client.payments.length
-                                : 0
-                        } دفعة
-                    </span>
-
-                </div>
-
-                <div class="space-y-2">
-
-                    ${paymentsHtml}
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        $('profile-modal')
-            .classList
-            .remove('hidden');
+        }
 
     }
 
-
-    function closeProfileModal() {
-
-        $('profile-modal')
-            .classList
-            .add('hidden');
-
-    }
+    return `
+        <span class="px-3 py-1 rounded-full text-xs ${cls}">
+            ${text}
+        </span>
+    `;
+}
 
 
-    /* =====================================================
-       CONFIRM MODAL
-    ===================================================== */
+function formatMoney(value) {
 
-    function askConfirm(title, text) {
-
-        return new Promise(resolve => {
-
-            $('confirm-title').textContent =
-                title;
-
-            $('confirm-text').textContent =
-                text;
-
-            confirmCallback = resolve;
-
-            $('confirm-modal')
-                .classList
-                .remove('hidden');
-
+    return Number(value || 0)
+        .toLocaleString("en-US", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
         });
+}
 
+
+function formatDate(value) {
+
+    if (!value)
+        return "-";
+
+    const date =
+        new Date(value);
+
+    if (Number.isNaN(date.getTime()))
+        return value;
+
+    return date.toLocaleDateString(
+        "ar-EG",
+        {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        }
+    );
+}
+
+
+function todayDate() {
+
+    const d = new Date();
+
+    return [
+        d.getFullYear(),
+        String(d.getMonth() + 1).padStart(2,"0"),
+        String(d.getDate()).padStart(2,"0")
+    ].join("-");
+}
+
+
+function numberOrNull(value) {
+
+    if (value === "" || value === null)
+        return null;
+
+    return Number(value);
+}
+
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function escapeAttr(value) {
+
+    return escapeHtml(value);
+}
+
+
+/* =========================
+   MODALS
+========================= */
+
+function openModal(html) {
+
+    document.getElementById("modalContent")
+        .innerHTML = html;
+
+    document.getElementById("modal")
+        .classList.remove("hidden");
+
+    document.getElementById("modal")
+        .classList.add("flex");
+}
+
+
+function closeModal() {
+
+    document.getElementById("modal")
+        .classList.add("hidden");
+
+    document.getElementById("modal")
+        .classList.remove("flex");
+}
+
+
+function showConfirm(title, text, action) {
+
+    document.getElementById("confirmTitle")
+        .textContent = title;
+
+    document.getElementById("confirmText")
+        .textContent = text;
+
+    document.getElementById("confirmButton")
+        .onclick = action;
+
+    document.getElementById("confirmModal")
+        .classList.remove("hidden");
+
+    document.getElementById("confirmModal")
+        .classList.add("flex");
+}
+
+
+function closeConfirm() {
+
+    document.getElementById("confirmModal")
+        .classList.add("hidden");
+
+    document.getElementById("confirmModal")
+        .classList.remove("flex");
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+function toast(message, type = "success") {
+
+    const element =
+        document.getElementById("toast");
+
+    const box =
+        document.getElementById("toastBox");
+
+    const text =
+        document.getElementById("toastMessage");
+
+    text.textContent = message;
+
+    box.style.borderColor =
+        type === "error"
+        ? "rgba(248,113,113,.3)"
+        : "rgba(212,175,55,.25)";
+
+    element.classList.remove("hidden");
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer =
+        setTimeout(() => {
+
+            element.classList.add("hidden");
+
+        }, 3000);
+}
+
+
+/* =========================
+   WHATSAPP
+========================= */
+
+function openWhatsApp(phone, name = "") {
+
+    let number =
+        String(phone || "")
+            .replace(/\D/g, "");
+
+    if (number.startsWith("0"))
+        number = "20" + number.substring(1);
+
+    const message =
+        encodeURIComponent(
+            `أهلاً ${name}، معك BADGEIFY.`
+        );
+
+    window.open(
+        `https://wa.me/${number}?text=${message}`,
+        "_blank"
+    );
+}
+
+
+/* =========================
+   MOBILE MENU
+========================= */
+
+function toggleMobileMenu(force) {
+
+    const menu =
+        document.getElementById("mobileMenu");
+
+    if (force === false) {
+
+        menu.classList.remove("open");
+
+        return;
     }
 
-
-    $('confirm-yes').addEventListener(
-        'click',
-        function() {
-
-            if (confirmCallback) {
-
-                const callback =
-                    confirmCallback;
-
-                confirmCallback = null;
-
-                closeConfirm();
-
-                callback(true);
-
-            }
-
-        }
-    );
+    menu.classList.toggle("open");
+}
 
 
-    function closeConfirm() {
+/* =========================
+   LABEL STYLE
+========================= */
 
-        if (confirmCallback) {
+const style =
+document.createElement("style");
 
-            const callback =
-                confirmCallback;
+style.textContent = `
 
-            confirmCallback = null;
-
-            callback(false);
-
-        }
-
-        $('confirm-modal')
-            .classList
-            .add('hidden');
-
+    .label {
+        display: block;
+        color: #999;
+        font-size: 13px;
+        margin-bottom: 8px;
     }
 
+`;
 
-    /* =====================================================
-       MODAL CLOSE BY BACKGROUND
-    ===================================================== */
+document.head.appendChild(style);
 
-    $('add-modal').addEventListener(
-        'click',
-        function(e) {
-
-            if (e.target === this) {
-                closeAddModal();
-            }
-
-        }
-    );
-
-
-    $('profile-modal').addEventListener(
-        'click',
-        function(e) {
-
-            if (e.target === this) {
-                closeProfileModal();
-            }
-
-        }
-    );
-
-
-    $('confirm-modal').addEventListener(
-        'click',
-        function(e) {
-
-            if (e.target === this) {
-                closeConfirm();
-            }
-
-        }
-    );
-
-
-    /* =====================================================
-       ESC KEY
-    ===================================================== */
-
-    document.addEventListener(
-        'keydown',
-        function(e) {
-
-            if (e.key !== 'Escape') {
-                return;
-            }
-
-            closeAddModal();
-            closeProfileModal();
-            closeConfirm();
-
-        }
-    );
-
-
-    /* =====================================================
-       START
-    ===================================================== */
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        async function() {
-
-            await checkUser();
-
-        }
-    );
 
 </script>
 
 </body>
 </html>
-```
