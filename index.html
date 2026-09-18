@@ -1,607 +1,2881 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BADGEIFY | Platform Manager</title>
-    
-    <!-- Tailwind CSS -->
+    <meta name="theme-color" content="#0b0b0b">
+
+    <title>BADGEIFY | Subscription Manager</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { dark: '#0F0F0F', card: '#1A1A1A', gold: '#D4AF37', goldhover: '#b5952f' }
+                    colors: {
+                        dark: '#0B0B0B',
+                        card: '#151515',
+                        card2: '#1C1C1C',
+                        gold: '#D4AF37',
+                        gold2: '#F1D675',
+                        goldhover: '#B89425'
+                    },
+                    boxShadow: {
+                        gold: '0 0 35px rgba(212,175,55,.10)'
+                    }
                 }
             }
         }
     </script>
-    
-    <!-- خط تجوال -->
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Supabase JS -->
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #0F0F0F; color: #ffffff; }
-        .glass-panel { background: rgba(26, 26, 26, 0.95); border: 1px solid rgba(212, 175, 55, 0.2); }
-        .glass-modal { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(5px); }
-        .table-container { overflow-x: auto; }
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Tajawal', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(212,175,55,.07), transparent 30%),
+                radial-gradient(circle at bottom left, rgba(212,175,55,.04), transparent 25%),
+                #0B0B0B;
+            color: #fff;
+        }
+
+        body.login-mode {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass {
+            background: rgba(21,21,21,.94);
+            border: 1px solid rgba(212,175,55,.15);
+            box-shadow: 0 15px 50px rgba(0,0,0,.35);
+        }
+
+        .input {
+            width: 100%;
+            background: #0D0D0D;
+            border: 1px solid #303030;
+            color: white;
+            border-radius: 12px;
+            padding: 12px 14px;
+            outline: none;
+            transition: .2s;
+        }
+
+        .input:focus {
+            border-color: #D4AF37;
+            box-shadow: 0 0 0 3px rgba(212,175,55,.08);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #D4AF37, #B89425);
+            color: #090909;
+            font-weight: 800;
+            transition: .2s;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.08);
+        }
+
+        .sidebar {
+            background: rgba(15,15,15,.97);
+            border-left: 1px solid rgba(212,175,55,.12);
+        }
+
+        .nav-item {
+            transition: .2s;
+            color: #aaa;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(212,175,55,.11);
+            color: #D4AF37;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #171717, #101010);
+            border: 1px solid rgba(255,255,255,.06);
+            transition: .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(212,175,55,.22);
+        }
+
+        .modal-bg {
+            background: rgba(0,0,0,.78);
+            backdrop-filter: blur(8px);
+        }
+
+        .toast {
+            animation: toastIn .25s ease;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .spinner {
+            width: 19px;
+            height: 19px;
+            border: 2px solid rgba(0,0,0,.25);
+            border-top-color: #111;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            height: 7px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        .status-paid {
+            background: rgba(34,197,94,.12);
+            color: #4ade80;
+        }
+
+        .status-pending {
+            background: rgba(234,179,8,.12);
+            color: #facc15;
+        }
+
+        .status-overdue {
+            background: rgba(239,68,68,.12);
+            color: #f87171;
+        }
+
+        .service-chip {
+            background: rgba(212,175,55,.08);
+            color: #e8ca62;
+            border: 1px solid rgba(212,175,55,.14);
+        }
+
+        .hidden-force {
+            display: none !important;
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center">
 
-    <!-- === 1. شاشة تسجيل الدخول === -->
-    <div id="login-screen" class="w-full max-w-md p-8 glass-panel rounded-2xl mx-4">
+<body class="login-mode">
+
+<!-- =========================================================
+     LOGIN
+========================================================= -->
+
+<div id="login-screen" class="w-full px-5">
+
+    <div class="glass max-w-md mx-auto rounded-3xl p-7 md:p-9 shadow-gold">
+
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gold tracking-wider mb-2">BADGEIFY</h1>
-            <p class="text-sm text-gray-400 tracking-widest">DIGITAL SERVICES & SUBSCRIPTIONS</p>
+
+            <div class="w-20 h-20 mx-auto mb-5 rounded-2xl
+                        bg-gradient-to-br from-gold to-goldhover
+                        flex items-center justify-center
+                        shadow-lg shadow-yellow-900/20">
+
+                <span class="text-3xl font-black text-black">B</span>
+
+            </div>
+
+            <h1 class="text-4xl font-black tracking-[.15em] text-gold">
+                BADGEIFY
+            </h1>
+
+            <p class="text-xs text-gray-500 mt-2 tracking-[.18em]">
+                DIGITAL SERVICES & SUBSCRIPTIONS
+            </p>
+
+            <div class="w-16 h-px bg-gold/40 mx-auto mt-5"></div>
+
         </div>
-        <form id="login-form" class="space-y-6">
+
+        <form id="login-form" class="space-y-5">
+
             <div>
-                <label class="block text-sm text-gray-300 mb-2">البريد الإلكتروني</label>
-                <input type="email" id="email" required class="w-full bg-dark border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold" placeholder="admin@badgeify.com">
+                <label class="block text-sm text-gray-300 mb-2">
+                    البريد الإلكتروني
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                    class="input"
+                    placeholder="البريد الإلكتروني">
             </div>
+
             <div>
-                <label class="block text-sm text-gray-300 mb-2">كلمة المرور</label>
-                <input type="password" id="password" required class="w-full bg-dark border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-gold" placeholder="••••••••">
+
+                <label class="block text-sm text-gray-300 mb-2">
+                    كلمة المرور
+                </label>
+
+                <div class="relative">
+
+                    <input
+                        id="password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                        class="input pl-12"
+                        placeholder="كلمة المرور">
+
+                    <button
+                        type="button"
+                        onclick="togglePassword()"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gold">
+
+                        <span id="eye-icon">إظهار</span>
+
+                    </button>
+
+                </div>
+
             </div>
-            <button type="submit" id="login-btn" class="w-full bg-gold hover:bg-goldhover text-dark font-bold rounded-lg px-4 py-3 transition-colors">دخول للنظام</button>
-            <p id="login-error" class="text-red-500 text-sm text-center hidden"></p>
+
+            <button
+                id="login-btn"
+                type="submit"
+                class="btn-gold w-full rounded-xl py-3.5 flex items-center justify-center gap-3">
+
+                <span id="login-btn-text">
+                    دخول إلى النظام
+                </span>
+
+                <span id="login-spinner" class="spinner hidden-force"></span>
+
+            </button>
+
+            <div
+                id="login-error"
+                class="hidden text-center text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+            </div>
+
         </form>
+
+        <p class="text-center text-[11px] text-gray-600 mt-7">
+            BADGEIFY Subscription Management System
+        </p>
+
     </div>
 
-    <!-- === 2. النظام (Dashboard) === -->
-    <div id="dashboard-screen" class="hidden w-full min-h-screen flex flex-col md:flex-row">
-        <!-- القائمة الجانبية -->
-        <aside class="w-full md:w-64 glass-panel md:min-h-screen p-6 flex flex-col gap-6">
-            <div class="text-center border-b border-gray-800 pb-4">
-                <h2 class="text-2xl font-bold text-gold tracking-wider">BADGEIFY</h2>
+</div>
+
+
+<!-- =========================================================
+     DASHBOARD
+========================================================= -->
+
+<div id="dashboard-screen" class="hidden-force w-full min-h-screen">
+
+    <div class="min-h-screen flex flex-col md:flex-row">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar w-full md:w-64 md:min-h-screen p-4 md:p-5 flex flex-col">
+
+            <div class="flex items-center justify-between md:block mb-5">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-gold to-goldhover flex items-center justify-center">
+                        <span class="font-black text-black text-xl">B</span>
+                    </div>
+
+                    <div>
+                        <h2 class="font-black text-gold tracking-wider">
+                            BADGEIFY
+                        </h2>
+
+                        <p class="text-[10px] text-gray-600">
+                            MANAGER
+                        </p>
+                    </div>
+
+                </div>
+
             </div>
-            <nav class="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2">
-                <button class="bg-gold text-dark font-bold px-4 py-2 rounded text-right whitespace-nowrap">لوحة التحكم</button>
+
+            <div class="hidden md:block border-t border-gray-800 my-3"></div>
+
+            <nav class="flex md:flex-col gap-2 overflow-x-auto">
+
+                <button
+                    class="nav-item active rounded-xl px-4 py-3 text-right flex items-center gap-3 whitespace-nowrap">
+
+                    <span>⌂</span>
+                    <span>لوحة التحكم</span>
+
+                </button>
+
+                <button
+                    onclick="openAddModal()"
+                    class="nav-item rounded-xl px-4 py-3 text-right flex items-center gap-3 whitespace-nowrap">
+
+                    <span>＋</span>
+                    <span>إضافة اشتراك</span>
+
+                </button>
+
+                <button
+                    onclick="focusSearch()"
+                    class="nav-item rounded-xl px-4 py-3 text-right flex items-center gap-3 whitespace-nowrap">
+
+                    <span>⌕</span>
+                    <span>البحث</span>
+
+                </button>
+
             </nav>
-            <div class="mt-auto hidden md:block">
-                <button onclick="handleLogout()" class="w-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded transition-colors">تسجيل خروج</button>
+
+            <div class="hidden md:block mt-auto">
+
+                <div class="border-t border-gray-800 pt-4 mb-3">
+
+                    <p class="text-[11px] text-gray-600 mb-1">
+                        الحساب الحالي
+                    </p>
+
+                    <p id="current-user" class="text-xs text-gray-300 truncate">
+                        -
+                    </p>
+
+                </div>
+
+                <button
+                    onclick="handleLogout()"
+                    class="w-full border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl py-2.5 transition">
+
+                    تسجيل الخروج
+
+                </button>
+
             </div>
+
         </aside>
 
-        <!-- المحتوى الرئيسي -->
-        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold">إدارة الاشتراكات والخدمات</h2>
+
+        <!-- MAIN -->
+
+        <main class="flex-1 min-w-0 p-4 md:p-7">
+
+            <!-- HEADER -->
+
+            <header class="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-7">
+
+                <div>
+
+                    <p class="text-gray-500 text-xs mb-1">
+                        BADGEIFY MANAGEMENT
+                    </p>
+
+                    <h1 class="text-2xl md:text-3xl font-black">
+                        إدارة الاشتراكات
+                    </h1>
+
+                    <p class="text-gray-500 text-sm mt-1">
+                        تحكم في العملاء والاشتراكات والمدفوعات من مكان واحد
+                    </p>
+
+                </div>
+
                 <div class="flex gap-2">
-                    <button onclick="openAddModal()" class="bg-gold text-dark font-bold px-4 py-2 rounded text-sm md:text-base">+ إضافة اشتراك جديد</button>
-                    <button onclick="handleLogout()" class="md:hidden border border-red-500 text-red-500 px-3 py-2 rounded text-sm">خروج</button>
+
+                    <button
+                        onclick="loadData()"
+                        class="border border-gray-700 hover:border-gold text-gray-300 hover:text-gold rounded-xl px-4 py-2.5 text-sm">
+
+                        تحديث
+
+                    </button>
+
+                    <button
+                        onclick="openAddModal()"
+                        class="btn-gold rounded-xl px-5 py-2.5 text-sm">
+
+                        + اشتراك جديد
+
+                    </button>
+
+                    <button
+                        onclick="handleLogout()"
+                        class="md:hidden border border-red-500/50 text-red-400 rounded-xl px-3 py-2.5">
+
+                        خروج
+
+                    </button>
+
                 </div>
+
+            </header>
+
+
+            <!-- ALERT -->
+
+            <div id="alerts-container" class="hidden mb-6">
+
+                <div class="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
+
+                    <div class="flex items-start gap-3">
+
+                        <div class="text-red-400 text-xl">
+                            !
+                        </div>
+
+                        <div>
+
+                            <p class="font-bold text-red-400">
+                                تنبيه بالتحصيل
+                            </p>
+
+                            <p id="alerts-text" class="text-sm text-gray-400 mt-1">
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
 
-            <!-- التنبيهات الذكية -->
-            <div id="alerts-container" class="mb-6 hidden">
-                <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center justify-between">
-                    <span id="alerts-text" class="text-sm font-bold"></span>
-                </div>
-            </div>
 
-            <!-- الإحصائيات والأرباح -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="glass-panel p-4 rounded-xl text-center">
-                    <p class="text-gray-400 text-sm">إجمالي الدخل المتوقع</p>
-                    <p id="stat-total-money" class="text-2xl font-bold text-white mt-1">0 ج</p>
-                </div>
-                <div class="glass-panel p-4 rounded-xl text-center">
-                    <p class="text-gray-400 text-sm">تم تحصيله (مدفوع)</p>
-                    <p id="stat-collected" class="text-2xl font-bold text-green-500 mt-1">0 ج</p>
-                </div>
-                <div class="glass-panel p-4 rounded-xl text-center">
-                    <p class="text-gray-400 text-sm">مستحق التحصيل</p>
-                    <p id="stat-pending-money" class="text-2xl font-bold text-yellow-500 mt-1">0 ج</p>
-                </div>
-                <div class="glass-panel p-4 rounded-xl text-center">
-                    <p class="text-gray-400 text-sm">الاشتراكات النشطة</p>
-                    <p id="stat-active-count" class="text-2xl font-bold text-gold mt-1">0</p>
-                </div>
-            </div>
+            <!-- STATS -->
 
-            <!-- أدوات البحث والفلترة -->
-            <div class="glass-panel p-4 rounded-xl mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="w-full md:w-1/2">
-                    <input type="text" id="search-input" oninput="filterTable()" placeholder="ابحث باسم العميل، التاجر، أو رقم الموبايل..." class="w-full bg-dark border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-gold text-sm">
-                </div>
-                <div class="w-full md:w-auto flex gap-2 overflow-x-auto">
-                    <button onclick="setFilter('all')" id="filter-all" class="filter-btn bg-gold text-dark px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">الكل</button>
-                    <button onclick="setFilter('merchant')" id="filter-merchant" class="filter-btn bg-dark border border-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">التجار فقط</button>
-                    <button onclick="setFilter('direct')" id="filter-direct" class="filter-btn bg-dark border border-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">عملاء مباشرين</button>
-                    <button onclick="setFilter('overdue')" id="filter-overdue" class="filter-btn bg-dark border border-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">المتأخرين</button>
-                </div>
-            </div>
+            <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 mb-6">
 
-            <!-- جدول العملاء -->
-            <div class="glass-panel rounded-xl overflow-hidden">
-                <div class="table-container p-4">
+                <div class="stat-card rounded-2xl p-4 md:p-5">
+
+                    <p class="text-xs text-gray-500">
+                        إجمالي الاشتراكات
+                    </p>
+
+                    <p id="stat-active-count" class="text-2xl md:text-3xl font-black text-gold mt-2">
+                        0
+                    </p>
+
+                    <p class="text-[11px] text-gray-600 mt-1">
+                        عميل / تاجر
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card rounded-2xl p-4 md:p-5">
+
+                    <p class="text-xs text-gray-500">
+                        إجمالي الدخل المتوقع
+                    </p>
+
+                    <p id="stat-total-money" class="text-2xl md:text-3xl font-black mt-2">
+                        0 ج
+                    </p>
+
+                    <p class="text-[11px] text-gray-600 mt-1">
+                        للشهر الحالي
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card rounded-2xl p-4 md:p-5">
+
+                    <p class="text-xs text-gray-500">
+                        تم تحصيله
+                    </p>
+
+                    <p id="stat-collected" class="text-2xl md:text-3xl font-black text-green-400 mt-2">
+                        0 ج
+                    </p>
+
+                    <p class="text-[11px] text-gray-600 mt-1">
+                        مدفوع هذا الشهر
+                    </p>
+
+                </div>
+
+
+                <div class="stat-card rounded-2xl p-4 md:p-5">
+
+                    <p class="text-xs text-gray-500">
+                        مستحق التحصيل
+                    </p>
+
+                    <p id="stat-pending-money" class="text-2xl md:text-3xl font-black text-yellow-400 mt-2">
+                        0 ج
+                    </p>
+
+                    <p class="text-[11px] text-gray-600 mt-1">
+                        لم يتم دفعه
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- SEARCH -->
+
+            <section class="glass rounded-2xl p-4 mb-6">
+
+                <div class="flex flex-col xl:flex-row gap-4">
+
+                    <div class="flex-1">
+
+                        <div class="relative">
+
+                            <input
+                                id="search-input"
+                                oninput="filterTable()"
+                                type="text"
+                                class="input pr-12"
+                                placeholder="ابحث باسم العميل أو الحساب أو رقم الهاتف...">
+
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600">
+                                ⌕
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="flex gap-2 overflow-x-auto">
+
+                        <button
+                            onclick="setFilter('all')"
+                            id="filter-all"
+                            class="filter-btn bg-gold text-black font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+
+                            الكل
+
+                        </button>
+
+                        <button
+                            onclick="setFilter('merchant')"
+                            id="filter-merchant"
+                            class="filter-btn bg-[#0D0D0D] border border-gray-700 text-gray-400 px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+
+                            التجار
+
+                        </button>
+
+                        <button
+                            onclick="setFilter('direct')"
+                            id="filter-direct"
+                            class="filter-btn bg-[#0D0D0D] border border-gray-700 text-gray-400 px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+
+                            مباشر
+
+                        </button>
+
+                        <button
+                            onclick="setFilter('overdue')"
+                            id="filter-overdue"
+                            class="filter-btn bg-[#0D0D0D] border border-gray-700 text-gray-400 px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+
+                            المتأخرين
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- TABLE -->
+
+            <section class="glass rounded-2xl overflow-hidden">
+
+                <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+
+                    <div>
+
+                        <h2 class="font-bold">
+                            الاشتراكات
+                        </h2>
+
+                        <p id="table-count" class="text-xs text-gray-600 mt-1">
+                            0 اشتراك
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="table-scroll">
+
                     <table class="w-full text-right text-sm whitespace-nowrap">
-                        <thead class="text-gray-400 border-b border-gray-800">
+
+                        <thead class="text-gray-500 border-b border-gray-800">
+
                             <tr>
-                                <th class="pb-3 pr-2">العميل / التاجر والخدمات</th>
-                                <th class="pb-3 px-4">رقم الموبايل</th>
-                                <th class="pb-3 px-4">الاشتراك</th>
-                                <th class="pb-3 px-4">مواعيد (تجديد / دفع)</th>
-                                <th class="pb-3 px-4">الحالة</th>
-                                <th class="pb-3 px-4">إجراءات وتحكم</th>
+
+                                <th class="py-4 px-4">
+                                    العميل
+                                </th>
+
+                                <th class="py-4 px-4">
+                                    الهاتف
+                                </th>
+
+                                <th class="py-4 px-4">
+                                    الخدمات
+                                </th>
+
+                                <th class="py-4 px-4">
+                                    الاشتراك
+                                </th>
+
+                                <th class="py-4 px-4">
+                                    الدفع
+                                </th>
+
+                                <th class="py-4 px-4">
+                                    الحالة
+                                </th>
+
+                                <th class="py-4 px-4">
+                                    الإجراءات
+                                </th>
+
                             </tr>
+
                         </thead>
-                        <tbody id="clients-table-body" class="divide-y divide-gray-800">
-                            <!-- البيانات -->
+
+                        <tbody
+                            id="clients-table-body"
+                            class="divide-y divide-gray-800">
+
                         </tbody>
+
                     </table>
+
                 </div>
-            </div>
+
+                <div
+                    id="empty-state"
+                    class="hidden text-center py-16">
+
+                    <div class="text-4xl mb-3">
+                        ◇
+                    </div>
+
+                    <p class="text-gray-400">
+                        لا توجد اشتراكات مطابقة
+                    </p>
+
+                    <button
+                        onclick="openAddModal()"
+                        class="text-gold text-sm mt-2 hover:underline">
+
+                        إضافة أول اشتراك
+
+                    </button>
+
+                </div>
+
+            </section>
+
         </main>
+
     </div>
 
-    <!-- === 3. نافذة إضافة أو تعديل اشتراك === -->
-    <div id="add-modal" class="hidden fixed inset-0 glass-modal flex items-center justify-center p-4 z-50">
-        <div class="glass-panel w-full max-w-lg rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="modal-title" class="text-xl font-bold text-gold">إضافة اشتراك خدمة جديد</h3>
-                <button onclick="closeAddModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+</div>
+
+
+<!-- =========================================================
+     ADD / EDIT MODAL
+========================================================= -->
+
+<div
+    id="add-modal"
+    class="hidden fixed inset-0 modal-bg z-50 p-4 flex items-center justify-center">
+
+    <div class="glass rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto custom-scroll">
+
+        <div class="p-6 border-b border-gray-800 flex items-center justify-between sticky top-0 bg-[#151515]/95 backdrop-blur z-10">
+
+            <div>
+
+                <p class="text-xs text-gray-500">
+                    SUBSCRIPTION
+                </p>
+
+                <h3 id="modal-title" class="text-xl font-black text-gold mt-1">
+                    إضافة اشتراك جديد
+                </h3>
+
             </div>
-            <form id="add-form" class="space-y-4">
-                <input type="hidden" id="edit-client-id">
-                
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1">نوع العميل / الشريك</label>
-                    <select id="add-client-type" class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" onchange="toggleMerchantField()">
-                        <option value="direct">عميل مباشر (يستخدم الخدمة لنفسه)</option>
-                        <option value="merchant">تاجر / وسيط (يشتري نيابة عن عملاء آخرين)</option>
-                    </select>
-                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label id="client-name-label" class="block text-sm text-gray-300 mb-1">اسم العميل</label>
-                        <input type="text" id="add-client-name" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="محمد أحمد">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">اسم الحساب / النشاط</label>
-                        <input type="text" id="add-page-name" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="اسم الخدمة أو التفاصيل">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">رقم الموبايل / واتساب</label>
-                        <input type="text" id="add-phone" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="010...">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">إجمالي الاشتراك (جنية)</label>
-                        <input type="number" id="add-fee" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white">
-                    </div>
-                </div>
+            <button
+                onclick="closeAddModal()"
+                class="w-9 h-9 rounded-xl bg-gray-900 text-gray-400 hover:text-white">
 
-                <!-- المنصات -->
-                <div>
-                    <label class="block text-sm text-gray-300 mb-2">اختر المنصات والخدمات المشترك فيها:</label>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 bg-dark/50 p-3 rounded-lg border border-gray-800">
-                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="فيس بوك" class="accent-gold w-4 h-4"> فيس بوك</label>
-                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="انستجرام" class="accent-gold w-4 h-4"> انستجرام</label>
-                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="واتساب بيزنس" class="accent-gold w-4 h-4"> واتساب</label>
-                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="تروكولر" class="accent-gold w-4 h-4"> تروكلر</label>
-                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="جيت كونتاكت" class="accent-gold w-4 h-4"> جيت كونتاكت</label>
-                        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-200"><input type="checkbox" name="platforms" value="مساحة جوجل" class="accent-gold w-4 h-4"> مساحة جوجل</label>
-                    </div>
-                </div>
+                ×
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">رابط الحساب (اختياري)</label>
-                        <input type="text" id="add-link" class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white" placeholder="https://...">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">يوم الدفع (1 - 31)</label>
-                        <input type="number" id="add-payment-day" min="1" max="31" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">يوم تجديد الخدمة</label>
-                        <input type="number" id="add-renewal-day" min="1" max="31" required class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white">
-                    </div>
-                </div>
+            </button>
 
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1">ملاحظات خاصة (اختياري)</label>
-                    <input type="text" id="add-notes" class="w-full bg-dark border border-gray-700 rounded px-3 py-2 text-white text-sm" placeholder="ملاحظات العميل...">
-                </div>
-
-                <div class="pt-4 flex gap-2">
-                    <button type="submit" id="submit-add-btn" class="flex-1 bg-gold text-dark font-bold rounded py-2">حفظ التعديلات</button>
-                    <button type="button" onclick="closeAddModal()" class="flex-1 bg-gray-800 text-white rounded py-2">إلغاء</button>
-                </div>
-            </form>
         </div>
+
+
+        <form id="add-form" class="p-6 space-y-5">
+
+            <input type="hidden" id="edit-client-id">
+
+
+            <!-- TYPE -->
+
+            <div>
+
+                <label class="block text-sm text-gray-300 mb-2">
+                    نوع العميل
+                </label>
+
+                <select
+                    id="add-client-type"
+                    onchange="toggleMerchantField()"
+                    class="input">
+
+                    <option value="direct">
+                        عميل مباشر
+                    </option>
+
+                    <option value="merchant">
+                        تاجر / شريك
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- BASIC DATA -->
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+
+                    <label
+                        id="client-name-label"
+                        class="block text-sm text-gray-300 mb-2">
+
+                        اسم العميل
+
+                    </label>
+
+                    <input
+                        id="add-client-name"
+                        required
+                        class="input"
+                        placeholder="محمد أحمد">
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm text-gray-300 mb-2">
+                        اسم الحساب / النشاط
+                    </label>
+
+                    <input
+                        id="add-page-name"
+                        required
+                        class="input"
+                        placeholder="اسم الصفحة أو النشاط">
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm text-gray-300 mb-2">
+                        رقم الهاتف / واتساب
+                    </label>
+
+                    <input
+                        id="add-phone"
+                        required
+                        class="input"
+                        placeholder="01000000000">
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm text-gray-300 mb-2">
+                        قيمة الاشتراك
+                    </label>
+
+                    <div class="relative">
+
+                        <input
+                            id="add-fee"
+                            type="number"
+                            min="0"
+                            required
+                            class="input pl-12"
+                            placeholder="0">
+
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600">
+                            ج
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SERVICES -->
+
+            <div>
+
+                <label class="block text-sm text-gray-300 mb-2">
+                    الخدمات والمنصات
+                </label>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 bg-[#0D0D0D] border border-gray-800 rounded-xl p-3">
+
+                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
+                        <input type="checkbox" name="platforms" value="فيس بوك" class="accent-yellow-500">
+                        فيس بوك
+                    </label>
+
+                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
+                        <input type="checkbox" name="platforms" value="انستجرام" class="accent-yellow-500">
+                        انستجرام
+                    </label>
+
+                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
+                        <input type="checkbox" name="platforms" value="واتساب بيزنس" class="accent-yellow-500">
+                        واتساب بيزنس
+                    </label>
+
+                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
+                        <input type="checkbox" name="platforms" value="تروكولر" class="accent-yellow-500">
+                        تروكولر
+                    </label>
+
+                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
+                        <input type="checkbox" name="platforms" value="جيت كونتاكت" class="accent-yellow-500">
+                        جيت كونتاكت
+                    </label>
+
+                    <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm">
+                        <input type="checkbox" name="platforms" value="مساحة جوجل" class="accent-yellow-500">
+                        مساحة جوجل
+                    </label>
+
+                </div>
+
+                <p class="text-[11px] text-gray-600 mt-2">
+                    اختر خدمة واحدة على الأقل.
+                </p>
+
+            </div>
+
+
+            <!-- DATES -->
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <div>
+
+                    <label class="block text-sm text-gray-300 mb-2">
+                        يوم الدفع
+                    </label>
+
+                    <input
+                        id="add-payment-day"
+                        type="number"
+                        min="1"
+                        max="31"
+                        required
+                        class="input"
+                        placeholder="1">
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm text-gray-300 mb-2">
+                        يوم التجديد
+                    </label>
+
+                    <input
+                        id="add-renewal-day"
+                        type="number"
+                        min="1"
+                        max="31"
+                        required
+                        class="input"
+                        placeholder="1">
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm text-gray-300 mb-2">
+                        رابط الحساب
+                    </label>
+
+                    <input
+                        id="add-link"
+                        class="input"
+                        placeholder="https://...">
+
+                </div>
+
+            </div>
+
+
+            <!-- NOTES -->
+
+            <div>
+
+                <label class="block text-sm text-gray-300 mb-2">
+                    ملاحظات
+                </label>
+
+                <textarea
+                    id="add-notes"
+                    rows="3"
+                    class="input resize-none"
+                    placeholder="أي ملاحظات خاصة بالعميل..."></textarea>
+
+            </div>
+
+
+            <!-- BUTTONS -->
+
+            <div class="flex gap-3 pt-2">
+
+                <button
+                    id="submit-add-btn"
+                    type="submit"
+                    class="btn-gold flex-1 rounded-xl py-3">
+
+                    حفظ الاشتراك
+
+                </button>
+
+                <button
+                    type="button"
+                    onclick="closeAddModal()"
+                    class="flex-1 bg-gray-800 hover:bg-gray-700 rounded-xl py-3">
+
+                    إلغاء
+
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
 
-    <!-- === 4. نافذة تفاصيل / ملف العميل (Profile View) === -->
-    <div id="profile-modal" class="hidden fixed inset-0 glass-modal flex items-center justify-center p-4 z-50">
-        <div class="glass-panel w-full max-w-md rounded-2xl p-6">
-            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
-                <h3 class="text-lg font-bold text-gold" id="profile-client-name">ملف العميل</h3>
-                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+</div>
+
+
+<!-- =========================================================
+     PROFILE MODAL
+========================================================= -->
+
+<div
+    id="profile-modal"
+    class="hidden fixed inset-0 modal-bg z-50 p-4 flex items-center justify-center">
+
+    <div class="glass rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scroll">
+
+        <div class="p-6 border-b border-gray-800 flex items-center justify-between sticky top-0 bg-[#151515]/95 backdrop-blur z-10">
+
+            <div>
+
+                <p class="text-xs text-gray-500">
+                    CUSTOMER PROFILE
+                </p>
+
+                <h3
+                    id="profile-client-name"
+                    class="text-xl font-black text-gold mt-1">
+
+                    ملف العميل
+
+                </h3>
+
             </div>
-            <div id="profile-content" class="space-y-3 text-sm">
-                <!-- تفاصيل العميل وسجله -->
-            </div>
-            <div class="mt-6">
-                <button onclick="closeProfileModal()" class="w-full bg-gray-800 text-white py-2 rounded">إغلاق</button>
-            </div>
+
+            <button
+                onclick="closeProfileModal()"
+                class="w-9 h-9 rounded-xl bg-gray-900 text-gray-400 hover:text-white">
+
+                ×
+
+            </button>
+
         </div>
+
+        <div id="profile-content" class="p-6 space-y-4">
+        </div>
+
     </div>
 
-    <!-- === 5. الجافاسكريبت === -->
-    <script>
-        const SUPABASE_URL = 'https://rsvzachgbqsucqgrwguv.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ';
-        
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</div>
 
-        let clientsData = [];
-        let currentFilter = 'all';
 
-        async function checkUser() {
-            const { data: { session } } = await db.auth.getSession();
-            if (session) {
-                document.body.classList.remove('items-center', 'justify-center');
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard-screen').classList.remove('hidden');
-                loadData();
-            } else {
-                document.body.classList.add('items-center', 'justify-center');
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard-screen').classList.add('hidden');
-            }
+<!-- =========================================================
+     CONFIRM MODAL
+========================================================= -->
+
+<div
+    id="confirm-modal"
+    class="hidden fixed inset-0 modal-bg z-[60] p-4 flex items-center justify-center">
+
+    <div class="glass rounded-3xl w-full max-w-sm p-6 text-center">
+
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 text-2xl mb-4">
+            ?
+        </div>
+
+        <h3 id="confirm-title" class="font-black text-lg">
+            تأكيد العملية
+        </h3>
+
+        <p id="confirm-text" class="text-sm text-gray-500 mt-2">
+            هل أنت متأكد؟
+        </p>
+
+        <div class="flex gap-3 mt-6">
+
+            <button
+                id="confirm-yes"
+                class="btn-gold flex-1 rounded-xl py-3 font-bold">
+
+                تأكيد
+
+            </button>
+
+            <button
+                onclick="closeConfirm()"
+                class="flex-1 bg-gray-800 hover:bg-gray-700 rounded-xl py-3">
+
+                إلغاء
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+    id="toast-container"
+    class="fixed bottom-5 left-5 z-[100] space-y-3 max-w-sm">
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script>
+
+    /* =====================================================
+       SUPABASE
+    ===================================================== */
+
+    const SUPABASE_URL =
+        'https://rsvzachgbqsucqgrwguv.supabase.co';
+
+    const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ';
+
+    const db = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+    /* =====================================================
+       GLOBAL VARIABLES
+    ===================================================== */
+
+    let clientsData = [];
+    let currentFilter = 'all';
+    let confirmCallback = null;
+
+
+    /* =====================================================
+       HELPERS
+    ===================================================== */
+
+    function $(id) {
+        return document.getElementById(id);
+    }
+
+
+    function escapeHtml(value) {
+
+        if (value === null || value === undefined) {
+            return '';
         }
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('login-btn');
-            const errorMsg = document.getElementById('login-error');
-            
-            btn.textContent = 'جاري الدخول...';
-            errorMsg.classList.add('hidden');
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
 
-            const { error } = await db.auth.signInWithPassword({
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
+
+    function money(value) {
+
+        return new Intl.NumberFormat('ar-EG').format(
+            Number(value) || 0
+        ) + ' ج';
+
+    }
+
+
+    function showToast(message, type = 'success') {
+
+        const container = $('toast-container');
+
+        const toast = document.createElement('div');
+
+        const color =
+            type === 'success'
+                ? 'border-green-500/30 text-green-400 bg-green-500/10'
+                : type === 'error'
+                    ? 'border-red-500/30 text-red-400 bg-red-500/10'
+                    : 'border-yellow-500/30 text-yellow-400 bg-yellow-500/10';
+
+        toast.className =
+            `toast border ${color} rounded-2xl px-4 py-3 text-sm shadow-xl`;
+
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+
+            toast.style.opacity = '0';
+
+            setTimeout(() => {
+                toast.remove();
+            }, 250);
+
+        }, 3000);
+    }
+
+
+    function formatPlatforms(value) {
+
+        if (!value) {
+            return 'غير محدد';
+        }
+
+        try {
+
+            const parsed = JSON.parse(value);
+
+            if (Array.isArray(parsed)) {
+                return parsed.join(' + ');
+            }
+
+        } catch (e) {}
+
+        return value;
+    }
+
+
+    function getCurrentMonth() {
+
+        const now = new Date();
+
+        return `${now.getFullYear()}-${String(
+            now.getMonth() + 1
+        ).padStart(2, '0')}`;
+
+    }
+
+
+    function getTodayDay() {
+
+        return new Date().getDate();
+
+    }
+
+
+    /* =====================================================
+       LOGIN
+    ===================================================== */
+
+    function togglePassword() {
+
+        const input = $('password');
+        const eye = $('eye-icon');
+
+        if (input.type === 'password') {
+
+            input.type = 'text';
+            eye.textContent = 'إخفاء';
+
+        } else {
+
+            input.type = 'password';
+            eye.textContent = 'إظهار';
+
+        }
+
+    }
+
+
+    async function checkUser() {
+
+        const {
+            data: { session },
+            error
+        } = await db.auth.getSession();
+
+        if (error) {
+
+            console.error(error);
+
+            showLogin();
+
+            return;
+
+        }
+
+
+        if (session) {
+
+            showDashboard(session);
+
+        } else {
+
+            showLogin();
+
+        }
+
+    }
+
+
+    function showLogin() {
+
+        document.body.classList.add('login-mode');
+
+        $('login-screen').classList.remove('hidden-force');
+
+        $('dashboard-screen').classList.add('hidden-force');
+
+    }
+
+
+    async function showDashboard(session) {
+
+        document.body.classList.remove('login-mode');
+
+        $('login-screen').classList.add('hidden-force');
+
+        $('dashboard-screen').classList.remove('hidden-force');
+
+        $('current-user').textContent =
+            session?.user?.email || 'الحساب الحالي';
+
+        await loadData();
+
+    }
+
+
+    $('login-form').addEventListener('submit', async function(e) {
+
+        e.preventDefault();
+
+        const btn = $('login-btn');
+        const text = $('login-btn-text');
+        const spinner = $('login-spinner');
+        const errorBox = $('login-error');
+
+        errorBox.classList.add('hidden');
+
+        btn.disabled = true;
+        text.textContent = 'جاري تسجيل الدخول...';
+        spinner.classList.remove('hidden-force');
+
+        const email = $('email').value.trim();
+        const password = $('password').value;
+
+        const { data, error } =
+            await db.auth.signInWithPassword({
+                email,
+                password
             });
+
+        btn.disabled = false;
+        text.textContent = 'دخول إلى النظام';
+        spinner.classList.add('hidden-force');
+
+        if (error) {
+
+            errorBox.textContent =
+                'تعذر تسجيل الدخول. تأكد من البريد الإلكتروني وكلمة المرور.';
+
+            errorBox.classList.remove('hidden');
+
+            return;
+        }
+
+        if (data.session) {
+
+            await showDashboard(data.session);
+
+            showToast('تم تسجيل الدخول بنجاح');
+
+        }
+
+    });
+
+
+    db.auth.onAuthStateChange((event, session) => {
+
+        if (event === 'SIGNED_OUT') {
+
+            showLogin();
+
+        }
+
+    });
+
+
+    async function handleLogout() {
+
+        const confirmed = await askConfirm(
+            'تسجيل الخروج',
+            'هل تريد تسجيل الخروج من النظام؟'
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        const { error } = await db.auth.signOut();
+
+        if (error) {
+
+            showToast(
+                'تعذر تسجيل الخروج',
+                'error'
+            );
+
+            return;
+
+        }
+
+        showLogin();
+
+        showToast('تم تسجيل الخروج');
+
+    }
+
+
+    /* =====================================================
+       LOAD DATA
+    ===================================================== */
+
+    async function loadData() {
+
+        $('clients-table-body').innerHTML = `
+            <tr>
+                <td colspan="7" class="py-12 text-center text-gray-500">
+                    جاري تحميل البيانات...
+                </td>
+            </tr>
+        `;
+
+        try {
+
+            const {
+                data,
+                error
+            } = await db
+                .from('clients')
+                .select('*, payments(*)')
+                .order('created_at', {
+                    ascending: false
+                });
+
 
             if (error) {
-                errorMsg.textContent = 'البيانات غير صحيحة!';
-                errorMsg.classList.remove('hidden');
-                btn.textContent = 'دخول للنظام';
-            } else {
-                checkUser();
-            }
-        });
 
-        async function handleLogout() {
-            await db.auth.signOut();
-            window.location.reload();
-        }
+                console.error(error);
 
-        async function loadData() {
-            document.getElementById('clients-table-body').innerHTML = '<tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr>';
-            
-            const { data, error } = await db.from('clients').select('*, payments(*)').order('created_at', { ascending: false });
-            
-            if (error) {
-                console.error('Error fetching data:', error);
-                return;
-            }
-            clientsData = data;
-            renderTable();
-        }
-
-        function toggleMerchantField() {
-            const type = document.getElementById('add-client-type').value;
-            const label = document.getElementById('client-name-label');
-            const input = document.getElementById('add-client-name');
-            if (type === 'merchant') {
-                label.textContent = 'اسم التاجر / الشريك';
-                input.placeholder = 'مثال: مكتب فلان';
-            } else {
-                label.textContent = 'اسم العميل';
-                input.placeholder = 'محمد أحمد';
-            }
-        }
-
-        function setFilter(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('bg-gold', 'text-dark', 'font-bold');
-                btn.classList.add('bg-dark', 'border', 'border-gray-700', 'text-gray-300');
-            });
-            const activeBtn = document.getElementById(`filter-${filter}`);
-            activeBtn.classList.remove('bg-dark', 'border', 'border-gray-700', 'text-gray-300');
-            activeBtn.classList.add('bg-gold', 'text-dark', 'font-bold');
-            renderTable();
-        }
-
-        function filterTable() {
-            renderTable();
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('clients-table-body');
-            tbody.innerHTML = '';
-            
-            const searchVal = document.getElementById('search-input').value.toLowerCase();
-            const today = new Date();
-            const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-            const currentDay = today.getDate();
-
-            let totalMoney = 0;
-            let collectedMoney = 0;
-            let pendingMoney = 0;
-            let overdueCount = 0;
-            let overdueNames = [];
-
-            let filteredList = clientsData.filter(client => {
-                const matchesSearch = client.client_name.toLowerCase().includes(searchVal) || 
-                                      client.phone.toLowerCase().includes(searchVal) || 
-                                      client.page_name.toLowerCase().includes(searchVal);
-                if (!matchesSearch) return false;
-
-                const isPaid = client.payments && client.payments.some(p => p.paid_month === currentMonthStr);
-                const isOverdue = !isPaid && currentDay > client.payment_day;
-
-                if (currentFilter === 'merchant') return client.client_type === 'merchant';
-                if (currentFilter === 'direct') return client.client_type === 'direct';
-                if (currentFilter === 'overdue') return isOverdue;
-                return true;
-            });
-
-            filteredList.forEach(client => {
-                const isPaidThisMonth = client.payments && client.payments.some(p => p.paid_month === currentMonthStr);
-                const fee = Number(client.monthly_fee) || 0;
-                
-                totalMoney += fee;
-                if (isPaidThisMonth) {
-                    collectedMoney += fee;
-                } else {
-                    pendingMoney += fee;
-                }
-
-                let statusText = '';
-                let statusClass = '';
-
-                if (isPaidThisMonth) {
-                    statusText = 'مدفوع';
-                    statusClass = 'bg-green-500/20 text-green-500';
-                } else if (currentDay > client.payment_day) {
-                    statusText = 'متأخر';
-                    statusClass = 'bg-red-500/20 text-red-500';
-                    overdueCount++;
-                    overdueNames.push(client.client_name);
-                } else {
-                    statusText = 'مستحق';
-                    statusClass = 'bg-yellow-500/20 text-yellow-500';
-                }
-
-                let platformsList = client.platform;
-                try {
-                    const parsed = JSON.parse(client.platform);
-                    if (Array.isArray(parsed)) {
-                        platformsList = parsed.join(' + ');
-                    }
-                } catch (e) {}
-
-                const isMerchant = client.client_type === 'merchant';
-                const badgeHtml = isMerchant 
-                    ? `<span class="bg-purple-500/20 text-purple-400 text-[10px] px-1.5 py-0.5 rounded ml-1 font-bold">تاجر</span>` 
-                    : `<span class="bg-blue-500/20 text-blue-400 text-[10px] px-1.5 py-0.5 rounded ml-1">مباشر</span>`;
-
-                const waMsg = encodeURIComponent(`مرحباً ${client.client_name}، تذكير بخصوص تجديد اشتراك خدمات (${platformsList} - ${client.page_name}) بقيمة ${client.monthly_fee} جنيه، وموعد الدفع هو يوم ${client.payment_day} من الشهر. برجاء تأكيد الدفع. شكراً لك.`);
-                const waUrl = `https://wa.me/20${client.phone.replace(/^0/, '')}?text=${waMsg}`;
-
-                const notesHtml = client.notes ? `<p class="text-[11px] text-yellow-400 mt-0.5">ملاحظة: ${client.notes}</p>` : '';
-
-                const row = `
-                    <tr class="hover:bg-gray-900/50 transition-colors border-b border-gray-800">
-                        <td class="py-3 pr-2">
-                            <div class="flex items-center cursor-pointer" onclick="openProfile('${client.id}')">
-                                <p class="font-bold text-white hover:text-gold">${client.client_name}</p>
-                                ${badgeHtml}
-                            </div>
-                            <p class="text-xs text-gray-400">${client.page_name} <span class="text-gold">(${platformsList})</span></p>
-                            ${notesHtml}
-                        </td>
-                        <td class="py-3 px-4">${client.phone}</td>
-                        <td class="py-3 px-4 font-bold text-gold">${client.monthly_fee} ج</td>
-                        <td class="py-3 px-4 text-xs">
-                            <span class="text-gray-300">تجديد: يوم ${client.renewal_day}</span><br>
-                            <span class="text-gray-400">دفع: يوم ${client.payment_day}</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 rounded text-xs font-bold ${statusClass}">${statusText}</span>
-                        </td>
-                        <td class="py-3 px-4 flex gap-1.5 items-center">
-                            ${!isPaidThisMonth ? `<button onclick="markAsPaid('${client.id}',${client.monthly_fee})" class="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs">دفع</button>` : `<span class="text-xs text-gray-500">تم</span>`}
-                            <a href="${waUrl}" target="_blank" class="border border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-2 py-1 rounded text-xs">واتساب</a>
-                            <button onclick="openEditModal('${client.id}')" class="bg-blue-600/30 text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-1 rounded text-xs">تعديل</button>
-                            <button onclick="deleteClient('${client.id}')" class="bg-red-600/30 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs">حذف</button>
+                $('clients-table-body').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-red-400">
+                            حدث خطأ أثناء تحميل البيانات
                         </td>
                     </tr>
                 `;
-                tbody.innerHTML += row;
+
+                showToast(
+                    'تعذر تحميل البيانات: ' + error.message,
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            clientsData = data || [];
+
+            renderTable();
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast(
+                'حدث خطأ غير متوقع',
+                'error'
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       FILTERS
+    ===================================================== */
+
+    function setFilter(filter) {
+
+        currentFilter = filter;
+
+        document
+            .querySelectorAll('.filter-btn')
+            .forEach(btn => {
+
+                btn.classList.remove(
+                    'bg-gold',
+                    'text-black',
+                    'font-bold'
+                );
+
+                btn.classList.add(
+                    'bg-[#0D0D0D]',
+                    'border',
+                    'border-gray-700',
+                    'text-gray-400'
+                );
+
             });
 
-            document.getElementById('stat-total-money').textContent = totalMoney + ' ج';
-            document.getElementById('stat-collected').textContent = collectedMoney + ' ج';
-            document.getElementById('stat-pending-money').textContent = pendingMoney + ' ج';
-            document.getElementById('stat-active-count').textContent = clientsData.length;
 
-            const alertsContainer = document.getElementById('alerts-container');
-            if (overdueCount > 0) {
-                document.getElementById('alerts-text').textContent = `تنبيه! يوجد ${overdueCount} اشتراكات متأخرة عن ميعاد الدفع (${overdueNames.join(', ')}).`;
-                alertsContainer.classList.remove('hidden');
-            } else {
-                alertsContainer.classList.add('hidden');
-            }
+        const active = $(`filter-${filter}`);
+
+        if (active) {
+
+            active.classList.remove(
+                'bg-[#0D0D0D]',
+                'border',
+                'border-gray-700',
+                'text-gray-400'
+            );
+
+            active.classList.add(
+                'bg-gold',
+                'text-black',
+                'font-bold'
+            );
+
         }
 
-        async function markAsPaid(clientId, amount) {
-            if(!confirm('هل أنت متأكد من تسجيل دفعة هذا الشهر؟')) return;
-            const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
-            const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        renderTable();
 
-            const { error } = await db.from('payments').insert([{ client_id: clientId, amount: amount, payment_date: dateStr, paid_month: monthStr }]);
-            if (error) alert('حدث خطأ');
-            else loadData();
-        }
+    }
 
-        async function deleteClient(id) {
-            if(!confirm('هل أنت متأكد من حذف هذا الاشتراك نهائياً؟')) return;
-            const { error } = await db.from('clients').delete().eq('id', id);
-            if (error) alert('خطأ في الحذف');
-            else loadData();
-        }
 
-        function openAddModal() {
-            document.getElementById('edit-client-id').value = '';
-            document.getElementById('modal-title').textContent = 'إضافة اشتراك خدمة جديد';
-            document.getElementById('submit-add-btn').textContent = 'حفظ الاشتراك';
-            document.getElementById('add-form').reset();
-            toggleMerchantField();
-            document.getElementById('add-modal').classList.remove('hidden');
-        }
+    function filterTable() {
 
-        function openEditModal(id) {
-            const client = clientsData.find(c => c.id === id);
-            if (!client) return;
+        renderTable();
 
-            document.getElementById('edit-client-id').value = client.id;
-            document.getElementById('modal-title').textContent = 'تعديل بيانات الاشتراك';
-            document.getElementById('submit-add-btn').textContent = 'حفظ التعديلات';
-            
-            document.getElementById('add-client-type').value = client.client_type || 'direct';
-            toggleMerchantField();
-            document.getElementById('add-client-name').value = client.client_name;
-            document.getElementById('add-page-name').value = client.page_name;
-            document.getElementById('add-phone').value = client.phone;
-            document.getElementById('add-fee').value = client.monthly_fee;
-            document.getElementById('add-link').value = client.page_link || '';
-            document.getElementById('add-payment-day').value = client.payment_day;
-            document.getElementById('add-renewal-day').value = client.renewal_day;
-            document.getElementById('add-notes').value = client.notes || '';
+    }
 
-            // تفعيل المنصات الخاصة به
-            document.querySelectorAll('input[name="platforms"]').forEach(cb => cb.checked = false);
-            try {
-                const pList = JSON.parse(client.platform);
-                if (Array.isArray(pList)) {
-                    pList.forEach(p => {
-                        const cb = document.querySelector(`input[name="platforms"][value="${p}"]`);
-                        if (cb) cb.checked = true;
-                    });
-                }
-            } catch (e) {}
 
-            document.getElementById('add-modal').classList.remove('hidden');
-        }
+    function focusSearch() {
 
-        function closeAddModal() { 
-            document.getElementById('add-modal').classList.add('hidden'); 
-            document.getElementById('add-form').reset(); 
-        }
+        $('search-input').focus();
 
-        function openProfile(id) {
-            const client = clientsData.find(c => c.id === id);
-            if (!client) return;
+        $('search-input').scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
 
-            document.getElementById('profile-client-name').textContent = client.client_name;
-            
-            let platformsList = client.platform;
-            try {
-                const parsed = JSON.parse(client.platform);
-                if (Array.isArray(parsed)) platformsList = parsed.join(', ');
-            } catch(e) {}
+    }
 
-            let paymentsHistory = '';
-            if (client.payments && client.payments.length > 0) {
-                paymentsHistory = client.payments.map(p => `<li class="text-green-400">دفعة بقيمة ${p.amount} ج عن شهر ${p.paid_month} (بتاريخ ${p.payment_date})</li>`).join('');
-            } else {
-                paymentsHistory = '<li class="text-gray-500">لا توجد دفعات مسجلة بعد</li>';
+
+    /* =====================================================
+       RENDER TABLE
+    ===================================================== */
+
+    function renderTable() {
+
+        const tbody = $('clients-table-body');
+        const empty = $('empty-state');
+
+        tbody.innerHTML = '';
+
+        const search =
+            $('search-input')
+                .value
+                .trim()
+                .toLowerCase();
+
+        const month = getCurrentMonth();
+        const day = getTodayDay();
+
+        let totalMoney = 0;
+        let collectedMoney = 0;
+        let pendingMoney = 0;
+
+        let overdueNames = [];
+
+
+        const filtered = clientsData.filter(client => {
+
+            const name =
+                String(client.client_name || '').toLowerCase();
+
+            const phone =
+                String(client.phone || '').toLowerCase();
+
+            const page =
+                String(client.page_name || '').toLowerCase();
+
+            const matchesSearch =
+                name.includes(search) ||
+                phone.includes(search) ||
+                page.includes(search);
+
+            if (!matchesSearch) {
+                return false;
             }
 
-            document.getElementById('profile-content').innerHTML = `
-                <p><strong class="text-gray-400">نوع العميل:</strong> ${client.client_type === 'merchant' ? 'تاجر / شريك' : 'عميل مباشر'}</p>
-                <p><strong class="text-gray-400">رقم الموبايل:</strong> ${client.phone}</p>
-                <p><strong class="text-gray-400">اسم الحساب/الخدمة:</strong> ${client.page_name}</p>
-                <p><strong class="text-gray-400">المنصات:</strong> ${platformsList}</p>
-                <p><strong class="text-gray-400">قيمة الاشتراك:</strong> ${client.monthly_fee} جنيه</p>
-                <p><strong class="text-gray-400">مواعيد:</strong> دفع يوم ${client.payment_day} | تجديد يوم ${client.renewal_day}</p>
-                <p><strong class="text-gray-400">ملاحظات:</strong> ${client.notes || 'لا توجد ملاحظات'}</p>
-                <div class="border-t border-gray-800 pt-2 mt-2">
-                    <p class="font-bold text-gold mb-1">سجل الدفعات:</p>
-                    <ul class="list-disc list-inside space-y-1 text-xs">${paymentsHistory}</ul>
-                </div>
+
+            const paid =
+                Array.isArray(client.payments) &&
+                client.payments.some(
+                    payment =>
+                        payment.paid_month === month
+                );
+
+
+            const overdue =
+                !paid &&
+                day > Number(client.payment_day);
+
+
+            if (currentFilter === 'merchant') {
+                return client.client_type === 'merchant';
+            }
+
+            if (currentFilter === 'direct') {
+                return client.client_type === 'direct';
+            }
+
+            if (currentFilter === 'overdue') {
+                return overdue;
+            }
+
+            return true;
+
+        });
+
+
+        filtered.forEach(client => {
+
+            const paid =
+                Array.isArray(client.payments) &&
+                client.payments.some(
+                    payment =>
+                        payment.paid_month === month
+                );
+
+            const fee =
+                Number(client.monthly_fee) || 0;
+
+            totalMoney += fee;
+
+            if (paid) {
+
+                collectedMoney += fee;
+
+            } else {
+
+                pendingMoney += fee;
+
+            }
+
+
+            const overdue =
+                !paid &&
+                day > Number(client.payment_day);
+
+
+            if (overdue) {
+                overdueNames.push(client.client_name);
+            }
+
+
+            let statusText;
+            let statusClass;
+
+            if (paid) {
+
+                statusText = 'مدفوع';
+                statusClass = 'status-paid';
+
+            } else if (overdue) {
+
+                statusText = 'متأخر';
+                statusClass = 'status-overdue';
+
+            } else {
+
+                statusText = 'مستحق';
+                statusClass = 'status-pending';
+
+            }
+
+
+            const platforms =
+                formatPlatforms(client.platform);
+
+
+            const merchant =
+                client.client_type === 'merchant';
+
+
+            const badge =
+                merchant
+                    ? `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full text-[10px]">تاجر</span>`
+                    : `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[10px]">مباشر</span>`;
+
+
+            const phone =
+                String(client.phone || '')
+                    .replace(/\D/g, '')
+                    .replace(/^0/, '20');
+
+
+            const waMessage = encodeURIComponent(
+                `مرحباً ${client.client_name}،\n\n` +
+                `تذكير بخصوص اشتراك خدمات ${platforms} ` +
+                `لحساب ${client.page_name}.\n` +
+                `قيمة الاشتراك: ${client.monthly_fee} جنيه.\n` +
+                `موعد الدفع: يوم ${client.payment_day} من الشهر.\n\n` +
+                `برجاء تأكيد الدفع. شكراً لك.`
+            );
+
+
+            const waUrl =
+                `https://wa.me/${phone}?text=${waMessage}`;
+
+
+            const notes =
+                client.notes
+                    ? `<div class="text-[11px] text-yellow-500 mt-1 truncate max-w-[220px]">ملاحظة: ${escapeHtml(client.notes)}</div>`
+                    : '';
+
+
+            const row = document.createElement('tr');
+
+            row.className =
+                'hover:bg-white/[.025] transition';
+
+
+            row.innerHTML = `
+
+                <td class="py-4 px-4">
+
+                    <button
+                        onclick="openProfile('${client.id}')"
+                        class="text-right">
+
+                        <div class="flex items-center gap-2">
+
+                            <span class="font-bold text-white hover:text-gold">
+                                ${escapeHtml(client.client_name)}
+                            </span>
+
+                            ${badge}
+
+                        </div>
+
+                        <div class="text-xs text-gray-500 mt-1">
+                            ${escapeHtml(client.page_name || '')}
+                        </div>
+
+                        ${notes}
+
+                    </button>
+
+                </td>
+
+
+                <td class="py-4 px-4 text-gray-300">
+                    ${escapeHtml(client.phone)}
+                </td>
+
+
+                <td class="py-4 px-4">
+
+                    <div class="flex flex-wrap gap-1 max-w-[220px]">
+
+                        ${platforms
+                            .split(' + ')
+                            .map(service =>
+                                `<span class="service-chip px-2 py-1 rounded-md text-[10px]">${escapeHtml(service)}</span>`
+                            )
+                            .join('')}
+
+                    </div>
+
+                </td>
+
+
+                <td class="py-4 px-4">
+
+                    <span class="font-black text-gold">
+                        ${money(client.monthly_fee)}
+                    </span>
+
+                </td>
+
+
+                <td class="py-4 px-4 text-xs">
+
+                    <span class="text-gray-400">
+                        دفع: يوم ${escapeHtml(client.payment_day)}
+                    </span>
+
+                    <br>
+
+                    <span class="text-gray-600">
+                        تجديد: يوم ${escapeHtml(client.renewal_day)}
+                    </span>
+
+                </td>
+
+
+                <td class="py-4 px-4">
+
+                    <span class="${statusClass} px-3 py-1.5 rounded-full text-xs font-bold">
+                        ${statusText}
+                    </span>
+
+                </td>
+
+
+                <td class="py-4 px-4">
+
+                    <div class="flex gap-1.5 items-center">
+
+                        ${
+                            !paid
+                                ? `
+                                    <button
+                                        onclick="markAsPaid('${client.id}', ${fee})"
+                                        class="bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
+                                        دفع
+                                    </button>
+                                  `
+                                : `
+                                    <span class="text-xs text-green-500">
+                                        ✓ تم
+                                    </span>
+                                  `
+                        }
+
+
+                        <a
+                            href="${waUrl}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
+
+                            واتساب
+
+                        </a>
+
+
+                        <button
+                            onclick="openEditModal('${client.id}')"
+                            class="bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
+
+                            تعديل
+
+                        </button>
+
+
+                        <button
+                            onclick="deleteClient('${client.id}')"
+                            class="bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs">
+
+                            حذف
+
+                        </button>
+
+                    </div>
+
+                </td>
+
             `;
-            document.getElementById('profile-modal').classList.remove('hidden');
+
+
+            tbody.appendChild(row);
+
+        });
+
+
+        $('stat-active-count').textContent =
+            clientsData.length;
+
+
+        $('stat-total-money').textContent =
+            money(totalMoney);
+
+
+        $('stat-collected').textContent =
+            money(collectedMoney);
+
+
+        $('stat-pending-money').textContent =
+            money(pendingMoney);
+
+
+        $('table-count').textContent =
+            `${filtered.length} اشتراك`;
+
+
+        if (filtered.length === 0) {
+
+            empty.classList.remove('hidden');
+
+        } else {
+
+            empty.classList.add('hidden');
+
         }
 
-        function closeProfileModal() {
-            document.getElementById('profile-modal').classList.add('hidden');
+
+        if (overdueNames.length > 0) {
+
+            $('alerts-container').classList.remove('hidden');
+
+            const names =
+                overdueNames.slice(0, 5).join('، ');
+
+            const more =
+                overdueNames.length > 5
+                    ? ` و ${overdueNames.length - 5} آخرين`
+                    : '';
+
+            $('alerts-text').textContent =
+                `يوجد ${overdueNames.length} اشتراك متأخر عن موعد الدفع: ${names}${more}`;
+
+        } else {
+
+            $('alerts-container').classList.add('hidden');
+
         }
 
-        document.getElementById('add-form').addEventListener('submit', async (e) => {
+    }
+
+
+    /* =====================================================
+       ADD / EDIT
+    ===================================================== */
+
+    function toggleMerchantField() {
+
+        const type =
+            $('add-client-type').value;
+
+        const label =
+            $('client-name-label');
+
+        const input =
+            $('add-client-name');
+
+
+        if (type === 'merchant') {
+
+            label.textContent =
+                'اسم التاجر / الشريك';
+
+            input.placeholder =
+                'مثال: مكتب فلان';
+
+        } else {
+
+            label.textContent =
+                'اسم العميل';
+
+            input.placeholder =
+                'محمد أحمد';
+
+        }
+
+    }
+
+
+    function clearPlatformCheckboxes() {
+
+        document
+            .querySelectorAll('input[name="platforms"]')
+            .forEach(cb => cb.checked = false);
+
+    }
+
+
+    function openAddModal() {
+
+        $('add-form').reset();
+
+        $('edit-client-id').value = '';
+
+        $('modal-title').textContent =
+            'إضافة اشتراك جديد';
+
+        $('submit-add-btn').textContent =
+            'حفظ الاشتراك';
+
+        clearPlatformCheckboxes();
+
+        toggleMerchantField();
+
+        $('add-modal').classList.remove('hidden');
+
+    }
+
+
+    function openEditModal(id) {
+
+        const client =
+            clientsData.find(c => c.id === id);
+
+        if (!client) {
+            return;
+        }
+
+
+        $('edit-client-id').value =
+            client.id;
+
+        $('modal-title').textContent =
+            'تعديل بيانات الاشتراك';
+
+        $('submit-add-btn').textContent =
+            'حفظ التعديلات';
+
+
+        $('add-client-type').value =
+            client.client_type || 'direct';
+
+        toggleMerchantField();
+
+
+        $('add-client-name').value =
+            client.client_name || '';
+
+        $('add-page-name').value =
+            client.page_name || '';
+
+        $('add-phone').value =
+            client.phone || '';
+
+        $('add-fee').value =
+            client.monthly_fee || '';
+
+        $('add-link').value =
+            client.page_link || '';
+
+        $('add-payment-day').value =
+            client.payment_day || '';
+
+        $('add-renewal-day').value =
+            client.renewal_day || '';
+
+        $('add-notes').value =
+            client.notes || '';
+
+
+        clearPlatformCheckboxes();
+
+
+        try {
+
+            const list =
+                JSON.parse(client.platform);
+
+            if (Array.isArray(list)) {
+
+                list.forEach(platform => {
+
+                    const checkbox =
+                        Array.from(
+                            document.querySelectorAll(
+                                'input[name="platforms"]'
+                            )
+                        ).find(
+                            cb => cb.value === platform
+                        );
+
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+
+                });
+
+            }
+
+        } catch (e) {}
+
+
+        $('add-modal').classList.remove('hidden');
+
+    }
+
+
+    function closeAddModal() {
+
+        $('add-modal').classList.add('hidden');
+
+        $('add-form').reset();
+
+        clearPlatformCheckboxes();
+
+    }
+
+
+    $('add-form').addEventListener(
+        'submit',
+        async function(e) {
+
             e.preventDefault();
-            const btn = document.getElementById('submit-add-btn');
-            btn.textContent = 'جاري الحفظ...';
+
+            const btn =
+                $('submit-add-btn');
 
             const selectedPlatforms = [];
-            document.querySelectorAll('input[name="platforms"]:checked').forEach(checkbox => {
-                selectedPlatforms.push(checkbox.value);
-            });
+
+
+            document
+                .querySelectorAll(
+                    'input[name="platforms"]:checked'
+                )
+                .forEach(cb => {
+
+                    selectedPlatforms.push(
+                        cb.value
+                    );
+
+                });
+
 
             if (selectedPlatforms.length === 0) {
-                alert('من فضلك اختر منصة واحدة على الأقل');
-                btn.textContent = 'حفظ';
+
+                showToast(
+                    'اختر منصة واحدة على الأقل',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            const fee =
+                Number($('add-fee').value);
+
+            const paymentDay =
+                Number($('add-payment-day').value);
+
+            const renewalDay =
+                Number($('add-renewal-day').value);
+
+
+            if (fee < 0) {
+
+                showToast(
+                    'قيمة الاشتراك غير صحيحة',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            if (
+                paymentDay < 1 ||
+                paymentDay > 31 ||
+                renewalDay < 1 ||
+                renewalDay > 31
+            ) {
+
+                showToast(
+                    'أيام الدفع والتجديد يجب أن تكون من 1 إلى 31',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            const editId =
+                $('edit-client-id').value;
+
+
+            const clientData = {
+
+                client_type:
+                    $('add-client-type').value,
+
+                client_name:
+                    $('add-client-name').value.trim(),
+
+                page_name:
+                    $('add-page-name').value.trim(),
+
+                phone:
+                    $('add-phone').value.trim(),
+
+                platform:
+                    JSON.stringify(selectedPlatforms),
+
+                page_link:
+                    $('add-link').value.trim(),
+
+                monthly_fee:
+                    fee,
+
+                payment_day:
+                    paymentDay,
+
+                renewal_day:
+                    renewalDay,
+
+                notes:
+                    $('add-notes').value.trim()
+
+            };
+
+
+            btn.disabled = true;
+
+            btn.textContent =
+                'جاري الحفظ...';
+
+
+            let error;
+
+
+            if (editId) {
+
+                const result =
+                    await db
+                        .from('clients')
+                        .update(clientData)
+                        .eq('id', editId);
+
+                error = result.error;
+
+            } else {
+
+                const result =
+                    await db
+                        .from('clients')
+                        .insert([clientData]);
+
+                error = result.error;
+
+            }
+
+
+            btn.disabled = false;
+
+            btn.textContent =
+                editId
+                    ? 'حفظ التعديلات'
+                    : 'حفظ الاشتراك';
+
+
+            if (error) {
+
+                console.error(error);
+
+                showToast(
+                    'حدث خطأ: ' + error.message,
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            closeAddModal();
+
+            await loadData();
+
+            showToast(
+                editId
+                    ? 'تم تعديل الاشتراك بنجاح'
+                    : 'تم إضافة الاشتراك بنجاح'
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       PAYMENT
+    ===================================================== */
+
+    async function markAsPaid(clientId, amount) {
+
+        const confirmed =
+            await askConfirm(
+                'تسجيل دفعة',
+                'هل تريد تسجيل دفعة هذا الشهر لهذا العميل؟'
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        const now =
+            new Date();
+
+        const dateStr =
+            now.toISOString().split('T')[0];
+
+        const monthStr =
+            getCurrentMonth();
+
+
+        const {
+            error
+        } = await db
+            .from('payments')
+            .insert([
+                {
+                    client_id: clientId,
+                    amount: amount,
+                    payment_date: dateStr,
+                    paid_month: monthStr
+                }
+            ]);
+
+
+        if (error) {
+
+            console.error(error);
+
+            showToast(
+                'تعذر تسجيل الدفعة: ' + error.message,
+                'error'
+            );
+
+            return;
+
+        }
+
+
+        await loadData();
+
+        showToast(
+            'تم تسجيل الدفعة بنجاح'
+        );
+
+    }
+
+
+    /* =====================================================
+       DELETE
+    ===================================================== */
+
+    async function deleteClient(id) {
+
+        const client =
+            clientsData.find(
+                c => c.id === id
+            );
+
+        if (!client) {
+            return;
+        }
+
+
+        const confirmed =
+            await askConfirm(
+                'حذف الاشتراك',
+                `هل أنت متأكد من حذف اشتراك ${client.client_name}؟ لا يُنصح بهذه العملية إذا كنت تريد الاحتفاظ بالسجل.`
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        const {
+            error
+        } = await db
+            .from('clients')
+            .delete()
+            .eq('id', id);
+
+
+        if (error) {
+
+            console.error(error);
+
+            showToast(
+                'تعذر حذف الاشتراك: ' + error.message,
+                'error'
+            );
+
+            return;
+
+        }
+
+
+        await loadData();
+
+        showToast(
+            'تم حذف الاشتراك'
+        );
+
+    }
+
+
+    /* =====================================================
+       PROFILE
+    ===================================================== */
+
+    function openProfile(id) {
+
+        const client =
+            clientsData.find(
+                c => c.id === id
+            );
+
+        if (!client) {
+            return;
+        }
+
+
+        $('profile-client-name').textContent =
+            client.client_name;
+
+
+        const platforms =
+            formatPlatforms(
+                client.platform
+            );
+
+
+        let paymentsHtml = '';
+
+
+        if (
+            Array.isArray(client.payments) &&
+            client.payments.length
+        ) {
+
+            const sorted =
+                [...client.payments].sort(
+                    (a, b) =>
+                        String(b.payment_date)
+                            .localeCompare(
+                                String(a.payment_date)
+                            )
+                );
+
+
+            paymentsHtml = sorted
+                .map(payment => `
+
+                    <div class="flex items-center justify-between bg-[#0D0D0D] border border-gray-800 rounded-xl p-3">
+
+                        <div>
+
+                            <p class="text-green-400 font-bold">
+                                ${money(payment.amount)}
+                            </p>
+
+                            <p class="text-[11px] text-gray-600 mt-1">
+                                شهر ${escapeHtml(payment.paid_month)}
+                            </p>
+
+                        </div>
+
+                        <p class="text-xs text-gray-500">
+                            ${escapeHtml(payment.payment_date)}
+                        </p>
+
+                    </div>
+
+                `)
+                .join('');
+
+        } else {
+
+            paymentsHtml = `
+                <div class="text-center text-gray-600 py-5">
+                    لا توجد دفعات مسجلة حتى الآن
+                </div>
+            `;
+
+        }
+
+
+        const phone =
+            String(client.phone || '')
+                .replace(/\D/g, '')
+                .replace(/^0/, '20');
+
+
+        const waMessage =
+            encodeURIComponent(
+                `مرحباً ${client.client_name}، بخصوص اشتراكك في ${platforms}.`
+            );
+
+
+        const waUrl =
+            `https://wa.me/${phone}?text=${waMessage}`;
+
+
+        $('profile-content').innerHTML = `
+
+            <div class="grid grid-cols-2 gap-3">
+
+                <div class="bg-[#0D0D0D] rounded-xl p-3 border border-gray-800">
+                    <p class="text-[11px] text-gray-600">
+                        نوع العميل
+                    </p>
+
+                    <p class="font-bold mt-1">
+                        ${
+                            client.client_type === 'merchant'
+                                ? 'تاجر / شريك'
+                                : 'عميل مباشر'
+                        }
+                    </p>
+                </div>
+
+
+                <div class="bg-[#0D0D0D] rounded-xl p-3 border border-gray-800">
+                    <p class="text-[11px] text-gray-600">
+                        الهاتف
+                    </p>
+
+                    <p class="font-bold mt-1">
+                        ${escapeHtml(client.phone)}
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
+
+                <p class="text-xs text-gray-600">
+                    الحساب / النشاط
+                </p>
+
+                <p class="font-bold mt-1">
+                    ${escapeHtml(client.page_name)}
+                </p>
+
+            </div>
+
+
+            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
+
+                <p class="text-xs text-gray-600 mb-2">
+                    الخدمات
+                </p>
+
+                <div class="flex flex-wrap gap-2">
+
+                    ${platforms
+                        .split(' + ')
+                        .map(p =>
+                            `<span class="service-chip px-2.5 py-1 rounded-lg text-xs">${escapeHtml(p)}</span>`
+                        )
+                        .join('')}
+
+                </div>
+
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-3">
+
+                <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
+
+                    <p class="text-xs text-gray-600">
+                        قيمة الاشتراك
+                    </p>
+
+                    <p class="text-gold font-black text-xl mt-1">
+                        ${money(client.monthly_fee)}
+                    </p>
+
+                </div>
+
+
+                <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
+
+                    <p class="text-xs text-gray-600">
+                        موعد الدفع
+                    </p>
+
+                    <p class="font-bold text-xl mt-1">
+                        يوم ${escapeHtml(client.payment_day)}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
+
+                <p class="text-xs text-gray-600">
+                    موعد التجديد
+                </p>
+
+                <p class="font-bold mt-1">
+                    يوم ${escapeHtml(client.renewal_day)}
+                </p>
+
+            </div>
+
+
+            <div class="bg-[#0D0D0D] rounded-xl p-4 border border-gray-800">
+
+                <p class="text-xs text-gray-600">
+                    الملاحظات
+                </p>
+
+                <p class="text-sm mt-1 text-gray-300">
+                    ${escapeHtml(client.notes || 'لا توجد ملاحظات')}
+                </p>
+
+            </div>
+
+
+            ${
+                client.page_link
+                    ? `
+                        <a
+                            href="${escapeHtml(client.page_link)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="block text-center border border-gold/30 text-gold hover:bg-gold hover:text-black rounded-xl py-3">
+                            فتح رابط الحساب
+                        </a>
+                      `
+                    : ''
+            }
+
+
+            <a
+                href="${waUrl}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block text-center bg-green-600 hover:bg-green-500 text-white rounded-xl py-3">
+
+                التواصل عبر واتساب
+
+            </a>
+
+
+            <div>
+
+                <div class="flex items-center justify-between mb-3">
+
+                    <h4 class="font-bold text-gold">
+                        سجل المدفوعات
+                    </h4>
+
+                    <span class="text-xs text-gray-600">
+                        ${
+                            Array.isArray(client.payments)
+                                ? client.payments.length
+                                : 0
+                        } دفعة
+                    </span>
+
+                </div>
+
+                <div class="space-y-2">
+
+                    ${paymentsHtml}
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        $('profile-modal')
+            .classList
+            .remove('hidden');
+
+    }
+
+
+    function closeProfileModal() {
+
+        $('profile-modal')
+            .classList
+            .add('hidden');
+
+    }
+
+
+    /* =====================================================
+       CONFIRM MODAL
+    ===================================================== */
+
+    function askConfirm(title, text) {
+
+        return new Promise(resolve => {
+
+            $('confirm-title').textContent =
+                title;
+
+            $('confirm-text').textContent =
+                text;
+
+            confirmCallback = resolve;
+
+            $('confirm-modal')
+                .classList
+                .remove('hidden');
+
+        });
+
+    }
+
+
+    $('confirm-yes').addEventListener(
+        'click',
+        function() {
+
+            if (confirmCallback) {
+
+                const callback =
+                    confirmCallback;
+
+                confirmCallback = null;
+
+                closeConfirm();
+
+                callback(true);
+
+            }
+
+        }
+    );
+
+
+    function closeConfirm() {
+
+        if (confirmCallback) {
+
+            const callback =
+                confirmCallback;
+
+            confirmCallback = null;
+
+            callback(false);
+
+        }
+
+        $('confirm-modal')
+            .classList
+            .add('hidden');
+
+    }
+
+
+    /* =====================================================
+       MODAL CLOSE BY BACKGROUND
+    ===================================================== */
+
+    $('add-modal').addEventListener(
+        'click',
+        function(e) {
+
+            if (e.target === this) {
+                closeAddModal();
+            }
+
+        }
+    );
+
+
+    $('profile-modal').addEventListener(
+        'click',
+        function(e) {
+
+            if (e.target === this) {
+                closeProfileModal();
+            }
+
+        }
+    );
+
+
+    $('confirm-modal').addEventListener(
+        'click',
+        function(e) {
+
+            if (e.target === this) {
+                closeConfirm();
+            }
+
+        }
+    );
+
+
+    /* =====================================================
+       ESC KEY
+    ===================================================== */
+
+    document.addEventListener(
+        'keydown',
+        function(e) {
+
+            if (e.key !== 'Escape') {
                 return;
             }
 
-            const editId = document.getElementById('edit-client-id').value;
-            const clientData = {
-                client_type: document.getElementById('add-client-type').value,
-                client_name: document.getElementById('add-client-name').value,
-                page_name: document.getElementById('add-page-name').value,
-                phone: document.getElementById('add-phone').value,
-                platform: JSON.stringify(selectedPlatforms),
-                page_link: document.getElementById('add-link').value,
-                monthly_fee: document.getElementById('add-fee').value,
-                payment_day: document.getElementById('add-payment-day').value,
-                renewal_day: document.getElementById('add-renewal-day').value,
-                notes: document.getElementById('add-notes').value
-            };
+            closeAddModal();
+            closeProfileModal();
+            closeConfirm();
 
-            let error;
-            if (editId) {
-                // تعديل
-                const res = await db.from('clients').update(clientData).eq('id', editId);
-                error = res.error;
-            } else {
-                // إضافة جديد
-                const res = await db.from('clients').insert([clientData]);
-                error = res.error;
-            }
+        }
+    );
 
-            if (error) {
-                alert('حدث خطأ: ' + error.message);
-                btn.textContent = 'حفظ';
-            } else {
-                closeAddModal();
-                loadData();
-            }
-        });
 
-        checkUser();
-    </script>
+    /* =====================================================
+       START
+    ===================================================== */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        async function() {
+
+            await checkUser();
+
+        }
+    );
+
+</script>
+
 </body>
 </html>
+```
