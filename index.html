@@ -1,594 +1,1713 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BADGEIFY - CRM</title>
 
-    <title>BADGEIFY | إدارة العملاء والاشتراكات</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+    --bg:#080808;
+    --panel:#111;
+    --panel2:#171717;
+    --gold:#d4af37;
+    --gold2:#f1d477;
+    --text:#f5f5f5;
+    --muted:#9b9b9b;
+    --green:#22c55e;
+    --red:#ef4444;
+    --blue:#3b82f6;
+    --border:#292929;
+    --shadow:0 10px 35px rgba(0,0,0,.35);
+}
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+*{
+    box-sizing:border-box;
+}
 
-    <style>
-        * {
-            font-family: "Tajawal", sans-serif;
-            box-sizing: border-box;
-        }
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Tahoma,Arial,sans-serif;
+}
 
-        body {
-            margin: 0;
-            background:
-                radial-gradient(circle at top right, rgba(212,175,55,.10), transparent 30%),
-                radial-gradient(circle at bottom left, rgba(212,175,55,.06), transparent 30%),
-                #080808;
-            color: #fff;
-            min-height: 100vh;
-        }
+button,
+input,
+select,
+textarea{
+    font-family:inherit;
+}
 
-        .gold {
-            color: #d4af37;
-        }
+button{
+    cursor:pointer;
+}
 
-        .gold-bg {
-            background: linear-gradient(135deg, #d4af37, #f4d77d, #b88a14);
-        }
+.hidden{
+    display:none!important;
+}
 
-        .glass {
-            background: rgba(20,20,20,.78);
-            border: 1px solid rgba(212,175,55,.15);
-            backdrop-filter: blur(15px);
-        }
+/* ================= LOGIN ================= */
 
-        .card {
-            background: linear-gradient(145deg, rgba(25,25,25,.96), rgba(12,12,12,.96));
-            border: 1px solid rgba(212,175,55,.13);
-            box-shadow: 0 15px 45px rgba(0,0,0,.25);
-        }
+#loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:
+        radial-gradient(circle at top,#2b230b 0,#080808 45%);
+}
 
-        .input {
-            width: 100%;
-            background: #111;
-            border: 1px solid #292929;
-            color: #fff;
-            border-radius: 12px;
-            padding: 12px 14px;
-            outline: none;
-            transition: .2s;
-        }
+.login-box{
+    width:100%;
+    max-width:430px;
+    background:rgba(17,17,17,.96);
+    border:1px solid rgba(212,175,55,.35);
+    border-radius:24px;
+    padding:35px;
+    box-shadow:var(--shadow);
+}
 
-        .input:focus {
-            border-color: #d4af37;
-            box-shadow: 0 0 0 3px rgba(212,175,55,.08);
-        }
+.logo{
+    text-align:center;
+    font-size:38px;
+    font-weight:900;
+    letter-spacing:4px;
+    color:var(--gold);
+}
 
-        select.input option {
-            background: #111;
-            color: white;
-        }
+.logo-sub{
+    text-align:center;
+    color:var(--muted);
+    margin:8px 0 30px;
+}
 
-        .btn {
-            border-radius: 12px;
-            padding: 11px 16px;
-            font-weight: 700;
-            transition: .2s;
-            cursor: pointer;
-        }
+.form-group{
+    margin-bottom:15px;
+}
 
-        .btn:hover {
-            transform: translateY(-1px);
-        }
+label{
+    display:block;
+    color:#ddd;
+    margin-bottom:7px;
+    font-size:14px;
+}
 
-        .btn-gold {
-            background: linear-gradient(135deg,#d4af37,#f0d46c);
-            color: #080808;
-        }
+input,
+select,
+textarea{
+    width:100%;
+    background:#0c0c0c;
+    color:white;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+    outline:none;
+}
 
-        .btn-dark {
-            background: #171717;
-            border: 1px solid #303030;
-            color: #fff;
-        }
+input:focus,
+select:focus,
+textarea:focus{
+    border-color:var(--gold);
+}
 
-        .btn-danger {
-            background: rgba(220,38,38,.12);
-            color: #f87171;
-            border: 1px solid rgba(220,38,38,.25);
-        }
+textarea{
+    min-height:90px;
+    resize:vertical;
+}
 
-        .nav-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            color: #aaa;
-            transition: .2s;
-            text-align: right;
-        }
+.btn{
+    border:0;
+    border-radius:10px;
+    padding:11px 17px;
+    color:white;
+    background:#242424;
+    transition:.2s;
+}
 
-        .nav-btn:hover,
-        .nav-btn.active {
-            background: rgba(212,175,55,.1);
-            color: #d4af37;
-        }
+.btn:hover{
+    transform:translateY(-1px);
+}
 
-        .modal-bg {
-            background: rgba(0,0,0,.78);
-            backdrop-filter: blur(8px);
-        }
+.btn-gold{
+    background:linear-gradient(135deg,var(--gold),#9e7b13);
+    color:#111;
+    font-weight:bold;
+}
 
-        .modal-box {
-            max-height: 90vh;
-            overflow-y: auto;
-        }
+.btn-red{
+    background:#481919;
+    color:#ff8b8b;
+}
 
-        ::-webkit-scrollbar {
-            width: 7px;
-        }
+.btn-green{
+    background:#12351f;
+    color:#70e09a;
+}
 
-        ::-webkit-scrollbar-track {
-            background: #090909;
-        }
+.btn-blue{
+    background:#102d4d;
+    color:#76b5ff;
+}
 
-        ::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 10px;
-        }
+.btn-block{
+    width:100%;
+}
 
-        .loader-ring {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            border: 3px solid rgba(212,175,55,.15);
-            border-top-color: #d4af37;
-            animation: spin 1s linear infinite;
-        }
+.error{
+    color:#ff7777;
+    text-align:center;
+    margin-top:12px;
+}
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+/* ================= APP ================= */
 
-        .fade-in {
-            animation: fadeIn .35s ease;
-        }
+#app{
+    min-height:100vh;
+}
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+.topbar{
+    height:70px;
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(8,8,8,.94);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+}
 
-        .pulse-gold {
-            animation: pulseGold 1.8s infinite;
-        }
+.brand{
+    color:var(--gold);
+    font-size:24px;
+    font-weight:900;
+    letter-spacing:2px;
+}
 
-        @keyframes pulseGold {
-            0%,100% {
-                box-shadow: 0 0 0 0 rgba(212,175,55,.20);
-            }
-            50% {
-                box-shadow: 0 0 0 12px rgba(212,175,55,0);
-            }
-        }
+.top-user{
+    color:#aaa;
+    font-size:13px;
+}
 
-        .table-row:hover {
-            background: rgba(255,255,255,.025);
-        }
+.layout{
+    display:flex;
+    min-height:calc(100vh - 70px);
+}
 
-        .status-active {
-            color: #4ade80;
-            background: rgba(74,222,128,.08);
-            border: 1px solid rgba(74,222,128,.15);
-        }
+.sidebar{
+    width:245px;
+    background:#0d0d0d;
+    border-left:1px solid var(--border);
+    padding:18px 12px;
+    flex-shrink:0;
+}
 
-        .status-expired {
-            color: #f87171;
-            background: rgba(248,113,113,.08);
-            border: 1px solid rgba(248,113,113,.15);
-        }
+.nav-title{
+    color:#777;
+    font-size:11px;
+    margin:12px 10px 7px;
+}
 
-        .status-paused {
-            color: #fbbf24;
-            background: rgba(251,191,36,.08);
-            border: 1px solid rgba(251,191,36,.15);
-        }
+.nav-btn{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:#bbb;
+    padding:12px;
+    border-radius:10px;
+    text-align:right;
+    margin-bottom:4px;
+}
 
-        .mobile-menu {
-            transform: translateX(100%);
-            transition: .25s;
-        }
+.nav-btn:hover,
+.nav-btn.active{
+    background:rgba(212,175,55,.1);
+    color:var(--gold2);
+}
 
-        .mobile-menu.open {
-            transform: translateX(0);
-        }
-    </style>
+.main{
+    flex:1;
+    padding:22px;
+    min-width:0;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.page-title{
+    font-size:25px;
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+.page-title span{
+    color:var(--gold);
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:22px;
+}
+
+.stat-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:15px;
+    padding:20px;
+}
+
+.stat-title{
+    color:#999;
+    font-size:13px;
+}
+
+.stat-value{
+    font-size:28px;
+    font-weight:bold;
+    margin-top:8px;
+    color:var(--gold2);
+}
+
+.panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+    margin-bottom:18px;
+}
+
+.panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.panel-title{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-bottom:15px;
+}
+
+.toolbar input,
+.toolbar select{
+    width:auto;
+    min-width:180px;
+}
+
+.table-wrap{
+    overflow:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:800px;
+}
+
+th,
+td{
+    padding:12px 10px;
+    border-bottom:1px solid var(--border);
+    text-align:right;
+    white-space:nowrap;
+}
+
+th{
+    color:var(--gold2);
+    font-size:13px;
+}
+
+td{
+    color:#ddd;
+    font-size:13px;
+}
+
+.badge{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+}
+
+.badge-green{
+    background:#12351f;
+    color:#72e19b;
+}
+
+.badge-red{
+    background:#401717;
+    color:#ff8b8b;
+}
+
+.badge-gold{
+    background:#3d3213;
+    color:#e7ca67;
+}
+
+.badge-blue{
+    background:#102d4d;
+    color:#79b8ff;
+}
+
+.actions{
+    display:flex;
+    gap:5px;
+}
+
+.actions .btn{
+    padding:7px 10px;
+    font-size:11px;
+}
+
+/* ================= CUSTOMER CARDS ================= */
+
+.customer-grid,
+.trader-grid,
+.service-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:14px;
+}
+
+.customer-card,
+.trader-card,
+.service-card{
+    background:#141414;
+    border:1px solid var(--border);
+    border-radius:15px;
+    padding:17px;
+}
+
+.customer-name{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.customer-meta{
+    color:#999;
+    font-size:12px;
+    margin-top:7px;
+}
+
+.card-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:15px;
+}
+
+/* ================= MODAL ================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    background:rgba(0,0,0,.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:100%;
+    max-width:720px;
+    max-height:92vh;
+    overflow:auto;
+    background:#111;
+    border:1px solid rgba(212,175,55,.35);
+    border-radius:18px;
+    padding:22px;
+}
+
+.modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:20px;
+}
+
+.close{
+    background:#242424;
+    color:white;
+    border:0;
+    border-radius:8px;
+    width:35px;
+    height:35px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:13px;
+}
+
+.form-full{
+    grid-column:1/-1;
+}
+
+.modal-footer{
+    display:flex;
+    justify-content:flex-start;
+    gap:8px;
+    margin-top:20px;
+}
+
+/* ================= CALENDAR ================= */
+
+.calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:7px;
+}
+
+.calendar-day{
+    min-height:105px;
+    background:#141414;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:9px;
+}
+
+.calendar-day.today{
+    border-color:var(--gold);
+}
+
+.day-number{
+    color:var(--gold2);
+    font-weight:bold;
+    margin-bottom:7px;
+}
+
+.follow-item{
+    background:#29200b;
+    color:#e8ce71;
+    border-radius:6px;
+    padding:5px;
+    font-size:10px;
+    margin-top:4px;
+    cursor:pointer;
+}
+
+.follow-item.done{
+    background:#12351f;
+    color:#6cdb93;
+}
+
+/* ================= PROFILE ================= */
+
+.profile-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    flex-wrap:wrap;
+    background:linear-gradient(135deg,#19150a,#111);
+    border:1px solid rgba(212,175,55,.3);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:18px;
+}
+
+.profile-name{
+    font-size:27px;
+    font-weight:bold;
+}
+
+.profile-sections{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+/* ================= TOAST ================= */
+
+#toast{
+    position:fixed;
+    left:20px;
+    bottom:20px;
+    z-index:300;
+    background:#191919;
+    border:1px solid var(--gold);
+    color:white;
+    padding:13px 18px;
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    display:none;
+}
+
+#toast.show{
+    display:block;
+}
+
+/* ================= LOADING ================= */
+
+#loading{
+    position:fixed;
+    inset:0;
+    z-index:999;
+    background:#080808;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--gold);
+    font-size:22px;
+    font-weight:bold;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:1000px){
+    .cards{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .profile-sections{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:750px){
+    .layout{
+        display:block;
+    }
+
+    .sidebar{
+        width:100%;
+        border-left:0;
+        border-bottom:1px solid var(--border);
+        display:flex;
+        overflow:auto;
+        gap:5px;
+        padding:8px;
+    }
+
+    .nav-title{
+        display:none;
+    }
+
+    .nav-btn{
+        min-width:max-content;
+        margin:0;
+    }
+
+    .main{
+        padding:14px;
+    }
+
+    .cards{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .form-full{
+        grid-column:auto;
+    }
+
+    .calendar-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .brand{
+        font-size:19px;
+    }
+
+    .top-user{
+        display:none;
+    }
+}
+
+@media(max-width:450px){
+    .cards{
+        grid-template-columns:1fr;
+    }
+}
+</style>
 </head>
 
 <body>
 
-<!-- LOADING -->
-<div id="loadingScreen"
-     class="fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center">
+<div id="loading">BADGEIFY</div>
 
-    <div class="text-center">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-3xl gold-bg flex items-center justify-center shadow-2xl">
-            <span class="text-3xl font-black text-black">B</span>
-        </div>
+<!-- ================= LOGIN ================= -->
 
-        <div class="text-3xl font-black tracking-[.2em] gold">
-            BADGEIFY
-        </div>
-
-        <div class="text-gray-500 mt-2">
-            CRM & Subscription Management
-        </div>
-
-        <div class="loader-ring mx-auto mt-8"></div>
-    </div>
-</div>
-
-
-<!-- LOGIN -->
-<div id="loginScreen" class="hidden min-h-screen items-center justify-center p-5">
-
-    <div class="w-full max-w-md card rounded-3xl p-8">
-
-        <div class="text-center mb-8">
-
-            <div class="w-20 h-20 mx-auto rounded-3xl gold-bg flex items-center justify-center mb-5">
-                <span class="text-4xl font-black text-black">B</span>
-            </div>
-
-            <h1 class="text-3xl font-black gold">
-                BADGEIFY
-            </h1>
-
-            <p class="text-gray-500 mt-2">
-                نظام إدارة العملاء والاشتراكات
-            </p>
-        </div>
+<section id="loginScreen" class="hidden">
+    <div class="login-box">
+        <div class="logo">BADGEIFY</div>
+        <div class="logo-sub">VERIFIED TRUST & SECURITY</div>
 
         <form id="loginForm">
-
-            <label class="block text-sm text-gray-400 mb-2">
-                البريد الإلكتروني
-            </label>
-
-            <input
-                id="loginEmail"
-                type="email"
-                class="input mb-5"
-                placeholder="example@email.com"
-                required
-            >
-
-            <label class="block text-sm text-gray-400 mb-2">
-                كلمة المرور
-            </label>
-
-            <div class="relative">
-
-                <input
-                    id="loginPassword"
-                    type="password"
-                    class="input pl-12"
-                    placeholder="••••••••"
-                    required
-                >
-
-                <button
-                    type="button"
-                    onclick="togglePassword()"
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                    👁
-                </button>
-
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <input id="loginEmail" type="email" required autocomplete="email">
             </div>
 
-            <button
-                type="submit"
-                class="btn btn-gold w-full mt-6">
-                تسجيل الدخول
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input id="loginPassword" type="password" required autocomplete="current-password">
+            </div>
+
+            <button class="btn btn-gold btn-block" type="submit">
+                دخول النظام
             </button>
 
-            <div id="loginError"
-                 class="hidden mt-4 text-center text-red-400 text-sm">
-            </div>
-
+            <div id="loginError" class="error"></div>
         </form>
     </div>
-</div>
+</section>
 
+<!-- ================= APP ================= -->
 
-<!-- APP -->
-<div id="app" class="hidden min-h-screen">
+<div id="app" class="hidden">
 
-    <!-- SIDEBAR -->
-    <aside id="sidebar"
-           class="fixed right-0 top-0 bottom-0 w-72 bg-[#0b0b0b] border-l border-[#202020] z-50 hidden lg:block">
+<header class="topbar">
+    <div class="brand">BADGEIFY</div>
+    <div class="top-user" id="topUser"></div>
+    <button class="btn" onclick="logout()">تسجيل الخروج</button>
+</header>
 
-        <div class="p-6 border-b border-[#202020]">
+<div class="layout">
 
-            <div class="flex items-center gap-3">
+<aside class="sidebar">
 
-                <div class="w-12 h-12 rounded-2xl gold-bg flex items-center justify-center">
-                    <span class="text-2xl font-black text-black">B</span>
-                </div>
+    <div class="nav-title">الرئيسية</div>
 
-                <div>
-                    <div class="font-black gold text-xl">
-                        BADGEIFY
-                    </div>
+    <button class="nav-btn active" data-page="dashboard">
+        لوحة التحكم
+    </button>
 
-                    <div class="text-xs text-gray-500">
-                        Management System
-                    </div>
-                </div>
+    <div class="nav-title">إدارة العملاء</div>
 
-            </div>
+    <button class="nav-btn" data-page="customers">
+        العملاء
+    </button>
 
-        </div>
+    <button class="nav-btn" data-page="subscriptions">
+        الاشتراكات
+    </button>
 
-        <nav class="p-4 space-y-1">
+    <button class="nav-btn" data-page="payments">
+        المدفوعات
+    </button>
 
-            <button class="nav-btn active" data-page="dashboard">
-                <span>⌂</span>
-                <span>الرئيسية</span>
-            </button>
+    <div class="nav-title">المتابعة</div>
 
-            <button class="nav-btn" data-page="customers">
-                <span>♙</span>
-                <span>العملاء</span>
-            </button>
+    <button class="nav-btn" data-page="agenda">
+        أجندة المتابعة
+    </button>
 
-            <button class="nav-btn" data-page="subscriptions">
-                <span>◈</span>
-                <span>الاشتراكات</span>
-            </button>
+    <button class="nav-btn" data-page="followups">
+        سجل المتابعة
+    </button>
 
-            <button class="nav-btn" data-page="payments">
-                <span>▣</span>
-                <span>المدفوعات</span>
-            </button>
+    <div class="nav-title">الإدارة</div>
 
-            <button class="nav-btn" data-page="services">
-                <span>◇</span>
-                <span>الخدمات</span>
-            </button>
+    <button class="nav-btn" data-page="traders">
+        التجار
+    </button>
 
-            <div class="pt-5 pb-2 px-3 text-xs text-gray-600">
-                قريباً
-            </div>
+    <button class="nav-btn" data-page="services">
+        الخدمات
+    </button>
 
-            <button class="nav-btn" disabled>
-                <span>▤</span>
-                <span>الفواتير</span>
-            </button>
+    <button class="nav-btn" data-page="invoices">
+        الفواتير
+    </button>
 
-            <button class="nav-btn" disabled>
-                <span>✓</span>
-                <span>المهام والمتابعة</span>
-            </button>
+    <button class="nav-btn" data-page="activity">
+        سجل النشاط
+    </button>
 
-            <button class="nav-btn" disabled>
-                <span>◷</span>
-                <span>سجل النشاط</span>
-            </button>
+    <button class="nav-btn" data-page="settings">
+        الإعدادات
+    </button>
 
-            <button class="nav-btn" disabled>
-                <span>⚙</span>
-                <span>الإعدادات</span>
-            </button>
+</aside>
 
-        </nav>
+<main class="main">
 
-        <div class="absolute bottom-0 right-0 left-0 p-4 border-t border-[#202020]">
+<!-- DASHBOARD -->
 
-            <div class="flex items-center gap-3 mb-3">
+<section id="page-dashboard" class="page active">
 
-                <div class="w-10 h-10 rounded-full bg-[#181818] flex items-center justify-center gold">
-                    U
-                </div>
-
-                <div class="min-w-0">
-                    <div id="userEmail"
-                         class="text-sm truncate text-gray-300">
-                    </div>
-
-                    <div class="text-xs text-gray-600">
-                        مستخدم النظام
-                    </div>
-                </div>
-
-            </div>
-
-            <button onclick="logout()"
-                    class="btn btn-dark w-full text-sm">
-                تسجيل الخروج
-            </button>
-
-        </div>
-
-    </aside>
-
-
-    <!-- MOBILE SIDEBAR -->
-    <div id="mobileMenu"
-         class="mobile-menu fixed right-0 top-0 bottom-0 w-72 bg-[#0b0b0b] z-[100] lg:hidden border-l border-[#222]">
-
-        <div class="p-5 flex justify-between items-center border-b border-[#222]">
-
-            <span class="gold font-black text-xl">
-                BADGEIFY
-            </span>
-
-            <button onclick="toggleMobileMenu()"
-                    class="text-gray-400 text-2xl">
-                ×
-            </button>
-
-        </div>
-
-        <div class="p-4 space-y-1">
-
-            <button class="nav-btn active" data-page="dashboard">
-                ⌂ <span>الرئيسية</span>
-            </button>
-
-            <button class="nav-btn" data-page="customers">
-                ♙ <span>العملاء</span>
-            </button>
-
-            <button class="nav-btn" data-page="subscriptions">
-                ◈ <span>الاشتراكات</span>
-            </button>
-
-            <button class="nav-btn" data-page="payments">
-                ▣ <span>المدفوعات</span>
-            </button>
-
-            <button class="nav-btn" data-page="services">
-                ◇ <span>الخدمات</span>
-            </button>
-
-            <button onclick="logout()" class="nav-btn text-red-400 mt-5">
-                ⇥ <span>تسجيل الخروج</span>
-            </button>
-
-        </div>
+    <div class="page-title">
+        لوحة <span>التحكم</span>
     </div>
 
+    <div class="cards">
 
-    <!-- MAIN -->
-    <main class="lg:mr-72 min-h-screen">
-
-        <!-- HEADER -->
-        <header class="sticky top-0 z-40 bg-[#080808]/90 backdrop-blur-xl border-b border-[#202020]">
-
-            <div class="px-4 md:px-7 py-4 flex items-center justify-between">
-
-                <div class="flex items-center gap-3">
-
-                    <button onclick="toggleMobileMenu()"
-                            class="lg:hidden btn btn-dark px-3">
-                        ☰
-                    </button>
-
-                    <div>
-                        <h1 id="pageTitle"
-                            class="font-black text-xl md:text-2xl">
-                            الرئيسية
-                        </h1>
-
-                        <p id="pageSubtitle"
-                           class="text-xs md:text-sm text-gray-600">
-                            نظرة عامة على النظام
-                        </p>
-                    </div>
-
-                </div>
-
-                <button
-                    onclick="refreshCurrentPage()"
-                    class="btn btn-dark">
-                    تحديث
-                </button>
-
-            </div>
-
-        </header>
-
-
-        <!-- CONTENT -->
-        <div id="content"
-             class="p-4 md:p-7">
+        <div class="stat-card">
+            <div class="stat-title">إجمالي العملاء</div>
+            <div class="stat-value" id="statCustomers">0</div>
         </div>
 
-    </main>
-</div>
-
-
-<!-- MODAL -->
-<div id="modal"
-     class="hidden fixed inset-0 z-[200] modal-bg items-center justify-center p-4">
-
-    <div id="modalContent"
-         class="modal-box w-full max-w-2xl card rounded-3xl p-6 fade-in">
-    </div>
-
-</div>
-
-
-<!-- CONFIRM -->
-<div id="confirmModal"
-     class="hidden fixed inset-0 z-[300] modal-bg items-center justify-center p-4">
-
-    <div class="card rounded-3xl p-7 w-full max-w-md text-center">
-
-        <div class="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-5 text-2xl">
-            !
+        <div class="stat-card">
+            <div class="stat-title">الاشتراكات النشطة</div>
+            <div class="stat-value" id="statSubscriptions">0</div>
         </div>
 
-        <h3 id="confirmTitle"
-            class="font-black text-xl">
-            تأكيد العملية
-        </h3>
+        <div class="stat-card">
+            <div class="stat-title">إجمالي المدفوعات</div>
+            <div class="stat-value" id="statPayments">0</div>
+        </div>
 
-        <p id="confirmText"
-           class="text-gray-500 mt-2">
-            هل أنت متأكد؟
-        </p>
-
-        <div class="flex gap-3 mt-7">
-
-            <button
-                onclick="closeConfirm()"
-                class="btn btn-dark flex-1">
-                إلغاء
-            </button>
-
-            <button
-                id="confirmButton"
-                class="btn btn-danger flex-1">
-                تأكيد
-            </button>
-
+        <div class="stat-card">
+            <div class="stat-title">متابعات اليوم</div>
+            <div class="stat-value" id="statToday">0</div>
         </div>
 
     </div>
 
-</div>
+    <div class="panel">
 
+        <div class="panel-head">
+            <div class="panel-title">متابعات اليوم</div>
 
-<!-- TOAST -->
-<div id="toast"
-     class="fixed bottom-5 left-5 z-[500] hidden">
+            <button class="btn btn-gold"
+                    onclick="showPage('agenda')">
+                فتح الأجندة
+            </button>
+        </div>
 
-    <div id="toastBox"
-         class="card rounded-2xl px-5 py-4 min-w-[280px]">
+        <div id="todayFollowups"></div>
 
-        <div id="toastMessage"
-             class="text-sm">
+    </div>
+
+    <div class="panel">
+
+        <div class="panel-head">
+            <div class="panel-title">التجديدات القادمة</div>
+        </div>
+
+        <div id="upcomingRenewals"></div>
+
+    </div>
+
+</section>
+
+<!-- CUSTOMERS -->
+
+<section id="page-customers" class="page">
+
+    <div class="page-title">
+        <span>العملاء</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="toolbar">
+
+            <input id="customerSearch"
+                   placeholder="بحث باسم العميل أو الهاتف...">
+
+            <select id="customerTraderFilter">
+                <option value="">كل التجار</option>
+            </select>
+
+            <button class="btn btn-gold"
+                    onclick="openCustomerModal()">
+                + إضافة عميل
+            </button>
+
+        </div>
+
+        <div id="customerGrid" class="customer-grid"></div>
+
+    </div>
+
+</section>
+
+<!-- SUBSCRIPTIONS -->
+
+<section id="page-subscriptions" class="page">
+
+    <div class="page-title">
+        <span>الاشتراكات</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="toolbar">
+
+            <input id="subscriptionSearch"
+                   placeholder="بحث...">
+
+            <select id="subscriptionStatusFilter">
+                <option value="">كل الحالات</option>
+                <option value="active">نشط</option>
+                <option value="paused">متوقف مؤقتاً</option>
+                <option value="cancelled">ملغي</option>
+            </select>
+
+            <button class="btn btn-gold"
+                    onclick="openSubscriptionModal()">
+                + إضافة اشتراك
+            </button>
+
+        </div>
+
+        <div class="table-wrap">
+            <table>
+
+                <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>الخدمة</th>
+                    <th>المنصة</th>
+                    <th>السعر</th>
+                    <th>التجديد</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+                </thead>
+
+                <tbody id="subscriptionsTable"></tbody>
+
+            </table>
         </div>
 
     </div>
 
+</section>
+
+<!-- PAYMENTS -->
+
+<section id="page-payments" class="page">
+
+    <div class="page-title">
+        <span>المدفوعات</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="toolbar">
+
+            <input id="paymentSearch"
+                   placeholder="بحث باسم العميل...">
+
+            <button class="btn btn-gold"
+                    onclick="openPaymentModal()">
+                + تسجيل دفعة
+            </button>
+
+        </div>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>الاشتراك</th>
+                    <th>المبلغ</th>
+                    <th>التاريخ</th>
+                    <th>الشهر</th>
+                    <th>إجراءات</th>
+                </tr>
+                </thead>
+
+                <tbody id="paymentsTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- AGENDA -->
+
+<section id="page-agenda" class="page">
+
+    <div class="page-title">
+        <span>أجندة المتابعة</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="panel-head">
+
+            <div>
+                متابعة وتجديدات الـ 30 يوم القادمة
+            </div>
+
+            <button class="btn btn-gold"
+                    onclick="generateRenewalFollowups()">
+                تحديث من الاشتراكات
+            </button>
+
+        </div>
+
+        <div id="calendar" class="calendar-grid"></div>
+
+    </div>
+
+</section>
+
+<!-- FOLLOWUPS -->
+
+<section id="page-followups" class="page">
+
+    <div class="page-title">
+        <span>سجل المتابعة</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="toolbar">
+
+            <input id="followupSearch"
+                   placeholder="بحث في المتابعة...">
+
+            <button class="btn btn-gold"
+                    onclick="openFollowupModal()">
+                + إضافة متابعة
+            </button>
+
+        </div>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>العميل</th>
+                    <th>النوع</th>
+                    <th>العنوان</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+                </thead>
+
+                <tbody id="followupsTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- TRADERS -->
+
+<section id="page-traders" class="page">
+
+    <div class="page-title">
+        <span>التجار</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="panel-head">
+
+            <div class="panel-title">
+                التجار والعملاء التابعون لكل تاجر
+            </div>
+
+            <button class="btn btn-gold"
+                    onclick="openTraderModal()">
+                + إضافة تاجر
+            </button>
+
+        </div>
+
+        <div id="traderGrid" class="trader-grid"></div>
+
+    </div>
+
+</section>
+
+<!-- SERVICES -->
+
+<section id="page-services" class="page">
+
+    <div class="page-title">
+        <span>الخدمات</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="panel-head">
+
+            <div class="panel-title">
+                الخدمات التي تقدمها
+            </div>
+
+            <button class="btn btn-gold"
+                    onclick="openServiceModal()">
+                + إضافة خدمة
+            </button>
+
+        </div>
+
+        <div id="serviceGrid" class="service-grid"></div>
+
+    </div>
+
+</section>
+
+<!-- INVOICES -->
+
+<section id="page-invoices" class="page">
+
+    <div class="page-title">
+        <span>الفواتير</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="toolbar">
+
+            <input id="invoiceSearch"
+                   placeholder="بحث برقم الفاتورة أو العميل...">
+
+            <button class="btn btn-gold"
+                    onclick="openInvoiceModal()">
+                + إنشاء فاتورة
+            </button>
+
+        </div>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>العميل</th>
+                    <th>التاريخ</th>
+                    <th>الإجمالي</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+                </thead>
+
+                <tbody id="invoicesTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ACTIVITY -->
+
+<section id="page-activity" class="page">
+
+    <div class="page-title">
+        <span>سجل النشاط</span>
+    </div>
+
+    <div class="panel">
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>الإجراء</th>
+                    <th>القسم</th>
+                    <th>الوصف</th>
+                </tr>
+                </thead>
+
+                <tbody id="activityTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- SETTINGS -->
+
+<section id="page-settings" class="page">
+
+    <div class="page-title">
+        <span>الإعدادات</span>
+    </div>
+
+    <div class="panel">
+
+        <form id="settingsForm">
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>اسم الشركة</label>
+                    <input id="settingCompanyName">
+                </div>
+
+                <div class="form-group">
+                    <label>الهاتف</label>
+                    <input id="settingCompanyPhone">
+                </div>
+
+                <div class="form-group">
+                    <label>واتساب</label>
+                    <input id="settingCompanyWhatsapp">
+                </div>
+
+                <div class="form-group">
+                    <label>بادئة الفواتير</label>
+                    <input id="settingInvoicePrefix">
+                </div>
+
+                <div class="form-group">
+                    <label>العملة</label>
+                    <input id="settingCurrency">
+                </div>
+
+                <div class="form-group">
+                    <label>عدد أيام المتابعة</label>
+                    <input id="settingFollowupDays" type="number">
+                </div>
+
+                <div class="form-group form-full">
+                    <label>العنوان</label>
+                    <input id="settingCompanyAddress">
+                </div>
+
+            </div>
+
+            <button class="btn btn-gold" type="submit">
+                حفظ الإعدادات
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+</main>
+</div>
 </div>
 
+<!-- ================= MODALS ================= -->
+
+<!-- CUSTOMER -->
+
+<div id="customerModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+    <h3 id="customerModalTitle">إضافة عميل</h3>
+    <button class="close" onclick="closeModal('customerModal')">×</button>
+</div>
+
+<form id="customerForm">
+
+<input type="hidden" id="customerId">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>اسم العميل *</label>
+<input id="customerName" required>
+</div>
+
+<div class="form-group">
+<label>نوع العميل</label>
+<select id="customerType">
+<option value="person">شخص</option>
+<option value="business">شركة / نشاط</option>
+<option value="trader">تاجر</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>رقم الهاتف</label>
+<input id="customerPhone">
+</div>
+
+<div class="form-group">
+<label>التاجر</label>
+<select id="customerTrader">
+<option value="">بدون تاجر</option>
+</select>
+</div>
+
+<div class="form-group form-full">
+<label>رابط الصفحة / الحساب</label>
+<input id="customerLink">
+</div>
+
+<div class="form-group form-full">
+<label>ملاحظات</label>
+<textarea id="customerNotes"></textarea>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-gold" type="submit">حفظ</button>
+<button class="btn" type="button" onclick="closeModal('customerModal')">إلغاء</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- SUBSCRIPTION -->
+
+<div id="subscriptionModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h3 id="subscriptionModalTitle">إضافة اشتراك</h3>
+<button class="close" onclick="closeModal('subscriptionModal')">×</button>
+</div>
+
+<form id="subscriptionForm">
+
+<input type="hidden" id="subscriptionId">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>العميل *</label>
+<select id="subscriptionCustomer" required></select>
+</div>
+
+<div class="form-group">
+<label>الخدمة *</label>
+<select id="subscriptionService" required></select>
+</div>
+
+<div class="form-group">
+<label>اسم الصفحة / الحساب</label>
+<input id="subscriptionPageName">
+</div>
+
+<div class="form-group">
+<label>المنصة</label>
+<select id="subscriptionPlatform">
+<option value="">اختر</option>
+<option>Facebook</option>
+<option>Instagram</option>
+<option>WhatsApp</option>
+<option>Meta</option>
+<option>Other</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>السعر الشهري</label>
+<input id="subscriptionFee" type="number" step="0.01">
+</div>
+
+<div class="form-group">
+<label>يوم الدفع</label>
+<input id="subscriptionPaymentDay" type="number" min="1" max="31">
+</div>
+
+<div class="form-group">
+<label>يوم التجديد</label>
+<input id="subscriptionRenewalDay" type="number" min="1" max="31">
+</div>
+
+<div class="form-group">
+<label>تاريخ البداية</label>
+<input id="subscriptionStartDate" type="date">
+</div>
+
+<div class="form-group">
+<label>تاريخ التجديد</label>
+<input id="subscriptionRenewalDate" type="date">
+</div>
+
+<div class="form-group">
+<label>الحالة</label>
+<select id="subscriptionStatus">
+<option value="active">نشط</option>
+<option value="paused">متوقف مؤقتاً</option>
+<option value="cancelled">ملغي</option>
+</select>
+</div>
+
+<div class="form-group form-full">
+<label>ملاحظات</label>
+<textarea id="subscriptionNotes"></textarea>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-gold" type="submit">حفظ الاشتراك</button>
+<button class="btn" type="button" onclick="closeModal('subscriptionModal')">إلغاء</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- PAYMENT -->
+
+<div id="paymentModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h3>تسجيل دفعة</h3>
+<button class="close" onclick="closeModal('paymentModal')">×</button>
+</div>
+
+<form id="paymentForm">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>الاشتراك *</label>
+<select id="paymentSubscription" required></select>
+</div>
+
+<div class="form-group">
+<label>المبلغ *</label>
+<input id="paymentAmount" type="number" step="0.01" required>
+</div>
+
+<div class="form-group">
+<label>تاريخ الدفع</label>
+<input id="paymentDate" type="date">
+</div>
+
+<div class="form-group">
+<label>الشهر المدفوع</label>
+<input id="paymentMonth" placeholder="مثال: سبتمبر 2026">
+</div>
+
+<div class="form-group form-full">
+<label>ملاحظات</label>
+<textarea id="paymentNotes"></textarea>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-gold" type="submit">تسجيل الدفعة</button>
+<button class="btn" type="button" onclick="closeModal('paymentModal')">إلغاء</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- TRADER -->
+
+<div id="traderModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h3 id="traderModalTitle">إضافة تاجر</h3>
+<button class="close" onclick="closeModal('traderModal')">×</button>
+</div>
+
+<form id="traderForm">
+
+<input type="hidden" id="traderId">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>اسم التاجر *</label>
+<input id="traderName" required>
+</div>
+
+<div class="form-group">
+<label>الهاتف</label>
+<input id="traderPhone">
+</div>
+
+<div class="form-group form-full">
+<label>ملاحظات</label>
+<textarea id="traderNotes"></textarea>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-gold" type="submit">حفظ</button>
+<button class="btn" type="button" onclick="closeModal('traderModal')">إلغاء</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- SERVICE -->
+
+<div id="serviceModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h3 id="serviceModalTitle">إضافة خدمة</h3>
+<button class="close" onclick="closeModal('serviceModal')">×</button>
+</div>
+
+<form id="serviceForm">
+
+<input type="hidden" id="serviceId">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>اسم الخدمة *</label>
+<input id="serviceName" required
+placeholder="مثال: توثيق Facebook">
+</div>
+
+<div class="form-group">
+<label>السعر الافتراضي</label>
+<input id="servicePrice" type="number" step="0.01">
+</div>
+
+<div class="form-group">
+<label>العملة</label>
+<input id="serviceCurrency" value="EGP">
+</div>
+
+<div class="form-group">
+<label>الحالة</label>
+<select id="serviceStatus">
+<option value="active">نشطة</option>
+<option value="inactive">متوقفة</option>
+</select>
+</div>
+
+<div class="form-group form-full">
+<label>وصف الخدمة</label>
+<textarea id="serviceDescription"></textarea>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-gold" type="submit">حفظ الخدمة</button>
+<button class="btn" type="button" onclick="closeModal('serviceModal')">إلغاء</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- FOLLOWUP -->
+
+<div id="followupModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h3>إضافة متابعة</h3>
+<button class="close" onclick="closeModal('followupModal')">×</button>
+</div>
+
+<form id="followupForm">
+
+<input type="hidden" id="followupId">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>العميل *</label>
+<select id="followupCustomer" required></select>
+</div>
+
+<div class="form-group">
+<label>الاشتراك</label>
+<select id="followupSubscription">
+<option value="">بدون اشتراك</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>تاريخ المتابعة *</label>
+<input id="followupDate" type="date" required>
+</div>
+
+<div class="form-group">
+<label>نوع المتابعة</label>
+<select id="followupType">
+<option value="renewal">تجديد</option>
+<option value="payment">تحصيل دفعة</option>
+<option value="call">اتصال</option>
+<option value="whatsapp">واتساب</option>
+<option value="problem">حل مشكلة</option>
+<option value="other">أخرى</option>
+</select>
+</div>
+
+<div class="form-group form-full">
+<label>العنوان</label>
+<input id="followupTitle">
+</div>
+
+<div class="form-group form-full">
+<label>ملاحظات</label>
+<textarea id="followupNotes"></textarea>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-gold" type="submit">حفظ المتابعة</button>
+<button class="btn" type="button" onclick="closeModal('followupModal')">إلغاء</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- INVOICE -->
+
+<div id="invoiceModal" class="modal">
+
+<div class="modal-box">
+
+<div class="modal-head">
+<h3>إنشاء فاتورة</h3>
+<button class="close" onclick="closeModal('invoiceModal')">×</button>
+</div>
+
+<form id="invoiceForm">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>العميل *</label>
+<select id="invoiceCustomer" required></select>
+</div>
+
+<div class="form-group">
+<label>الاشتراك</label>
+<select id="invoiceSubscription">
+<option value="">بدون اشتراك</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>رقم الفاتورة</label>
+<input id="invoiceNumber" readonly>
+</div>
+
+<div class="form-group">
+<label>تاريخ الفاتورة</label>
+<input id="invoiceDate" type="date">
+</div>
+
+<div class="form-group">
+<label>تاريخ الاستحقاق</label>
+<input id="invoiceDueDate" type="date">
+</div>
+
+<div class="form-group">
+<label>السعر</label>
+<input id="invoiceSubtotal" type="number" step="0.01">
+</div>
+
+<div class="form-group">
+<label>الخصم</label>
+<input id="invoiceDiscount" type="number" step="0.01" value="0">
+</div>
+
+<div class="form-group">
+<label>الحالة</label>
+<select id="invoiceStatus">
+<option value="unpaid">غير مدفوعة</option>
+<option value="paid">مدفوعة</option>
+<option value="partial">مدفوعة جزئياً</option>
+<option value="cancelled">ملغاة</option>
+</select>
+</div>
+
+<div class="form-group form-full">
+<label>ملاحظات</label>
+<textarea id="invoiceNotes"></textarea>
+</div>
+
+</div>
+
+<div style="margin-top:15px">
+<strong>الإجمالي: </strong>
+<span id="invoiceTotalPreview" style="color:var(--gold2);font-size:22px">0.00</span>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-gold" type="submit">إنشاء الفاتورة</button>
+<button class="btn" type="button" onclick="closeModal('invoiceModal')">إلغاء</button>
+</div>
+
+</form>
+</div>
+</div>
+
+<!-- CUSTOMER PROFILE -->
+
+<div id="profileModal" class="modal">
+
+<div class="modal-box" style="max-width:1000px">
+
+<div class="modal-head">
+<h3>ملف العميل</h3>
+<button class="close" onclick="closeModal('profileModal')">×</button>
+</div>
+
+<div id="customerProfile"></div>
+
+</div>
+</div>
+
+<div id="toast"></div>
 
 <script>
+
+/* =========================================================
+   SUPABASE
+========================================================= */
 
 const SUPABASE_URL =
     "https://rsvzachgbqsucqgrwguv.supabase.co";
@@ -596,90 +1715,212 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
     "sb_publishable_jn8QNpKQ8v7awUj2wYANdw_wcliO986";
 
-const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
+const { createClient } =
+    supabase;
+
+const db =
+    createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
-let currentPage = "dashboard";
-
-let customers = [];
-let subscriptions = [];
-let payments = [];
-let services = [];
+/* =========================================================
+   STATE
+========================================================= */
 
 let currentUser = null;
 
+let customers = [];
+let traders = [];
+let subscriptions = [];
+let services = [];
+let payments = [];
+let followups = [];
+let invoices = [];
+let activityLogs = [];
+let settings = {};
 
-/* =========================
-   INITIALIZATION
-========================= */
+let selectedTraderId = null;
 
-document.addEventListener("DOMContentLoaded", async () => {
 
-    await new Promise(resolve => setTimeout(resolve, 1200));
+/* =========================================================
+   HELPERS
+========================================================= */
 
-    const {
-        data: { session }
-    } = await supabaseClient.auth.getSession();
+function esc(value){
 
-    document.getElementById("loadingScreen").classList.add("hidden");
+    if(value === null || value === undefined)
+        return "";
 
-    if (session) {
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
 
-        currentUser = session.user;
+
+function money(value){
+
+    return Number(value || 0).toLocaleString("ar-EG",{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+    });
+
+}
+
+
+function dateText(value){
+
+    if(!value)
+        return "-";
+
+    return new Date(value + "T00:00:00")
+        .toLocaleDateString("ar-EG");
+
+}
+
+
+function todayISO(){
+
+    const d = new Date();
+
+    const y = d.getFullYear();
+
+    const m = String(d.getMonth()+1).padStart(2,"0");
+
+    const day = String(d.getDate()).padStart(2,"0");
+
+    return `${y}-${m}-${day}`;
+
+}
+
+
+function showToast(message){
+
+    const el =
+        document.getElementById("toast");
+
+    el.textContent = message;
+
+    el.classList.add("show");
+
+    setTimeout(()=>{
+        el.classList.remove("show");
+    },2500);
+
+}
+
+
+function openModal(id){
+
+    document.getElementById(id)
+        .classList.add("show");
+
+}
+
+
+function closeModal(id){
+
+    document.getElementById(id)
+        .classList.remove("show");
+
+}
+
+
+function statusBadge(status){
+
+    const map = {
+        active:["نشط","badge-green"],
+        paid:["مدفوعة","badge-green"],
+        completed:["مكتملة","badge-green"],
+        unpaid:["غير مدفوعة","badge-red"],
+        cancelled:["ملغاة","badge-red"],
+        inactive:["متوقفة","badge-red"],
+        pending:["معلقة","badge-gold"],
+        partial:["جزئية","badge-gold"],
+        paused:["متوقفة مؤقتاً","badge-gold"]
+    };
+
+    const item =
+        map[status] || [status || "-", "badge-blue"];
+
+    return `<span class="badge ${item[1]}">${esc(item[0])}</span>`;
+
+}
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+async function checkSession(){
+
+    const {data} =
+        await db.auth.getSession();
+
+    if(data.session){
+
+        currentUser =
+            data.session.user;
 
         showApp();
 
-    } else {
+    }else{
 
         showLogin();
 
     }
 
-});
-
-
-/* =========================
-   AUTH
-========================= */
-
-function showLogin() {
-
-    document.getElementById("loginScreen")
-        .classList.remove("hidden");
-
-    document.getElementById("loginScreen")
-        .classList.add("flex");
-
-    document.getElementById("app")
-        .classList.add("hidden");
 }
 
 
-function showApp() {
+function showLogin(){
+
+    document.getElementById("loading")
+        .classList.add("hidden");
+
+    document.getElementById("app")
+        .classList.add("hidden");
+
+    document.getElementById("loginScreen")
+        .classList.remove("hidden");
+
+}
+
+
+function showApp(){
+
+    document.getElementById("loading")
+        .classList.add("hidden");
 
     document.getElementById("loginScreen")
         .classList.add("hidden");
 
-    document.getElementById("loginScreen")
-        .classList.remove("flex");
-
     document.getElementById("app")
         .classList.remove("hidden");
 
-    document.getElementById("userEmail").textContent =
+    document.getElementById("topUser")
+        .textContent =
         currentUser?.email || "";
 
-    loadPage("dashboard");
+    loadAll();
+
 }
 
 
-async function login(event) {
+async function logout(){
 
-    event.preventDefault();
+    await db.auth.signOut();
+
+    location.reload();
+
+}
+
+
+document.getElementById("loginForm")
+.addEventListener("submit", async e => {
+
+    e.preventDefault();
 
     const email =
         document.getElementById("loginEmail").value.trim();
@@ -690,877 +1931,711 @@ async function login(event) {
     const error =
         document.getElementById("loginError");
 
-    error.classList.add("hidden");
+    error.textContent = "";
 
-    const { data, error: authError } =
-        await supabaseClient.auth.signInWithPassword({
+    const {error:err} =
+        await db.auth.signInWithPassword({
             email,
             password
         });
 
-    if (authError) {
+    if(err){
 
         error.textContent =
-            "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-
-        error.classList.remove("hidden");
+            err.message;
 
         return;
+
     }
 
-    currentUser = data.user;
+    checkSession();
 
-    showApp();
-}
-
-
-async function logout() {
-
-    await supabaseClient.auth.signOut();
-
-    currentUser = null;
-
-    document.getElementById("app")
-        .classList.add("hidden");
-
-    showLogin();
-}
+});
 
 
-function togglePassword() {
-
-    const input =
-        document.getElementById("loginPassword");
-
-    input.type =
-        input.type === "password"
-            ? "text"
-            : "password";
-}
-
-
-document
-    .getElementById("loginForm")
-    .addEventListener("submit", login);
-
-
-/* =========================
+/* =========================================================
    NAVIGATION
-========================= */
+========================================================= */
 
-document.querySelectorAll(".nav-btn[data-page]")
-.forEach(button => {
+document.querySelectorAll(".nav-btn")
+.forEach(btn => {
 
-    button.addEventListener("click", () => {
+    btn.addEventListener("click",()=>{
 
-        const page =
-            button.dataset.page;
+        showPage(btn.dataset.page);
 
-        loadPage(page);
-
-        toggleMobileMenu(false);
     });
 
 });
 
 
-function setActiveNav(page) {
+function showPage(page){
 
-    document
-        .querySelectorAll(".nav-btn[data-page]")
-        .forEach(btn => {
+    document.querySelectorAll(".page")
+    .forEach(x => x.classList.remove("active"));
 
-            btn.classList.toggle(
-                "active",
-                btn.dataset.page === page
-            );
+    const target =
+        document.getElementById("page-"+page);
 
+    if(target)
+        target.classList.add("active");
+
+    document.querySelectorAll(".nav-btn")
+    .forEach(x=>{
+        x.classList.toggle(
+            "active",
+            x.dataset.page === page
+        );
+    });
+
+    if(page === "dashboard")
+        renderDashboard();
+
+    if(page === "customers")
+        renderCustomers();
+
+    if(page === "subscriptions")
+        renderSubscriptions();
+
+    if(page === "payments")
+        renderPayments();
+
+    if(page === "agenda")
+        renderCalendar();
+
+    if(page === "followups")
+        renderFollowups();
+
+    if(page === "traders")
+        renderTraders();
+
+    if(page === "services")
+        renderServices();
+
+    if(page === "invoices")
+        renderInvoices();
+
+    if(page === "activity")
+        renderActivity();
+
+    if(page === "settings")
+        renderSettings();
+
+}
+
+
+/* =========================================================
+   LOAD ALL
+========================================================= */
+
+async function loadAll(){
+
+    try{
+
+        const [
+            customersRes,
+            tradersRes,
+            subscriptionsRes,
+            servicesRes,
+            paymentsRes,
+            followupsRes,
+            invoicesRes,
+            activityRes,
+            settingsRes
+        ] = await Promise.all([
+
+            db.from("customers")
+                .select("*")
+                .order("id",{ascending:false}),
+
+            db.from("traders")
+                .select("*")
+                .order("trader_name"),
+
+            db.from("subscriptions")
+                .select("*")
+                .order("id",{ascending:false}),
+
+            db.from("app_services")
+                .select("*")
+                .order("service_name"),
+
+            db.from("subscription_payments")
+                .select("*")
+                .order("payment_date",{ascending:false}),
+
+            db.from("followups")
+                .select("*")
+                .order("followup_date"),
+
+            db.from("invoices")
+                .select("*")
+                .order("id",{ascending:false}),
+
+            db.from("activity_logs")
+                .select("*")
+                .order("created_at",{ascending:false})
+                .limit(300),
+
+            db.from("app_settings")
+                .select("*")
+
+        ]);
+
+
+        if(customersRes.error)
+            throw customersRes.error;
+
+        if(tradersRes.error)
+            throw tradersRes.error;
+
+        if(subscriptionsRes.error)
+            throw subscriptionsRes.error;
+
+        if(servicesRes.error)
+            throw servicesRes.error;
+
+        if(paymentsRes.error)
+            throw paymentsRes.error;
+
+        if(followupsRes.error)
+            throw followupsRes.error;
+
+        if(invoicesRes.error)
+            throw invoicesRes.error;
+
+        if(activityRes.error)
+            throw activityRes.error;
+
+        if(settingsRes.error)
+            throw settingsRes.error;
+
+
+        customers =
+            customersRes.data || [];
+
+        traders =
+            tradersRes.data || [];
+
+        subscriptions =
+            subscriptionsRes.data || [];
+
+        services =
+            servicesRes.data || [];
+
+        payments =
+            paymentsRes.data || [];
+
+        followups =
+            followupsRes.data || [];
+
+        invoices =
+            invoicesRes.data || [];
+
+        activityLogs =
+            activityRes.data || [];
+
+        settings = {};
+
+        (settingsRes.data || [])
+        .forEach(row=>{
+            settings[row.setting_key] =
+                row.setting_value;
         });
 
-}
 
+        fillSelects();
 
-async function loadPage(page) {
+        renderDashboard();
+        renderCustomers();
+        renderSubscriptions();
+        renderPayments();
+        renderFollowups();
+        renderTraders();
+        renderServices();
+        renderInvoices();
+        renderActivity();
+        renderSettings();
+        renderCalendar();
 
-    currentPage = page;
+    }catch(err){
 
-    setActiveNav(page);
+        console.error(err);
 
-    const titles = {
-
-        dashboard: [
-            "الرئيسية",
-            "نظرة عامة على النظام"
-        ],
-
-        customers: [
-            "العملاء",
-            "إدارة بيانات العملاء"
-        ],
-
-        subscriptions: [
-            "الاشتراكات",
-            "إدارة اشتراكات العملاء"
-        ],
-
-        payments: [
-            "المدفوعات",
-            "متابعة عمليات الدفع"
-        ],
-
-        services: [
-            "الخدمات",
-            "إدارة الخدمات والباقات"
-        ]
-
-    };
-
-    document.getElementById("pageTitle").textContent =
-        titles[page][0];
-
-    document.getElementById("pageSubtitle").textContent =
-        titles[page][1];
-
-    if (page === "dashboard")
-        await renderDashboard();
-
-    if (page === "customers")
-        await renderCustomers();
-
-    if (page === "subscriptions")
-        await renderSubscriptions();
-
-    if (page === "payments")
-        await renderPayments();
-
-    if (page === "services")
-        await renderServices();
-}
-
-
-async function refreshCurrentPage() {
-
-    await loadPage(currentPage);
-
-    toast("تم تحديث البيانات");
-}
-
-
-/* =========================
-   DATA
-========================= */
-
-async function loadCustomers() {
-
-    const { data, error } =
-        await supabaseClient
-            .from("customers")
-            .select("*")
-            .order("created_at", {
-                ascending: false
-            });
-
-    if (error) {
-
-        console.error(error);
-
-        toast(
-            "حدث خطأ أثناء تحميل العملاء",
-            "error"
+        showToast(
+            "حدث خطأ أثناء تحميل البيانات"
         );
-
-        return [];
 
     }
 
-    customers = data || [];
-
-    return customers;
 }
 
 
-async function loadSubscriptions() {
+/* =========================================================
+   SELECTS
+========================================================= */
 
-    const { data, error } =
-        await supabaseClient
-            .from("subscriptions")
-            .select(`
-                *,
-                customers (
-                    id,
-                    client_name,
-                    phone
-                )
-            `)
-            .order("created_at", {
-                ascending: false
-            });
+function fillSelects(){
 
-    if (error) {
+    const traderSelects = [
+        document.getElementById("customerTrader")
+    ];
 
-        console.error(error);
+    traderSelects.forEach(select=>{
 
-        toast(
-            "حدث خطأ أثناء تحميل الاشتراكات",
-            "error"
+        if(!select) return;
+
+        const current =
+            select.value;
+
+        select.innerHTML =
+            `<option value="">بدون تاجر</option>` +
+            traders.map(t =>
+                `<option value="${t.id}">
+                    ${esc(t.trader_name)}
+                </option>`
+            ).join("");
+
+        select.value = current;
+
+    });
+
+
+    const filter =
+        document.getElementById(
+            "customerTraderFilter"
         );
 
-        return [];
+    if(filter){
+
+        filter.innerHTML =
+            `<option value="">كل التجار</option>` +
+            traders.map(t =>
+                `<option value="${t.id}">
+                    ${esc(t.trader_name)}
+                </option>`
+            ).join("");
 
     }
 
-    subscriptions = data || [];
 
-    return subscriptions;
-}
+    const customerSelects = [
+        document.getElementById("subscriptionCustomer"),
+        document.getElementById("followupCustomer"),
+        document.getElementById("invoiceCustomer")
+    ];
+
+    customerSelects.forEach(select=>{
+
+        if(!select) return;
+
+        const current =
+            select.value;
+
+        select.innerHTML =
+            `<option value="">اختر العميل</option>` +
+            customers.map(c =>
+                `<option value="${c.id}">
+                    ${esc(c.client_name)}
+                </option>`
+            ).join("");
+
+        select.value = current;
+
+    });
 
 
-async function loadPayments() {
-
-    const { data, error } =
-        await supabaseClient
-            .from("subscription_payments")
-            .select(`
-                *,
-                subscriptions (
-                    id,
-                    page_name,
-                    monthly_fee,
-                    customers (
-                        id,
-                        client_name,
-                        phone
-                    )
-                )
-            `)
-            .order("payment_date", {
-                ascending: false
-            });
-
-    if (error) {
-
-        console.error(error);
-
-        toast(
-            "حدث خطأ أثناء تحميل المدفوعات",
-            "error"
+    const serviceSelect =
+        document.getElementById(
+            "subscriptionService"
         );
 
-        return [];
+    if(serviceSelect){
+
+        const current =
+            serviceSelect.value;
+
+        serviceSelect.innerHTML =
+            `<option value="">اختر الخدمة</option>` +
+            services
+            .filter(s=>s.status !== "inactive")
+            .map(s =>
+                `<option value="${s.id}">
+                    ${esc(s.service_name)}
+                </option>`
+            ).join("");
+
+        serviceSelect.value = current;
 
     }
 
-    payments = data || [];
 
-    return payments;
+    refreshSubscriptionSelects();
+
 }
 
 
-async function loadServices() {
+function refreshSubscriptionSelects(){
 
-    const { data, error } =
-        await supabaseClient
-            .from("services")
-            .select("*")
-            .order("id", {
-                ascending: false
-            });
+    const selects = [
+        document.getElementById("paymentSubscription"),
+        document.getElementById("followupSubscription"),
+        document.getElementById("invoiceSubscription")
+    ];
 
-    if (error) {
+    selects.forEach(select=>{
 
-        console.error(error);
+        if(!select) return;
 
-        toast(
-            "تعذر تحميل الخدمات",
-            "error"
-        );
+        const current =
+            select.value;
 
-        return [];
+        const first =
+            select.id === "paymentSubscription"
+            ? `<option value="">اختر الاشتراك</option>`
+            : `<option value="">بدون اشتراك</option>`;
 
-    }
+        select.innerHTML =
+            first +
+            subscriptions
+            .filter(s=>s.status !== "cancelled")
+            .map(s=>{
 
-    services = data || [];
+                const customer =
+                    customers.find(
+                        c=>String(c.id) === String(s.customer_id)
+                    );
 
-    return services;
+                const service =
+                    services.find(
+                        x=>String(x.id) === String(s.app_service_id)
+                    );
+
+                return `
+                <option value="${s.id}">
+                    ${esc(customer?.client_name || "عميل")}
+                    - ${esc(service?.service_name || s.page_name || "اشتراك")}
+                </option>`;
+
+            }).join("");
+
+        select.value = current;
+
+    });
+
 }
 
 
-/* =========================
+/* =========================================================
    DASHBOARD
-========================= */
+========================================================= */
 
-async function renderDashboard() {
+function renderDashboard(){
 
-    const [
-        customersData,
-        subscriptionsData,
-        paymentsData
-    ] = await Promise.all([
-        loadCustomers(),
-        loadSubscriptions(),
-        loadPayments()
-    ]);
+    document.getElementById("statCustomers")
+        .textContent =
+        customers.length;
 
-    const activeSubscriptions =
-        subscriptionsData.filter(
-            s => s.status === "active"
-        );
-
-    const today =
-        new Date();
-
-    const dueSoon =
-        subscriptionsData.filter(s => {
-
-            if (!s.renewal_date)
-                return false;
-
-            const date =
-                new Date(s.renewal_date);
-
-            const diff =
-                Math.ceil(
-                    (date - today) /
-                    (1000 * 60 * 60 * 24)
-                );
-
-            return diff >= 0 && diff <= 7;
-
-        });
-
-    const totalMonthly =
-        activeSubscriptions.reduce(
-            (sum, s) =>
-                sum + Number(s.monthly_fee || 0),
-            0
-        );
+    document.getElementById("statSubscriptions")
+        .textContent =
+        subscriptions.filter(
+            s=>s.status === "active"
+        ).length;
 
     const totalPayments =
-        paymentsData.reduce(
-            (sum, p) =>
-                sum + Number(p.amount || 0),
+        payments.reduce(
+            (sum,p)=>sum + Number(p.amount || 0),
             0
         );
 
-    document.getElementById("content").innerHTML = `
+    document.getElementById("statPayments")
+        .textContent =
+        money(totalPayments);
 
-        <div class="fade-in">
+    const today =
+        todayISO();
 
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-7">
+    const todayItems =
+        followups.filter(
+            f=>f.followup_date === today &&
+            f.status !== "completed"
+        );
 
-                <div>
-                    <h2 class="text-2xl font-black">
-                        أهلاً بك في <span class="gold">BADGEIFY</span>
-                    </h2>
+    document.getElementById("statToday")
+        .textContent =
+        todayItems.length;
 
-                    <p class="text-gray-600 mt-1">
-                        هذه نظرة سريعة على حالة النظام.
-                    </p>
-                </div>
 
-                <button
-                    onclick="openCustomerModal()"
-                    class="btn btn-gold">
-                    + إضافة عميل
-                </button>
+    const todayBox =
+        document.getElementById("todayFollowups");
 
-            </div>
+    if(!todayItems.length){
 
+        todayBox.innerHTML =
+            `<div style="color:#777">
+                لا توجد متابعات مستحقة اليوم
+            </div>`;
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    }else{
 
-                ${statCard(
-                    "إجمالي العملاء",
-                    customersData.length,
-                    "♙"
-                )}
-
-                ${statCard(
-                    "الاشتراكات النشطة",
-                    activeSubscriptions.length,
-                    "◈"
-                )}
-
-                ${statCard(
-                    "دخل الاشتراكات الشهري",
-                    formatMoney(totalMonthly),
-                    "₤"
-                )}
-
-                ${statCard(
-                    "إجمالي المدفوعات",
-                    formatMoney(totalPayments),
-                    "▣"
-                )}
-
-            </div>
-
-
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
-
-                <div class="xl:col-span-2 card rounded-3xl p-5">
-
-                    <div class="flex justify-between items-center mb-5">
-
-                        <div>
-                            <h3 class="font-black text-lg">
-                                الاشتراكات القريبة من التجديد
-                            </h3>
-
-                            <p class="text-xs text-gray-600 mt-1">
-                                خلال 7 أيام
-                            </p>
-                        </div>
-
-                        <button
-                            onclick="loadPage('subscriptions')"
-                            class="text-sm gold">
-                            عرض الكل
-                        </button>
-
-                    </div>
-
-                    ${
-                        dueSoon.length
-                        ? dueSoon.slice(0,6).map(subscriptionRow).join("")
-                        : `
-                            <div class="text-center py-12 text-gray-600">
-                                لا توجد اشتراكات مستحقة خلال 7 أيام.
-                            </div>
-                        `
-                    }
-
-                </div>
-
-
-                <div class="card rounded-3xl p-5">
-
-                    <h3 class="font-black text-lg mb-5">
-                        إجراءات سريعة
-                    </h3>
-
-                    <div class="space-y-3">
-
-                        <button
-                            onclick="openCustomerModal()"
-                            class="btn btn-dark w-full text-right">
-                            + إضافة عميل جديد
-                        </button>
-
-                        <button
-                            onclick="openSubscriptionModal()"
-                            class="btn btn-dark w-full text-right">
-                            + إضافة اشتراك
-                        </button>
-
-                        <button
-                            onclick="openPaymentModal()"
-                            class="btn btn-dark w-full text-right">
-                            + تسجيل دفعة
-                        </button>
-
-                        <button
-                            onclick="loadPage('customers')"
-                            class="btn btn-dark w-full text-right">
-                            عرض العملاء
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-    `;
-}
-
-
-function statCard(title, value, icon) {
-
-    return `
-        <div class="card rounded-3xl p-5">
-
-            <div class="flex items-start justify-between">
-
-                <div>
-                    <div class="text-gray-500 text-sm">
-                        ${title}
-                    </div>
-
-                    <div class="text-2xl font-black mt-3">
-                        ${value}
-                    </div>
-                </div>
-
-                <div class="w-11 h-11 rounded-2xl bg-[#d4af37]/10 gold flex items-center justify-center text-xl">
-                    ${icon}
-                </div>
-
-            </div>
-
-        </div>
-    `;
-}
-
-
-/* =========================
-   CUSTOMERS
-========================= */
-
-async function renderCustomers() {
-
-    await loadCustomers();
-
-    document.getElementById("content").innerHTML = `
-
-        <div class="fade-in">
-
-            <div class="flex flex-col md:flex-row gap-3 justify-between mb-5">
-
-                <div class="relative flex-1">
-
-                    <input
-                        id="customerSearch"
-                        oninput="filterCustomers()"
-                        class="input"
-                        placeholder="ابحث باسم العميل أو الهاتف..."
-                    >
-
-                </div>
-
-                <button
-                    onclick="openCustomerModal()"
-                    class="btn btn-gold whitespace-nowrap">
-                    + إضافة عميل
-                </button>
-
-            </div>
-
-
-            <div class="card rounded-3xl overflow-hidden">
-
-                <div class="overflow-x-auto">
-
-                    <table class="w-full text-sm">
-
-                        <thead class="bg-[#111] text-gray-500">
-
-                            <tr>
-
-                                <th class="text-right p-4">
-                                    العميل
-                                </th>
-
-                                <th class="text-right p-4">
-                                    النوع
-                                </th>
-
-                                <th class="text-right p-4">
-                                    الهاتف
-                                </th>
-
-                                <th class="text-right p-4">
-                                    الحالة
-                                </th>
-
-                                <th class="text-right p-4">
-                                    تاريخ الإضافة
-                                </th>
-
-                                <th class="text-right p-4">
-                                    إجراءات
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="customersTable">
-
-                            ${customersRows(customers)}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-    `;
-}
-
-
-function customersRows(list) {
-
-    if (!list.length) {
-
-        return `
-            <tr>
-                <td colspan="6"
-                    class="p-12 text-center text-gray-600">
-                    لا يوجد عملاء.
-                </td>
-            </tr>
-        `;
+        todayBox.innerHTML =
+            todayItems.map(followupHTML).join("");
 
     }
 
-    return list.map(c => `
 
-        <tr class="table-row border-t border-[#1d1d1d]">
+    const upcoming =
+        subscriptions
+        .filter(s =>
+            s.status === "active" &&
+            s.renewal_date
+        )
+        .sort((a,b)=>
+            a.renewal_date.localeCompare(
+                b.renewal_date
+            )
+        )
+        .slice(0,8);
 
-            <td class="p-4">
 
-                <button
-                    onclick="openCustomerProfile(${c.id})"
-                    class="font-bold hover:text-[#d4af37]">
-                    ${escapeHtml(c.client_name || "-")}
-                </button>
+    document.getElementById("upcomingRenewals")
+        .innerHTML =
+        upcoming.length
+        ? upcoming.map(s=>{
 
-            </td>
+            const c =
+                customers.find(
+                    x=>x.id === s.customer_id
+                );
 
-            <td class="p-4 text-gray-400">
-                ${escapeHtml(c.client_type || "-")}
-            </td>
+            const service =
+                services.find(
+                    x=>x.id === s.app_service_id
+                );
 
-            <td class="p-4 text-gray-400">
-                ${escapeHtml(c.phone || "-")}
-            </td>
+            return `
+            <div style="
+                padding:12px 0;
+                border-bottom:1px solid var(--border)
+            ">
+                <strong>
+                    ${esc(c?.client_name || "")}
+                </strong>
 
-            <td class="p-4">
-
-                <span class="px-3 py-1 rounded-full text-xs status-active">
-                    ${escapeHtml(c.status || "active")}
+                <span style="color:#999">
+                    -
+                    ${esc(service?.service_name || "اشتراك")}
                 </span>
 
-            </td>
+                <div style="color:var(--gold2);margin-top:4px">
+                    ${dateText(s.renewal_date)}
+                </div>
+            </div>`;
 
-            <td class="p-4 text-gray-500">
-                ${formatDate(c.created_at)}
-            </td>
+        }).join("")
+        : `<div style="color:#777">
+            لا توجد تجديدات قادمة
+           </div>`;
 
-            <td class="p-4">
+}
 
-                <div class="flex gap-2">
 
-                    <button
-                        onclick="openCustomerModal(${c.id})"
-                        class="btn btn-dark text-xs">
+/* =========================================================
+   CUSTOMERS
+========================================================= */
+
+function renderCustomers(){
+
+    const search =
+        (document.getElementById(
+            "customerSearch"
+        )?.value || "")
+        .toLowerCase()
+        .trim();
+
+    const trader =
+        document.getElementById(
+            "customerTraderFilter"
+        )?.value || "";
+
+
+    let list =
+        customers.filter(c=>{
+
+            const text =
+                `${c.client_name || ""} ${c.phone || ""}`
+                .toLowerCase();
+
+            const matchSearch =
+                !search ||
+                text.includes(search);
+
+            const matchTrader =
+                !trader ||
+                String(c.trader_id) === String(trader);
+
+            const matchSelectedTrader =
+                !selectedTraderId ||
+                String(c.trader_id) === String(selectedTraderId);
+
+            return matchSearch &&
+                   matchTrader &&
+                   matchSelectedTrader;
+
+        });
+
+
+    const grid =
+        document.getElementById("customerGrid");
+
+
+    if(!list.length){
+
+        grid.innerHTML =
+            `<div style="color:#777">
+                لا يوجد عملاء
+            </div>`;
+
+        return;
+
+    }
+
+
+    grid.innerHTML =
+        list.map(c=>{
+
+            const traderObj =
+                traders.find(
+                    t=>t.id === c.trader_id
+                );
+
+            const count =
+                subscriptions.filter(
+                    s=>s.customer_id === c.id
+                ).length;
+
+
+            return `
+            <div class="customer-card">
+
+                <div class="customer-name">
+                    ${esc(c.client_name)}
+                </div>
+
+                <div class="customer-meta">
+                    ${esc(c.phone || "بدون هاتف")}
+                </div>
+
+                <div class="customer-meta">
+                    ${traderObj
+                        ? "التاجر: "+esc(traderObj.trader_name)
+                        : "بدون تاجر"}
+                </div>
+
+                <div class="customer-meta">
+                    ${count} اشتراك
+                </div>
+
+                <div class="card-buttons">
+
+                    <button class="btn btn-gold"
+                        onclick="openCustomerProfile(${c.id})">
+                        الملف
+                    </button>
+
+                    <button class="btn"
+                        onclick="editCustomer(${c.id})">
                         تعديل
                     </button>
 
-                    <button
-                        onclick="confirmDeleteCustomer(${c.id})"
-                        class="btn btn-danger text-xs">
+                    <button class="btn btn-red"
+                        onclick="deleteCustomer(${c.id})">
                         حذف
                     </button>
 
                 </div>
 
-            </td>
+            </div>`;
 
-        </tr>
-
-    `).join("");
-}
-
-
-function filterCustomers() {
-
-    const value =
-        document
-            .getElementById("customerSearch")
-            .value
-            .toLowerCase()
-            .trim();
-
-    const filtered =
-        customers.filter(c =>
-
-            String(c.client_name || "")
-                .toLowerCase()
-                .includes(value)
-
-            ||
-
-            String(c.phone || "")
-                .toLowerCase()
-                .includes(value)
-
-        );
-
-    document.getElementById("customersTable")
-        .innerHTML =
-        customersRows(filtered);
-}
-
-
-/* =========================
-   CUSTOMER MODAL
-========================= */
-
-function openCustomerModal(id = null) {
-
-    const customer =
-        id
-        ? customers.find(c => Number(c.id) === Number(id))
-        : null;
-
-    openModal(`
-
-        <div class="flex items-center justify-between mb-6">
-
-            <div>
-                <h2 class="text-xl font-black">
-                    ${customer ? "تعديل العميل" : "إضافة عميل جديد"}
-                </h2>
-
-                <p class="text-gray-600 text-sm mt-1">
-                    بيانات العميل الأساسية مستقلة عن الاشتراكات.
-                </p>
-            </div>
-
-            <button onclick="closeModal()"
-                    class="text-gray-500 text-2xl">
-                ×
-            </button>
-
-        </div>
-
-
-        <form onsubmit="saveCustomer(event, ${id || "null"})">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                <div>
-                    <label class="label">
-                        اسم العميل
-                    </label>
-
-                    <input
-                        id="customerName"
-                        class="input"
-                        required
-                        value="${escapeAttr(customer?.client_name || "")}">
-                </div>
-
-
-                <div>
-                    <label class="label">
-                        نوع العميل
-                    </label>
-
-                    <select id="customerType" class="input">
-
-                        <option value="person"
-                            ${customer?.client_type === "person" ? "selected" : ""}>
-                            شخص
-                        </option>
-
-                        <option value="business"
-                            ${customer?.client_type === "business" ? "selected" : ""}>
-                            شركة / نشاط تجاري
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div>
-                    <label class="label">
-                        رقم الهاتف
-                    </label>
-
-                    <input
-                        id="customerPhone"
-                        class="input"
-                        value="${escapeAttr(customer?.phone || "")}">
-                </div>
-
-
-                <div>
-                    <label class="label">
-                        الحالة
-                    </label>
-
-                    <select id="customerStatus" class="input">
-
-                        <option value="active"
-                            ${customer?.status === "active" || !customer ? "selected" : ""}>
-                            نشط
-                        </option>
-
-                        <option value="inactive"
-                            ${customer?.status === "inactive" ? "selected" : ""}>
-                            غير نشط
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="md:col-span-2">
-
-                    <label class="label">
-                        رابط الصفحة / الحساب
-                    </label>
-
-                    <input
-                        id="customerLink"
-                        class="input"
-                        value="${escapeAttr(customer?.page_link || "")}"
-                        placeholder="https://...">
-
-                </div>
-
-
-                <div class="md:col-span-2">
-
-                    <label class="label">
-                        ملاحظات
-                    </label>
-
-                    <textarea
-                        id="customerNotes"
-                        class="input"
-                        rows="4">${escapeHtml(customer?.notes || "")}</textarea>
-
-                </div>
-
-            </div>
-
-
-            <div class="flex gap-3 mt-7">
-
-                <button
-                    type="button"
-                    onclick="closeModal()"
-                    class="btn btn-dark flex-1">
-                    إلغاء
-                </button>
-
-                <button
-                    type="submit"
-                    class="btn btn-gold flex-1">
-                    حفظ العميل
-                </button>
-
-            </div>
-
-        </form>
-    `);
+        }).join("");
 
 }
 
 
-async function saveCustomer(event, id) {
+document.getElementById("customerSearch")
+.addEventListener("input",renderCustomers);
 
-    event.preventDefault();
+document.getElementById("customerTraderFilter")
+.addEventListener("change",()=>{
+
+    selectedTraderId = null;
+
+    renderCustomers();
+
+});
+
+
+function openCustomerModal(){
+
+    document.getElementById("customerForm")
+        .reset();
+
+    document.getElementById("customerId")
+        .value = "";
+
+    document.getElementById("customerModalTitle")
+        .textContent =
+        "إضافة عميل";
+
+    openModal("customerModal");
+
+}
+
+
+async function editCustomer(id){
+
+    const c =
+        customers.find(x=>x.id === id);
+
+    if(!c) return;
+
+    document.getElementById("customerId").value =
+        c.id;
+
+    document.getElementById("customerName").value =
+        c.client_name || "";
+
+    document.getElementById("customerType").value =
+        c.client_type || "person";
+
+    document.getElementById("customerPhone").value =
+        c.phone || "";
+
+    document.getElementById("customerTrader").value =
+        c.trader_id || "";
+
+    document.getElementById("customerLink").value =
+        c.page_link || "";
+
+    document.getElementById("customerNotes").value =
+        c.notes || "";
+
+    document.getElementById("customerModalTitle")
+        .textContent =
+        "تعديل العميل";
+
+    openModal("customerModal");
+
+}
+
+
+document.getElementById("customerForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+    const id =
+        document.getElementById("customerId").value;
 
     const payload = {
 
@@ -1573,1824 +2648,3194 @@ async function saveCustomer(event, id) {
         phone:
             document.getElementById("customerPhone").value.trim(),
 
+        trader_id:
+            document.getElementById("customerTrader").value
+            || null,
+
         page_link:
             document.getElementById("customerLink").value.trim(),
 
         notes:
-            document.getElementById("customerNotes").value.trim(),
-
-        status:
-            document.getElementById("customerStatus").value
+            document.getElementById("customerNotes").value.trim()
 
     };
 
 
     let result;
 
-    if (id) {
+    if(id){
 
         result =
-            await supabaseClient
-                .from("customers")
-                .update(payload)
-                .eq("id", id);
+            await db.from("customers")
+            .update(payload)
+            .eq("id",id);
 
-    } else {
+    }else{
 
         result =
-            await supabaseClient
-                .from("customers")
-                .insert(payload);
+            await db.from("customers")
+            .insert(payload);
 
     }
 
 
-    if (result.error) {
+    if(result.error){
 
-        console.error(result.error);
-
-        toast(
-            result.error.message,
-            "error"
-        );
+        showToast(result.error.message);
 
         return;
+
     }
 
 
-    closeModal();
+    await logActivity(
+        id ? "تعديل عميل" : "إضافة عميل",
+        "customers",
+        id || "",
+        payload.client_name
+    );
 
-    toast(
+
+    closeModal("customerModal");
+
+    showToast(
         id
         ? "تم تعديل العميل"
         : "تم إضافة العميل"
     );
 
-    await loadPage("customers");
-}
+    await loadAll();
+
+});
 
 
-function confirmDeleteCustomer(id) {
+async function deleteCustomer(id){
 
-    const customer =
-        customers.find(
-            c => Number(c.id) === Number(id)
-        );
+    const c =
+        customers.find(x=>x.id === id);
 
-    showConfirm(
-        "حذف العميل",
-        `سيتم حذف العميل "${customer?.client_name || ""}" وجميع اشتراكاته المرتبطة به. هل تريد المتابعة؟`,
-        async () => {
+    if(!c) return;
 
-            const { error } =
-                await supabaseClient
-                    .from("customers")
-                    .delete()
-                    .eq("id", id);
-
-            if (error) {
-
-                toast(
-                    error.message,
-                    "error"
-                );
-
-                return;
-            }
-
-            closeConfirm();
-
-            toast("تم حذف العميل");
-
-            await loadPage("customers");
-
-        }
-    );
-}
+    if(!confirm(
+        `هل تريد حذف العميل "${c.client_name}" وكل بيانات اشتراكاته؟`
+    )) return;
 
 
-/* =========================
-   CUSTOMER PROFILE
-========================= */
+    const result =
+        await db.from("customers")
+        .delete()
+        .eq("id",id);
 
-async function openCustomerProfile(id) {
 
-    const customer =
-        customers.find(
-            c => Number(c.id) === Number(id)
-        );
+    if(result.error){
 
-    if (!customer)
+        showToast(result.error.message);
+
         return;
-
-
-    const { data: customerSubs } =
-        await supabaseClient
-            .from("subscriptions")
-            .select(`
-                *,
-                services (*)
-            `)
-            .eq("customer_id", id)
-            .order("created_at", {
-                ascending: false
-            });
-
-
-    const { data: customerPayments } =
-        await supabaseClient
-            .from("subscription_payments")
-            .select(`
-                *,
-                subscriptions (
-                    page_name
-                )
-            `)
-            .in(
-                "subscription_id",
-                (customerSubs || []).map(s => s.id).length
-                    ? (customerSubs || []).map(s => s.id)
-                    : [-1]
-            )
-            .order("payment_date", {
-                ascending: false
-            });
-
-
-    openModal(`
-
-        <div class="flex justify-between items-start mb-6">
-
-            <div>
-
-                <div class="text-xs gold mb-1">
-                    ملف العميل
-                </div>
-
-                <h2 class="text-2xl font-black">
-                    ${escapeHtml(customer.client_name)}
-                </h2>
-
-                <p class="text-gray-500 mt-1">
-                    ${escapeHtml(customer.phone || "بدون رقم هاتف")}
-                </p>
-
-            </div>
-
-            <button
-                onclick="closeModal()"
-                class="text-gray-500 text-2xl">
-                ×
-            </button>
-
-        </div>
-
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-
-            ${profileStat(
-                "الاشتراكات",
-                customerSubs?.length || 0
-            )}
-
-            ${profileStat(
-                "المدفوعات",
-                customerPayments?.length || 0
-            )}
-
-            ${profileStat(
-                "الحالة",
-                customer.status || "active"
-            )}
-
-        </div>
-
-
-        <div class="flex gap-2 mb-6">
-
-            <button
-                onclick="closeModal(); openSubscriptionModal(${customer.id})"
-                class="btn btn-gold">
-                + إضافة اشتراك
-            </button>
-
-            ${
-                customer.phone
-                ? `
-                    <button
-                        onclick="openWhatsApp('${escapeAttr(customer.phone)}','${escapeAttr(customer.client_name)}')"
-                        class="btn btn-dark">
-                        WhatsApp
-                    </button>
-                `
-                : ""
-            }
-
-        </div>
-
-
-        <h3 class="font-black text-lg mb-3">
-            اشتراكات العميل
-        </h3>
-
-        <div class="space-y-2">
-
-            ${
-                customerSubs?.length
-                ? customerSubs.map(subscriptionRow).join("")
-                : `
-                    <div class="text-gray-600 text-center py-8">
-                        لا توجد اشتراكات لهذا العميل.
-                    </div>
-                `
-            }
-
-        </div>
-
-    `);
-}
-
-
-function profileStat(title, value) {
-
-    return `
-        <div class="bg-[#111] rounded-2xl p-4 border border-[#222]">
-            <div class="text-xs text-gray-600">
-                ${title}
-            </div>
-            <div class="font-black text-xl mt-2">
-                ${value}
-            </div>
-        </div>
-    `;
-}
-
-
-/* =========================
-   SUBSCRIPTIONS
-========================= */
-
-async function renderSubscriptions() {
-
-    await Promise.all([
-        loadCustomers(),
-        loadSubscriptions()
-    ]);
-
-    document.getElementById("content").innerHTML = `
-
-        <div class="fade-in">
-
-            <div class="flex flex-col md:flex-row gap-3 justify-between mb-5">
-
-                <input
-                    id="subscriptionSearch"
-                    oninput="filterSubscriptions()"
-                    class="input flex-1"
-                    placeholder="ابحث باسم العميل أو الصفحة...">
-
-                <button
-                    onclick="openSubscriptionModal()"
-                    class="btn btn-gold">
-                    + إضافة اشتراك
-                </button>
-
-            </div>
-
-
-            <div class="card rounded-3xl overflow-hidden">
-
-                <div class="overflow-x-auto">
-
-                    <table class="w-full text-sm">
-
-                        <thead class="bg-[#111] text-gray-500">
-
-                            <tr>
-
-                                <th class="text-right p-4">
-                                    العميل
-                                </th>
-
-                                <th class="text-right p-4">
-                                    الصفحة
-                                </th>
-
-                                <th class="text-right p-4">
-                                    المنصة
-                                </th>
-
-                                <th class="text-right p-4">
-                                    الرسوم
-                                </th>
-
-                                <th class="text-right p-4">
-                                    التجديد
-                                </th>
-
-                                <th class="text-right p-4">
-                                    الحالة
-                                </th>
-
-                                <th class="text-right p-4">
-                                    إجراءات
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="subscriptionsTable">
-
-                            ${subscriptionsRows(subscriptions)}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-    `;
-}
-
-
-function subscriptionsRows(list) {
-
-    if (!list.length) {
-
-        return `
-            <tr>
-                <td colspan="7"
-                    class="p-12 text-center text-gray-600">
-                    لا توجد اشتراكات.
-                </td>
-            </tr>
-        `;
 
     }
 
-    return list.map(s => `
 
-        <tr class="table-row border-t border-[#1d1d1d]">
+    await logActivity(
+        "حذف عميل",
+        "customers",
+        id,
+        c.client_name
+    );
 
-            <td class="p-4">
 
-                <button
-                    onclick="openCustomerProfile(${s.customer_id})"
-                    class="font-bold hover:text-[#d4af37]">
-                    ${escapeHtml(
-                        s.customers?.client_name || "-"
-                    )}
-                </button>
+    showToast("تم حذف العميل");
 
-            </td>
+    await loadAll();
 
-            <td class="p-4 text-gray-400">
-                ${escapeHtml(s.page_name || "-")}
-            </td>
-
-            <td class="p-4 text-gray-400">
-                ${escapeHtml(s.platform || "-")}
-            </td>
-
-            <td class="p-4 gold font-bold">
-                ${formatMoney(s.monthly_fee)}
-                ${escapeHtml(s.currency || "EGP")}
-            </td>
-
-            <td class="p-4 text-gray-400">
-                ${formatDate(s.renewal_date)}
-            </td>
-
-            <td class="p-4">
-
-                ${statusBadge(s)}
-
-            </td>
-
-            <td class="p-4">
-
-                <div class="flex gap-2">
-
-                    <button
-                        onclick="openSubscriptionModal(${s.id})"
-                        class="btn btn-dark text-xs">
-                        تعديل
-                    </button>
-
-                    <button
-                        onclick="openPaymentModal(${s.id})"
-                        class="btn btn-dark text-xs">
-                        دفعة
-                    </button>
-
-                    <button
-                        onclick="confirmDeleteSubscription(${s.id})"
-                        class="btn btn-danger text-xs">
-                        حذف
-                    </button>
-
-                </div>
-
-            </td>
-
-        </tr>
-
-    `).join("");
 }
 
 
-function filterSubscriptions() {
+/* =========================================================
+   CUSTOMER PROFILE
+========================================================= */
 
-    const value =
-        document
-            .getElementById("subscriptionSearch")
-            .value
-            .toLowerCase()
-            .trim();
+async function openCustomerProfile(id){
 
-    const filtered =
-        subscriptions.filter(s => {
+    const c =
+        customers.find(x=>x.id === id);
 
-            const client =
-                s.customers?.client_name || "";
+    if(!c) return;
 
-            const page =
-                s.page_name || "";
 
-            return (
-                client.toLowerCase().includes(value)
-                ||
-                page.toLowerCase().includes(value)
-            );
+    const customerSubs =
+        subscriptions.filter(
+            s=>s.customer_id === id
+        );
+
+    const subIds =
+        customerSubs.map(s=>s.id);
+
+    const customerPayments =
+        payments.filter(
+            p=>subIds.includes(p.subscription_id)
+        );
+
+    const customerInvoices =
+        invoices.filter(
+            i=>i.customer_id === id
+        );
+
+    const customerFollowups =
+        followups.filter(
+            f=>f.customer_id === id
+        );
+
+
+    const traderObj =
+        traders.find(
+            t=>t.id === c.trader_id
+        );
+
+
+    let html = `
+
+    <div class="profile-head">
+
+        <div>
+
+            <div class="profile-name">
+                ${esc(c.client_name)}
+            </div>
+
+            <div style="color:#999;margin-top:7px">
+                ${esc(c.phone || "بدون هاتف")}
+                ${traderObj
+                    ? " | التاجر: "+esc(traderObj.trader_name)
+                    : ""}
+            </div>
+
+        </div>
+
+        <div class="card-buttons">
+
+            <button class="btn btn-gold"
+                onclick="openSubscriptionModal(${c.id})">
+                + اشتراك
+            </button>
+
+            <button class="btn"
+                onclick="openPaymentModal()">
+                + دفعة
+            </button>
+
+            <button class="btn"
+                onclick="openFollowupModal(${c.id})">
+                + متابعة
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="profile-sections">
+
+        <div class="panel">
+
+            <div class="panel-title">
+                الاشتراكات
+            </div>
+
+            <div style="margin-top:12px">
+
+                ${
+                    customerSubs.length
+                    ? customerSubs.map(s=>{
+
+                        const service =
+                            services.find(
+                                x=>x.id === s.app_service_id
+                            );
+
+                        return `
+                        <div style="
+                            border-bottom:1px solid var(--border);
+                            padding:12px 0
+                        ">
+
+                            <strong>
+                                ${esc(
+                                    service?.service_name ||
+                                    s.page_name ||
+                                    "اشتراك"
+                                )}
+                            </strong>
+
+                            <div style="color:#999;margin-top:5px">
+                                ${esc(s.platform || "")}
+                                |
+                                ${money(s.monthly_fee)}
+                                ${esc(s.currency || "EGP")}
+                            </div>
+
+                            <div style="color:var(--gold2);margin-top:4px">
+                                التجديد:
+                                ${dateText(s.renewal_date)}
+                            </div>
+
+                            <div style="margin-top:5px">
+                                ${statusBadge(s.status)}
+                            </div>
+
+                        </div>`;
+
+                    }).join("")
+                    : `<div style="color:#777">
+                        لا توجد اشتراكات
+                       </div>`
+                }
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+                المدفوعات
+            </div>
+
+            <div style="margin-top:12px">
+
+                ${
+                    customerPayments.length
+                    ? customerPayments.map(p=>{
+
+                        const sub =
+                            customerSubs.find(
+                                s=>s.id === p.subscription_id
+                            );
+
+                        return `
+                        <div style="
+                            padding:10px 0;
+                            border-bottom:1px solid var(--border)
+                        ">
+                            <strong>
+                                ${money(p.amount)}
+                                ${esc(p.currency || "EGP")}
+                            </strong>
+
+                            <div style="color:#999">
+                                ${dateText(p.payment_date)}
+                            </div>
+
+                            <div style="color:#999">
+                                ${esc(p.paid_month || "")}
+                            </div>
+                        </div>`;
+
+                    }).join("")
+                    : `<div style="color:#777">
+                        لا توجد مدفوعات
+                       </div>`
+                }
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+                الفواتير
+            </div>
+
+            <div style="margin-top:12px">
+
+                ${
+                    customerInvoices.length
+                    ? customerInvoices.map(i=>`
+                        <div style="
+                            padding:10px 0;
+                            border-bottom:1px solid var(--border)
+                        ">
+                            <strong>
+                                ${esc(i.invoice_number)}
+                            </strong>
+
+                            <span style="float:left">
+                                ${money(i.total)}
+                                ${esc(i.currency || "EGP")}
+                            </span>
+
+                            <div style="margin-top:6px">
+                                ${statusBadge(i.status)}
+                            </div>
+                        </div>
+                    `).join("")
+                    : `<div style="color:#777">
+                        لا توجد فواتير
+                       </div>`
+                }
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-title">
+                سجل المتابعة
+            </div>
+
+            <div style="margin-top:12px">
+
+                ${
+                    customerFollowups.length
+                    ? customerFollowups
+                        .slice()
+                        .sort((a,b)=>
+                            b.followup_date.localeCompare(
+                                a.followup_date
+                            )
+                        )
+                        .map(f=>followupHTML(f))
+                        .join("")
+                    : `<div style="color:#777">
+                        لا توجد متابعات
+                       </div>`
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+    `;
+
+
+    document.getElementById("customerProfile")
+        .innerHTML = html;
+
+    openModal("profileModal");
+
+}
+
+
+/* =========================================================
+   SUBSCRIPTIONS
+========================================================= */
+
+function renderSubscriptions(){
+
+    const search =
+        (
+            document.getElementById(
+                "subscriptionSearch"
+            )?.value || ""
+        )
+        .toLowerCase()
+        .trim();
+
+    const status =
+        document.getElementById(
+            "subscriptionStatusFilter"
+        )?.value || "";
+
+
+    const list =
+        subscriptions.filter(s=>{
+
+            const c =
+                customers.find(
+                    x=>x.id === s.customer_id
+                );
+
+            const service =
+                services.find(
+                    x=>x.id === s.app_service_id
+                );
+
+            const text =
+                `${c?.client_name || ""}
+                  ${service?.service_name || ""}
+                  ${s.platform || ""}
+                  ${s.page_name || ""}`
+                .toLowerCase();
+
+            return
+                (!search || text.includes(search)) &&
+                (!status || s.status === status);
 
         });
 
-    document.getElementById("subscriptionsTable")
-        .innerHTML =
-        subscriptionsRows(filtered);
-}
+
+    const tbody =
+        document.getElementById(
+            "subscriptionsTable"
+        );
 
 
-/* =========================
-   SUBSCRIPTION MODAL
-========================= */
+    tbody.innerHTML =
+        list.map(s=>{
 
-async function openSubscriptionModal(id = null, presetCustomerId = null) {
+            const c =
+                customers.find(
+                    x=>x.id === s.customer_id
+                );
 
-    await Promise.all([
-        loadCustomers(),
-        loadServices()
-    ]);
+            const service =
+                services.find(
+                    x=>x.id === s.app_service_id
+                );
 
-    const subscription =
-        id
-        ? subscriptions.find(
-            s => Number(s.id) === Number(id)
-        )
-        : null;
-
-    const selectedCustomer =
-        subscription?.customer_id ||
-        presetCustomerId ||
-        "";
-
-
-    const serviceOptions =
-        services.map(service => {
-
-            const serviceName =
-                service.name ||
-                service.service_name ||
-                service.title ||
-                `خدمة #${service.id}`;
 
             return `
-                <option
-                    value="${service.id}"
-                    ${subscription?.service_id === service.id ? "selected" : ""}>
-                    ${escapeHtml(serviceName)}
-                </option>
-            `;
+            <tr>
+
+                <td>
+                    ${esc(c?.client_name || "-")}
+                </td>
+
+                <td>
+                    ${esc(
+                        service?.service_name ||
+                        s.page_name ||
+                        "-"
+                    )}
+                </td>
+
+                <td>
+                    ${esc(s.platform || "-")}
+                </td>
+
+                <td>
+                    ${money(s.monthly_fee)}
+                    ${esc(s.currency || "EGP")}
+                </td>
+
+                <td>
+                    ${dateText(s.renewal_date)}
+                </td>
+
+                <td>
+                    ${statusBadge(s.status)}
+                </td>
+
+                <td>
+
+                    <div class="actions">
+
+                        <button class="btn"
+                            onclick="editSubscription(${s.id})">
+                            تعديل
+                        </button>
+
+                        <button class="btn btn-green"
+                            onclick="openPaymentForSubscription(${s.id})">
+                            دفعة
+                        </button>
+
+                        <button class="btn btn-red"
+                            onclick="deleteSubscription(${s.id})">
+                            حذف
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>`;
 
         }).join("");
 
-
-    const customerOptions =
-        customers.map(c => `
-
-            <option
-                value="${c.id}"
-                ${Number(selectedCustomer) === Number(c.id) ? "selected" : ""}>
-                ${escapeHtml(c.client_name)}
-                ${c.phone ? " - " + escapeHtml(c.phone) : ""}
-            </option>
-
-        `).join("");
-
-
-    openModal(`
-
-        <div class="flex items-center justify-between mb-6">
-
-            <div>
-
-                <h2 class="text-xl font-black">
-                    ${subscription ? "تعديل الاشتراك" : "إضافة اشتراك جديد"}
-                </h2>
-
-                <p class="text-gray-600 text-sm mt-1">
-                    الاشتراك مرتبط بعميل موجود بالفعل.
-                </p>
-
-            </div>
-
-            <button
-                onclick="closeModal()"
-                class="text-gray-500 text-2xl">
-                ×
-            </button>
-
-        </div>
-
-
-        <form onsubmit="saveSubscription(event, ${id || "null"})">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
-                <div class="md:col-span-2">
-
-                    <label class="label">
-                        العميل
-                    </label>
-
-                    <select
-                        id="subscriptionCustomer"
-                        class="input"
-                        required>
-
-                        <option value="">
-                            اختر العميل
-                        </option>
-
-                        ${customerOptions}
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        الخدمة
-                    </label>
-
-                    <select
-                        id="subscriptionService"
-                        class="input">
-
-                        <option value="">
-                            بدون تحديد خدمة
-                        </option>
-
-                        ${serviceOptions}
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        اسم الصفحة / الحساب
-                    </label>
-
-                    <input
-                        id="subscriptionPage"
-                        class="input"
-                        value="${escapeAttr(subscription?.page_name || "")}"
-                        placeholder="مثال: BADGEIFY">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        المنصة
-                    </label>
-
-                    <select
-                        id="subscriptionPlatform"
-                        class="input">
-
-                        <option value="">
-                            اختر المنصة
-                        </option>
-
-                        <option value="Facebook"
-                            ${subscription?.platform === "Facebook" ? "selected" : ""}>
-                            Facebook
-                        </option>
-
-                        <option value="Instagram"
-                            ${subscription?.platform === "Instagram" ? "selected" : ""}>
-                            Instagram
-                        </option>
-
-                        <option value="WhatsApp"
-                            ${subscription?.platform === "WhatsApp" ? "selected" : ""}>
-                            WhatsApp
-                        </option>
-
-                        <option value="Facebook + Instagram"
-                            ${subscription?.platform === "Facebook + Instagram" ? "selected" : ""}>
-                            Facebook + Instagram
-                        </option>
-
-                        <option value="Facebook + Instagram + WhatsApp"
-                            ${subscription?.platform === "Facebook + Instagram + WhatsApp" ? "selected" : ""}>
-                            Facebook + Instagram + WhatsApp
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        الرسوم الشهرية
-                    </label>
-
-                    <input
-                        id="subscriptionFee"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        class="input"
-                        value="${subscription?.monthly_fee ?? 0}">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        العملة
-                    </label>
-
-                    <select
-                        id="subscriptionCurrency"
-                        class="input">
-
-                        <option value="EGP"
-                            ${subscription?.currency === "EGP" || !subscription ? "selected" : ""}>
-                            EGP - جنيه مصري
-                        </option>
-
-                        <option value="USD"
-                            ${subscription?.currency === "USD" ? "selected" : ""}>
-                            USD - دولار
-                        </option>
-
-                        <option value="EUR"
-                            ${subscription?.currency === "EUR" ? "selected" : ""}>
-                            EUR - يورو
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        يوم الدفع
-                    </label>
-
-                    <input
-                        id="subscriptionPaymentDay"
-                        type="number"
-                        min="1"
-                        max="31"
-                        class="input"
-                        value="${subscription?.payment_day ?? ""}">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        يوم التجديد
-                    </label>
-
-                    <input
-                        id="subscriptionRenewalDay"
-                        type="number"
-                        min="1"
-                        max="31"
-                        class="input"
-                        value="${subscription?.renewal_day ?? ""}">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        تاريخ البداية
-                    </label>
-
-                    <input
-                        id="subscriptionStartDate"
-                        type="date"
-                        class="input"
-                        value="${subscription?.start_date || ""}">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        تاريخ التجديد
-                    </label>
-
-                    <input
-                        id="subscriptionRenewalDate"
-                        type="date"
-                        class="input"
-                        value="${subscription?.renewal_date || ""}">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        الحالة
-                    </label>
-
-                    <select
-                        id="subscriptionStatus"
-                        class="input">
-
-                        <option value="active"
-                            ${subscription?.status === "active" || !subscription ? "selected" : ""}>
-                            نشط
-                        </option>
-
-                        <option value="paused"
-                            ${subscription?.status === "paused" ? "selected" : ""}>
-                            متوقف مؤقتاً
-                        </option>
-
-                        <option value="expired"
-                            ${subscription?.status === "expired" ? "selected" : ""}>
-                            منتهي
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="md:col-span-2">
-
-                    <label class="label">
-                        رابط الصفحة / الحساب
-                    </label>
-
-                    <input
-                        id="subscriptionLink"
-                        class="input"
-                        value="${escapeAttr(subscription?.page_link || "")}"
-                        placeholder="https://...">
-
-                </div>
-
-
-                <div class="md:col-span-2">
-
-                    <label class="label">
-                        ملاحظات
-                    </label>
-
-                    <textarea
-                        id="subscriptionNotes"
-                        class="input"
-                        rows="3">${escapeHtml(subscription?.notes || "")}</textarea>
-
-                </div>
-
-            </div>
-
-
-            <div class="flex gap-3 mt-7">
-
-                <button
-                    type="button"
-                    onclick="closeModal()"
-                    class="btn btn-dark flex-1">
-                    إلغاء
-                </button>
-
-                <button
-                    type="submit"
-                    class="btn btn-gold flex-1">
-                    حفظ الاشتراك
-                </button>
-
-            </div>
-
-        </form>
-    `);
 }
 
 
-async function saveSubscription(event, id) {
+document.getElementById("subscriptionSearch")
+.addEventListener("input",renderSubscriptions);
 
-    event.preventDefault();
+document.getElementById("subscriptionStatusFilter")
+.addEventListener("change",renderSubscriptions);
+
+
+function openSubscriptionModal(customerId=null){
+
+    document.getElementById("subscriptionForm")
+        .reset();
+
+    document.getElementById("subscriptionId")
+        .value = "";
+
+    document.getElementById("subscriptionModalTitle")
+        .textContent =
+        "إضافة اشتراك";
+
+
+    if(customerId){
+
+        document.getElementById(
+            "subscriptionCustomer"
+        ).value = customerId;
+
+    }
+
+
+    openModal("subscriptionModal");
+
+}
+
+
+async function editSubscription(id){
+
+    const s =
+        subscriptions.find(
+            x=>x.id === id
+        );
+
+    if(!s) return;
+
+
+    document.getElementById("subscriptionId").value =
+        s.id;
+
+    document.getElementById("subscriptionCustomer").value =
+        s.customer_id;
+
+    document.getElementById("subscriptionService").value =
+        s.app_service_id || "";
+
+    document.getElementById("subscriptionPageName").value =
+        s.page_name || "";
+
+    document.getElementById("subscriptionPlatform").value =
+        s.platform || "";
+
+    document.getElementById("subscriptionFee").value =
+        s.monthly_fee || 0;
+
+    document.getElementById("subscriptionPaymentDay").value =
+        s.payment_day || "";
+
+    document.getElementById("subscriptionRenewalDay").value =
+        s.renewal_day || "";
+
+    document.getElementById("subscriptionStartDate").value =
+        s.start_date || "";
+
+    document.getElementById("subscriptionRenewalDate").value =
+        s.renewal_date || "";
+
+    document.getElementById("subscriptionStatus").value =
+        s.status || "active";
+
+    document.getElementById("subscriptionNotes").value =
+        s.notes || "";
+
+
+    document.getElementById("subscriptionModalTitle")
+        .textContent =
+        "تعديل الاشتراك";
+
+
+    openModal("subscriptionModal");
+
+}
+
+
+document.getElementById("subscriptionService")
+.addEventListener("change",()=>{
+
+    const service =
+        services.find(
+            s=>String(s.id) ===
+            String(
+                document.getElementById(
+                    "subscriptionService"
+                ).value
+            )
+        );
+
+    if(!service) return;
+
+    const fee =
+        document.getElementById(
+            "subscriptionFee"
+        );
+
+    if(!fee.value ||
+       Number(fee.value) === 0){
+
+        fee.value =
+            service.default_price || 0;
+
+    }
+
+});
+
+
+document.getElementById("subscriptionForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+
+    const id =
+        document.getElementById(
+            "subscriptionId"
+        ).value;
 
 
     const customerId =
-        document
-            .getElementById("subscriptionCustomer")
-            .value;
-
-
-    if (!customerId) {
-
-        toast(
-            "يجب اختيار العميل",
-            "error"
+        Number(
+            document.getElementById(
+                "subscriptionCustomer"
+            ).value
         );
-
-        return;
-    }
 
 
     const payload = {
 
         customer_id:
-            Number(customerId),
+            customerId,
 
-        service_id:
-            document.getElementById("subscriptionService").value
-                || null,
+        app_service_id:
+            document.getElementById(
+                "subscriptionService"
+            ).value || null,
 
         page_name:
-            document.getElementById("subscriptionPage").value.trim(),
+            document.getElementById(
+                "subscriptionPageName"
+            ).value.trim(),
 
         platform:
-            document.getElementById("subscriptionPlatform").value,
+            document.getElementById(
+                "subscriptionPlatform"
+            ).value,
 
         page_link:
-            document.getElementById("subscriptionLink").value.trim(),
+            customers.find(
+                c=>c.id === customerId
+            )?.page_link || null,
 
         monthly_fee:
             Number(
-                document.getElementById("subscriptionFee").value
-                || 0
+                document.getElementById(
+                    "subscriptionFee"
+                ).value || 0
             ),
 
         currency:
-            document.getElementById("subscriptionCurrency").value,
+            settings.currency || "EGP",
 
         payment_day:
-            numberOrNull(
-                document.getElementById("subscriptionPaymentDay").value
-            ),
+            Number(
+                document.getElementById(
+                    "subscriptionPaymentDay"
+                ).value
+            ) || null,
 
         renewal_day:
-            numberOrNull(
-                document.getElementById("subscriptionRenewalDay").value
-            ),
+            Number(
+                document.getElementById(
+                    "subscriptionRenewalDay"
+                ).value
+            ) || null,
 
         start_date:
-            document.getElementById("subscriptionStartDate").value
-            || null,
+            document.getElementById(
+                "subscriptionStartDate"
+            ).value || null,
 
         renewal_date:
-            document.getElementById("subscriptionRenewalDate").value
-            || null,
+            document.getElementById(
+                "subscriptionRenewalDate"
+            ).value || null,
 
         status:
-            document.getElementById("subscriptionStatus").value,
+            document.getElementById(
+                "subscriptionStatus"
+            ).value,
 
         notes:
-            document.getElementById("subscriptionNotes").value.trim()
+            document.getElementById(
+                "subscriptionNotes"
+            ).value.trim()
 
     };
 
 
     let result;
 
-    if (id) {
+
+    if(id){
 
         result =
-            await supabaseClient
-                .from("subscriptions")
-                .update(payload)
-                .eq("id", id);
+            await db.from("subscriptions")
+            .update(payload)
+            .eq("id",id);
 
-    } else {
+    }else{
 
         result =
-            await supabaseClient
-                .from("subscriptions")
-                .insert(payload);
+            await db.from("subscriptions")
+            .insert(payload);
 
     }
 
 
-    if (result.error) {
+    if(result.error){
 
-        console.error(result.error);
-
-        toast(
-            result.error.message,
-            "error"
-        );
+        showToast(result.error.message);
 
         return;
+
     }
 
 
-    closeModal();
+    await logActivity(
+        id ? "تعديل اشتراك" : "إضافة اشتراك",
+        "subscriptions",
+        id || "",
+        `العميل رقم ${customerId}`
+    );
 
-    toast(
+
+    closeModal("subscriptionModal");
+
+    showToast(
         id
         ? "تم تعديل الاشتراك"
         : "تم إضافة الاشتراك"
     );
 
-    await loadPage("subscriptions");
-}
+    await loadAll();
+
+});
 
 
-function confirmDeleteSubscription(id) {
+async function deleteSubscription(id){
 
-    showConfirm(
-        "حذف الاشتراك",
-        "هل أنت متأكد من حذف هذا الاشتراك؟",
-        async () => {
-
-            const { error } =
-                await supabaseClient
-                    .from("subscriptions")
-                    .delete()
-                    .eq("id", id);
-
-            if (error) {
-
-                toast(
-                    error.message,
-                    "error"
-                );
-
-                return;
-            }
-
-            closeConfirm();
-
-            toast("تم حذف الاشتراك");
-
-            await loadPage("subscriptions");
-
-        }
-    );
-}
+    if(!confirm("هل تريد حذف الاشتراك؟"))
+        return;
 
 
-/* =========================
-   PAYMENTS
-========================= */
-
-async function renderPayments() {
-
-    await Promise.all([
-        loadPayments(),
-        loadCustomers(),
-        loadSubscriptions()
-    ]);
-
-    document.getElementById("content").innerHTML = `
-
-        <div class="fade-in">
-
-            <div class="flex flex-col md:flex-row gap-3 justify-between mb-5">
-
-                <input
-                    id="paymentSearch"
-                    oninput="filterPayments()"
-                    class="input flex-1"
-                    placeholder="ابحث باسم العميل أو الصفحة...">
-
-                <button
-                    onclick="openPaymentModal()"
-                    class="btn btn-gold">
-                    + تسجيل دفعة
-                </button>
-
-            </div>
+    const result =
+        await db.from("subscriptions")
+        .delete()
+        .eq("id",id);
 
 
-            <div class="card rounded-3xl overflow-hidden">
+    if(result.error){
 
-                <div class="overflow-x-auto">
+        showToast(result.error.message);
 
-                    <table class="w-full text-sm">
-
-                        <thead class="bg-[#111] text-gray-500">
-
-                            <tr>
-
-                                <th class="text-right p-4">
-                                    العميل
-                                </th>
-
-                                <th class="text-right p-4">
-                                    الاشتراك
-                                </th>
-
-                                <th class="text-right p-4">
-                                    المبلغ
-                                </th>
-
-                                <th class="text-right p-4">
-                                    الشهر
-                                </th>
-
-                                <th class="text-right p-4">
-                                    تاريخ الدفع
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="paymentsTable">
-
-                            ${paymentsRows(payments)}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-    `;
-}
-
-
-function paymentsRows(list) {
-
-    if (!list.length) {
-
-        return `
-            <tr>
-                <td colspan="5"
-                    class="p-12 text-center text-gray-600">
-                    لا توجد مدفوعات.
-                </td>
-            </tr>
-        `;
+        return;
 
     }
 
-    return list.map(p => `
 
-        <tr class="table-row border-t border-[#1d1d1d]">
+    await logActivity(
+        "حذف اشتراك",
+        "subscriptions",
+        id,
+        ""
+    );
 
-            <td class="p-4 font-bold">
-                ${escapeHtml(
-                    p.subscriptions?.customers?.client_name || "-"
-                )}
-            </td>
 
-            <td class="p-4 text-gray-400">
-                ${escapeHtml(
-                    p.subscriptions?.page_name || "-"
-                )}
-            </td>
+    showToast("تم حذف الاشتراك");
 
-            <td class="p-4 gold font-black">
-                ${formatMoney(p.amount)}
-                ${escapeHtml(p.currency || "EGP")}
-            </td>
+    await loadAll();
 
-            <td class="p-4 text-gray-400">
-                ${escapeHtml(p.paid_month || "-")}
-            </td>
-
-            <td class="p-4 text-gray-500">
-                ${formatDate(p.payment_date)}
-            </td>
-
-        </tr>
-
-    `).join("");
 }
 
 
-function filterPayments() {
+/* =========================================================
+   PAYMENTS
+========================================================= */
 
-    const value =
-        document
-            .getElementById("paymentSearch")
-            .value
-            .toLowerCase()
-            .trim();
+function renderPayments(){
 
-    const filtered =
-        payments.filter(p => {
+    const search =
+        (
+            document.getElementById(
+                "paymentSearch"
+            )?.value || ""
+        )
+        .toLowerCase()
+        .trim();
 
-            const client =
-                p.subscriptions?.customers?.client_name || "";
 
-            const page =
-                p.subscriptions?.page_name || "";
+    const list =
+        payments.filter(p=>{
 
-            return (
-                client.toLowerCase().includes(value)
-                ||
-                page.toLowerCase().includes(value)
-            );
+            const s =
+                subscriptions.find(
+                    x=>x.id === p.subscription_id
+                );
+
+            const c =
+                customers.find(
+                    x=>x.id === s?.customer_id
+                );
+
+            return !search ||
+                `${c?.client_name || ""}`
+                .toLowerCase()
+                .includes(search);
 
         });
 
+
     document.getElementById("paymentsTable")
         .innerHTML =
-        paymentsRows(filtered);
+        list.map(p=>{
+
+            const s =
+                subscriptions.find(
+                    x=>x.id === p.subscription_id
+                );
+
+            const c =
+                customers.find(
+                    x=>x.id === s?.customer_id
+                );
+
+            const service =
+                services.find(
+                    x=>x.id === s?.app_service_id
+                );
+
+
+            return `
+            <tr>
+
+                <td>
+                    ${esc(c?.client_name || "-")}
+                </td>
+
+                <td>
+                    ${esc(
+                        service?.service_name ||
+                        "اشتراك"
+                    )}
+                </td>
+
+                <td>
+                    ${money(p.amount)}
+                    ${esc(p.currency || "EGP")}
+                </td>
+
+                <td>
+                    ${dateText(p.payment_date)}
+                </td>
+
+                <td>
+                    ${esc(p.paid_month || "-")}
+                </td>
+
+                <td>
+                    <button class="btn btn-red"
+                        onclick="deletePayment(${p.id})">
+                        حذف
+                    </button>
+                </td>
+
+            </tr>`;
+
+        }).join("");
+
 }
 
 
-/* =========================
-   PAYMENT MODAL
-========================= */
-
-async function openPaymentModal(subscriptionId = null) {
-
-    await Promise.all([
-        loadSubscriptions(),
-        loadCustomers()
-    ]);
+document.getElementById("paymentSearch")
+.addEventListener("input",renderPayments);
 
 
-    const options =
-        subscriptions.map(s => `
+function openPaymentModal(){
 
-            <option
-                value="${s.id}"
-                ${Number(subscriptionId) === Number(s.id) ? "selected" : ""}>
+    document.getElementById("paymentForm")
+        .reset();
 
-                ${escapeHtml(
-                    s.customers?.client_name || "بدون اسم"
-                )}
+    document.getElementById("paymentDate")
+        .value =
+        todayISO();
 
-                —
-                ${escapeHtml(
-                    s.page_name || "اشتراك"
-                )}
+    openModal("paymentModal");
 
-            </option>
-
-        `).join("");
-
-
-    openModal(`
-
-        <div class="flex items-center justify-between mb-6">
-
-            <h2 class="text-xl font-black">
-                تسجيل دفعة
-            </h2>
-
-            <button
-                onclick="closeModal()"
-                class="text-gray-500 text-2xl">
-                ×
-            </button>
-
-        </div>
-
-
-        <form onsubmit="savePayment(event)">
-
-            <div class="space-y-4">
-
-
-                <div>
-
-                    <label class="label">
-                        الاشتراك
-                    </label>
-
-                    <select
-                        id="paymentSubscription"
-                        class="input"
-                        required>
-
-                        <option value="">
-                            اختر الاشتراك
-                        </option>
-
-                        ${options}
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        المبلغ
-                    </label>
-
-                    <input
-                        id="paymentAmount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        class="input"
-                        required>
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        العملة
-                    </label>
-
-                    <select
-                        id="paymentCurrency"
-                        class="input">
-
-                        <option value="EGP">
-                            EGP - جنيه مصري
-                        </option>
-
-                        <option value="USD">
-                            USD - دولار
-                        </option>
-
-                        <option value="EUR">
-                            EUR - يورو
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        تاريخ الدفع
-                    </label>
-
-                    <input
-                        id="paymentDate"
-                        type="date"
-                        class="input"
-                        value="${todayDate()}">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        الشهر المدفوع
-                    </label>
-
-                    <input
-                        id="paymentMonth"
-                        class="input"
-                        placeholder="مثال: سبتمبر 2026">
-
-                </div>
-
-
-                <div>
-
-                    <label class="label">
-                        ملاحظات
-                    </label>
-
-                    <textarea
-                        id="paymentNotes"
-                        class="input"
-                        rows="3"></textarea>
-
-                </div>
-
-            </div>
-
-
-            <div class="flex gap-3 mt-7">
-
-                <button
-                    type="button"
-                    onclick="closeModal()"
-                    class="btn btn-dark flex-1">
-                    إلغاء
-                </button>
-
-                <button
-                    type="submit"
-                    class="btn btn-gold flex-1">
-                    حفظ الدفعة
-                </button>
-
-            </div>
-
-        </form>
-
-    `);
 }
 
 
-async function savePayment(event) {
+function openPaymentForSubscription(id){
 
-    event.preventDefault();
+    openPaymentModal();
+
+    document.getElementById(
+        "paymentSubscription"
+    ).value = id;
+
+    const s =
+        subscriptions.find(
+            x=>x.id === id
+        );
+
+    if(s){
+
+        document.getElementById(
+            "paymentAmount"
+        ).value =
+            s.monthly_fee || 0;
+
+    }
+
+}
+
+
+document.getElementById("paymentForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
 
 
     const subscriptionId =
-        document
-            .getElementById("paymentSubscription")
-            .value;
+        Number(
+            document.getElementById(
+                "paymentSubscription"
+            ).value
+        );
 
 
     const payload = {
 
         subscription_id:
-            Number(subscriptionId),
+            subscriptionId,
 
         amount:
             Number(
-                document.getElementById("paymentAmount").value
+                document.getElementById(
+                    "paymentAmount"
+                ).value || 0
             ),
 
         currency:
-            document.getElementById("paymentCurrency").value,
+            settings.currency || "EGP",
 
         payment_date:
-            document.getElementById("paymentDate").value
-            || todayDate(),
+            document.getElementById(
+                "paymentDate"
+            ).value || todayISO(),
 
         paid_month:
-            document.getElementById("paymentMonth").value.trim()
-            || null,
+            document.getElementById(
+                "paymentMonth"
+            ).value.trim(),
 
         notes:
-            document.getElementById("paymentNotes").value.trim()
+            document.getElementById(
+                "paymentNotes"
+            ).value.trim()
 
     };
 
 
-    const { error } =
-        await supabaseClient
-            .from("subscription_payments")
-            .insert(payload);
+    const result =
+        await db.from(
+            "subscription_payments"
+        ).insert(payload);
 
 
-    if (error) {
+    if(result.error){
 
-        console.error(error);
-
-        toast(
-            error.message,
-            "error"
-        );
+        showToast(result.error.message);
 
         return;
+
     }
 
 
-    closeModal();
+    await logActivity(
+        "تسجيل دفعة",
+        "subscription_payments",
+        "",
+        `${money(payload.amount)} ${payload.currency}`
+    );
 
-    toast("تم تسجيل الدفعة");
 
-    await loadPage("payments");
+    closeModal("paymentModal");
+
+    showToast("تم تسجيل الدفعة");
+
+    await loadAll();
+
+});
+
+
+async function deletePayment(id){
+
+    if(!confirm("هل تريد حذف الدفعة؟"))
+        return;
+
+
+    const result =
+        await db.from(
+            "subscription_payments"
+        )
+        .delete()
+        .eq("id",id);
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    await logActivity(
+        "حذف دفعة",
+        "subscription_payments",
+        id,
+        ""
+    );
+
+
+    showToast("تم حذف الدفعة");
+
+    await loadAll();
+
 }
 
 
-/* =========================
-   SERVICES
-========================= */
+/* =========================================================
+   FOLLOWUPS
+========================================================= */
 
-async function renderServices() {
+function followupHTML(f){
 
-    await loadServices();
+    const c =
+        customers.find(
+            x=>x.id === f.customer_id
+        );
 
-    document.getElementById("content").innerHTML = `
-
-        <div class="fade-in">
-
-            <div class="card rounded-3xl p-6">
-
-                <div class="flex justify-between items-center mb-5">
-
-                    <div>
-                        <h2 class="font-black text-xl">
-                            الخدمات الحالية
-                        </h2>
-
-                        <p class="text-gray-600 text-sm mt-1">
-                            الخدمات الموجودة في قاعدة البيانات.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-
-                    ${
-                        services.length
-                        ? services.map(service => `
-
-                            <div class="bg-[#111] border border-[#222] rounded-2xl p-5">
-
-                                <div class="gold font-black text-lg">
-                                    ${escapeHtml(
-                                        service.name ||
-                                        service.service_name ||
-                                        service.title ||
-                                        "خدمة"
-                                    )}
-                                </div>
-
-                                <div class="text-xs text-gray-600 mt-2">
-                                    ID: ${escapeHtml(service.id)}
-                                </div>
-
-                            </div>
-
-                        `).join("")
-                        : `
-                            <div class="text-gray-600">
-                                لا توجد خدمات.
-                            </div>
-                        `
-                    }
-
-                </div>
-
-            </div>
-
-        </div>
-    `;
-}
-
-
-/* =========================
-   HELPERS
-========================= */
-
-function subscriptionRow(s) {
 
     return `
-        <div class="bg-[#111] border border-[#202020] rounded-2xl p-4">
+    <div style="
+        padding:10px 0;
+        border-bottom:1px solid var(--border)
+    ">
 
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <strong>
+            ${esc(c?.client_name || "عميل")}
+        </strong>
 
-                <div>
-
-                    <div class="font-bold">
-                        ${escapeHtml(
-                            s.customers?.client_name || "-"
-                        )}
-                    </div>
-
-                    <div class="text-xs text-gray-600 mt-1">
-                        ${escapeHtml(s.page_name || "بدون اسم صفحة")}
-                    </div>
-
-                </div>
-
-                <div class="flex items-center gap-4">
-
-                    <div class="text-right">
-
-                        <div class="gold font-bold">
-                            ${formatMoney(s.monthly_fee)}
-                            ${escapeHtml(s.currency || "EGP")}
-                        </div>
-
-                        <div class="text-xs text-gray-600">
-                            التجديد:
-                            ${formatDate(s.renewal_date)}
-                        </div>
-
-                    </div>
-
-                    ${statusBadge(s)}
-
-                </div>
-
-            </div>
-
+        <div style="color:#aaa;margin-top:4px">
+            ${esc(f.title || f.followup_type || "متابعة")}
         </div>
-    `;
+
+        <div style="color:#777;margin-top:3px">
+            ${dateText(f.followup_date)}
+        </div>
+
+        <div style="margin-top:5px">
+            ${statusBadge(f.status)}
+        </div>
+
+    </div>`;
+
 }
 
 
-function statusBadge(s) {
+function renderFollowups(){
 
-    let cls = "status-active";
-    let text = "نشط";
+    const search =
+        (
+            document.getElementById(
+                "followupSearch"
+            )?.value || ""
+        )
+        .toLowerCase()
+        .trim();
 
-    if (s.status === "expired") {
-        cls = "status-expired";
-        text = "منتهي";
+
+    const list =
+        followups.filter(f=>{
+
+            const c =
+                customers.find(
+                    x=>x.id === f.customer_id
+                );
+
+            const text =
+                `${c?.client_name || ""}
+                  ${f.title || ""}
+                  ${f.notes || ""}`
+                .toLowerCase();
+
+            return !search ||
+                text.includes(search);
+
+        });
+
+
+    document.getElementById(
+        "followupsTable"
+    ).innerHTML =
+        list.map(f=>{
+
+            const c =
+                customers.find(
+                    x=>x.id === f.customer_id
+                );
+
+
+            return `
+            <tr>
+
+                <td>
+                    ${dateText(f.followup_date)}
+                </td>
+
+                <td>
+                    ${esc(c?.client_name || "-")}
+                </td>
+
+                <td>
+                    ${esc(f.followup_type || "-")}
+                </td>
+
+                <td>
+                    ${esc(f.title || "-")}
+                </td>
+
+                <td>
+                    ${statusBadge(f.status)}
+                </td>
+
+                <td>
+
+                    <div class="actions">
+
+                        ${
+                            f.status !== "completed"
+                            ? `
+                            <button class="btn btn-green"
+                                onclick="completeFollowup(${f.id})">
+                                مكتملة
+                            </button>
+                            `
+                            : ""
+                        }
+
+                        <button class="btn btn-red"
+                            onclick="deleteFollowup(${f.id})">
+                            حذف
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>`;
+
+        }).join("");
+
+}
+
+
+document.getElementById("followupSearch")
+.addEventListener("input",renderFollowups);
+
+
+function openFollowupModal(customerId=null){
+
+    document.getElementById("followupForm")
+        .reset();
+
+    document.getElementById(
+        "followupDate"
+    ).value =
+        todayISO();
+
+
+    if(customerId){
+
+        document.getElementById(
+            "followupCustomer"
+        ).value =
+            customerId;
+
+        updateFollowupSubscriptions();
+
     }
 
-    if (s.status === "paused") {
-        cls = "status-paused";
-        text = "متوقف";
+
+    openModal("followupModal");
+
+}
+
+
+document.getElementById("followupCustomer")
+.addEventListener(
+    "change",
+    updateFollowupSubscriptions
+);
+
+
+function updateFollowupSubscriptions(){
+
+    const customerId =
+        Number(
+            document.getElementById(
+                "followupCustomer"
+            ).value
+        );
+
+
+    const select =
+        document.getElementById(
+            "followupSubscription"
+        );
+
+
+    select.innerHTML =
+        `<option value="">بدون اشتراك</option>` +
+        subscriptions
+        .filter(s=>s.customer_id === customerId)
+        .map(s=>{
+
+            const service =
+                services.find(
+                    x=>x.id === s.app_service_id
+                );
+
+            return `
+            <option value="${s.id}">
+                ${esc(
+                    service?.service_name ||
+                    s.page_name ||
+                    "اشتراك"
+                )}
+            </option>`;
+
+        }).join("");
+
+}
+
+
+document.getElementById("followupForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+
+    const payload = {
+
+        customer_id:
+            Number(
+                document.getElementById(
+                    "followupCustomer"
+                ).value
+            ),
+
+        subscription_id:
+            document.getElementById(
+                "followupSubscription"
+            ).value || null,
+
+        followup_date:
+            document.getElementById(
+                "followupDate"
+            ).value,
+
+        followup_type:
+            document.getElementById(
+                "followupType"
+            ).value,
+
+        title:
+            document.getElementById(
+                "followupTitle"
+            ).value.trim(),
+
+        notes:
+            document.getElementById(
+                "followupNotes"
+            ).value.trim(),
+
+        status:
+            "pending"
+
+    };
+
+
+    const result =
+        await db.from("followups")
+        .insert(payload);
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
     }
 
-    if (s.renewal_date) {
 
-        const date =
-            new Date(s.renewal_date);
+    await logActivity(
+        "إضافة متابعة",
+        "followups",
+        "",
+        payload.title
+    );
 
-        const today =
-            new Date();
 
-        const diff =
-            Math.ceil(
-                (date - today) /
-                (1000 * 60 * 60 * 24)
+    closeModal("followupModal");
+
+    showToast("تمت إضافة المتابعة");
+
+    await loadAll();
+
+});
+
+
+async function completeFollowup(id){
+
+    const result =
+        await db.from("followups")
+        .update({
+            status:"completed",
+            completed_at:new Date().toISOString()
+        })
+        .eq("id",id);
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    await logActivity(
+        "إكمال متابعة",
+        "followups",
+        id,
+        ""
+    );
+
+
+    showToast("تم إنهاء المتابعة");
+
+    await loadAll();
+
+}
+
+
+async function deleteFollowup(id){
+
+    if(!confirm("هل تريد حذف المتابعة؟"))
+        return;
+
+
+    const result =
+        await db.from("followups")
+        .delete()
+        .eq("id",id);
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    showToast("تم حذف المتابعة");
+
+    await loadAll();
+
+}
+
+
+/* =========================================================
+   AUTO FOLLOWUPS
+========================================================= */
+
+async function generateRenewalFollowups(){
+
+    let added = 0;
+
+    const today =
+        new Date();
+
+    const end =
+        new Date();
+
+    end.setDate(
+        end.getDate() + 30
+    );
+
+
+    for(const s of subscriptions){
+
+        if(
+            s.status !== "active" ||
+            !s.renewal_date
+        )
+            continue;
+
+
+        const renewal =
+            new Date(
+                s.renewal_date + "T00:00:00"
             );
 
-        if (diff < 0) {
 
-            cls = "status-expired";
-            text = "منتهي";
+        if(
+            renewal < new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate()
+            ) ||
+            renewal > end
+        )
+            continue;
 
-        } else if (diff <= 7) {
 
-            cls = "status-paused";
-            text = "قريب التجديد";
+        const exists =
+            followups.some(f=>
+                f.subscription_id === s.id &&
+                f.followup_date === s.renewal_date &&
+                f.followup_type === "renewal"
+            );
 
-        }
+
+        if(exists)
+            continue;
+
+
+        const result =
+            await db.from("followups")
+            .insert({
+
+                customer_id:
+                    s.customer_id,
+
+                subscription_id:
+                    s.id,
+
+                followup_date:
+                    s.renewal_date,
+
+                followup_type:
+                    "renewal",
+
+                title:
+                    "متابعة تجديد الاشتراك",
+
+                notes:
+                    "متابعة تجديد الاشتراك وسداد القيمة الشهرية",
+
+                status:
+                    "pending"
+
+            });
+
+
+        if(!result.error)
+            added++;
 
     }
 
-    return `
-        <span class="px-3 py-1 rounded-full text-xs ${cls}">
-            ${text}
-        </span>
-    `;
-}
 
-
-function formatMoney(value) {
-
-    return Number(value || 0)
-        .toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        });
-}
-
-
-function formatDate(value) {
-
-    if (!value)
-        return "-";
-
-    const date =
-        new Date(value);
-
-    if (Number.isNaN(date.getTime()))
-        return value;
-
-    return date.toLocaleDateString(
-        "ar-EG",
-        {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-        }
+    showToast(
+        added
+        ? `تم إنشاء ${added} متابعة جديدة`
+        : "لا توجد متابعات تجديد جديدة"
     );
+
+
+    await loadAll();
+
 }
 
 
-function todayDate() {
+/* =========================================================
+   CALENDAR
+========================================================= */
 
-    const d = new Date();
+function renderCalendar(){
 
-    return [
-        d.getFullYear(),
-        String(d.getMonth() + 1).padStart(2,"0"),
-        String(d.getDate()).padStart(2,"0")
-    ].join("-");
-}
+    const calendar =
+        document.getElementById("calendar");
 
 
-function numberOrNull(value) {
+    const start =
+        new Date();
 
-    if (value === "" || value === null)
-        return null;
-
-    return Number(value);
-}
+    start.setHours(0,0,0,0);
 
 
-function escapeHtml(value) {
-
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
+    const days = [];
 
 
-function escapeAttr(value) {
+    for(let i=0;i<30;i++){
 
-    return escapeHtml(value);
-}
+        const d =
+            new Date(start);
 
-
-/* =========================
-   MODALS
-========================= */
-
-function openModal(html) {
-
-    document.getElementById("modalContent")
-        .innerHTML = html;
-
-    document.getElementById("modal")
-        .classList.remove("hidden");
-
-    document.getElementById("modal")
-        .classList.add("flex");
-}
-
-
-function closeModal() {
-
-    document.getElementById("modal")
-        .classList.add("hidden");
-
-    document.getElementById("modal")
-        .classList.remove("flex");
-}
-
-
-function showConfirm(title, text, action) {
-
-    document.getElementById("confirmTitle")
-        .textContent = title;
-
-    document.getElementById("confirmText")
-        .textContent = text;
-
-    document.getElementById("confirmButton")
-        .onclick = action;
-
-    document.getElementById("confirmModal")
-        .classList.remove("hidden");
-
-    document.getElementById("confirmModal")
-        .classList.add("flex");
-}
-
-
-function closeConfirm() {
-
-    document.getElementById("confirmModal")
-        .classList.add("hidden");
-
-    document.getElementById("confirmModal")
-        .classList.remove("flex");
-}
-
-
-/* =========================
-   TOAST
-========================= */
-
-function toast(message, type = "success") {
-
-    const element =
-        document.getElementById("toast");
-
-    const box =
-        document.getElementById("toastBox");
-
-    const text =
-        document.getElementById("toastMessage");
-
-    text.textContent = message;
-
-    box.style.borderColor =
-        type === "error"
-        ? "rgba(248,113,113,.3)"
-        : "rgba(212,175,55,.25)";
-
-    element.classList.remove("hidden");
-
-    clearTimeout(window.toastTimer);
-
-    window.toastTimer =
-        setTimeout(() => {
-
-            element.classList.add("hidden");
-
-        }, 3000);
-}
-
-
-/* =========================
-   WHATSAPP
-========================= */
-
-function openWhatsApp(phone, name = "") {
-
-    let number =
-        String(phone || "")
-            .replace(/\D/g, "");
-
-    if (number.startsWith("0"))
-        number = "20" + number.substring(1);
-
-    const message =
-        encodeURIComponent(
-            `أهلاً ${name}، معك BADGEIFY.`
+        d.setDate(
+            start.getDate()+i
         );
 
-    window.open(
-        `https://wa.me/${number}?text=${message}`,
-        "_blank"
-    );
+        const iso =
+            `${d.getFullYear()}-${
+                String(d.getMonth()+1).padStart(2,"0")
+            }-${
+                String(d.getDate()).padStart(2,"0")
+            }`;
+
+        days.push({
+            date:d,
+            iso
+        });
+
+    }
+
+
+    calendar.innerHTML =
+        days.map(day=>{
+
+            const items =
+                followups.filter(
+                    f=>f.followup_date === day.iso
+                );
+
+
+            const isToday =
+                day.iso === todayISO();
+
+
+            return `
+            <div class="calendar-day ${
+                isToday ? "today" : ""
+            }">
+
+                <div class="day-number">
+                    ${day.date.toLocaleDateString(
+                        "ar-EG",
+                        {
+                            weekday:"short",
+                            day:"numeric",
+                            month:"short"
+                        }
+                    )}
+                </div>
+
+                ${
+                    items.length
+                    ? items.map(f=>{
+
+                        const c =
+                            customers.find(
+                                x=>x.id === f.customer_id
+                            );
+
+                        return `
+                        <div class="follow-item ${
+                            f.status === "completed"
+                            ? "done"
+                            : ""
+                        }"
+                        onclick="openCustomerProfile(${f.customer_id})">
+
+                            ${esc(
+                                c?.client_name || "عميل"
+                            )}
+
+                            <br>
+
+                            ${esc(
+                                f.title ||
+                                f.followup_type ||
+                                "متابعة"
+                            )}
+
+                        </div>`;
+
+                    }).join("")
+                    : `<div style="color:#555;font-size:10px">
+                        لا توجد
+                       </div>`
+                }
+
+            </div>`;
+
+        }).join("");
+
 }
 
 
-/* =========================
-   MOBILE MENU
-========================= */
+/* =========================================================
+   TRADERS
+========================================================= */
 
-function toggleMobileMenu(force) {
+function renderTraders(){
 
-    const menu =
-        document.getElementById("mobileMenu");
+    const grid =
+        document.getElementById(
+            "traderGrid"
+        );
 
-    if (force === false) {
 
-        menu.classList.remove("open");
+    grid.innerHTML = `
+
+    <div class="trader-card">
+
+        <div class="customer-name">
+            عملائي
+        </div>
+
+        <div class="customer-meta">
+            العملاء بدون تاجر
+        </div>
+
+        <div class="card-buttons">
+
+            <button class="btn btn-gold"
+                onclick="showMyClients()">
+                عرض العملاء
+            </button>
+
+        </div>
+
+    </div>
+
+    ` +
+    traders.map(t=>{
+
+        const count =
+            customers.filter(
+                c=>c.trader_id === t.id
+            ).length;
+
+
+        return `
+        <div class="trader-card">
+
+            <div class="customer-name">
+                ${esc(t.trader_name)}
+            </div>
+
+            <div class="customer-meta">
+                ${count} عميل
+            </div>
+
+            <div class="customer-meta">
+                ${esc(t.phone || "بدون هاتف")}
+            </div>
+
+            <div class="card-buttons">
+
+                <button class="btn btn-gold"
+                    onclick="viewTraderClients(${t.id})">
+                    عملاؤه
+                </button>
+
+                <button class="btn"
+                    onclick="editTrader(${t.id})">
+                    تعديل
+                </button>
+
+                <button class="btn btn-red"
+                    onclick="deleteTrader(${t.id})">
+                    حذف
+                </button>
+
+            </div>
+
+        </div>`;
+
+    }).join("");
+
+}
+
+
+function viewTraderClients(id){
+
+    selectedTraderId =
+        id;
+
+    showPage("customers");
+
+}
+
+
+function showMyClients(){
+
+    selectedTraderId =
+        "NONE";
+
+    const grid =
+        document.getElementById(
+            "customerGrid"
+        );
+
+    const list =
+        customers.filter(
+            c=>!c.trader_id
+        );
+
+
+    if(!list.length){
+
+        grid.innerHTML =
+            `<div style="color:#777">
+                لا يوجد عملاء بدون تاجر
+            </div>`;
+
+        showPage("customers");
 
         return;
+
     }
 
-    menu.classList.toggle("open");
+
+    grid.innerHTML =
+        list.map(c=>{
+
+            const count =
+                subscriptions.filter(
+                    s=>s.customer_id === c.id
+                ).length;
+
+            return `
+            <div class="customer-card">
+
+                <div class="customer-name">
+                    ${esc(c.client_name)}
+                </div>
+
+                <div class="customer-meta">
+                    ${esc(c.phone || "بدون هاتف")}
+                </div>
+
+                <div class="customer-meta">
+                    ${count} اشتراك
+                </div>
+
+                <div class="card-buttons">
+
+                    <button class="btn btn-gold"
+                        onclick="openCustomerProfile(${c.id})">
+                        الملف
+                    </button>
+
+                    <button class="btn"
+                        onclick="editCustomer(${c.id})">
+                        تعديل
+                    </button>
+
+                </div>
+
+            </div>`;
+
+        }).join("");
+
+
+    showPage("customers");
+
 }
 
 
-/* =========================
-   LABEL STYLE
-========================= */
+function openTraderModal(){
 
-const style =
-document.createElement("style");
+    document.getElementById("traderForm")
+        .reset();
 
-style.textContent = `
+    document.getElementById("traderId")
+        .value = "";
 
-    .label {
-        display: block;
-        color: #999;
-        font-size: 13px;
-        margin-bottom: 8px;
+    document.getElementById("traderModalTitle")
+        .textContent =
+        "إضافة تاجر";
+
+    openModal("traderModal");
+
+}
+
+
+function editTrader(id){
+
+    const t =
+        traders.find(
+            x=>x.id === id
+        );
+
+    if(!t) return;
+
+
+    document.getElementById("traderId")
+        .value = t.id;
+
+    document.getElementById("traderName")
+        .value = t.trader_name || "";
+
+    document.getElementById("traderPhone")
+        .value = t.phone || "";
+
+    document.getElementById("traderNotes")
+        .value = t.notes || "";
+
+    document.getElementById("traderModalTitle")
+        .textContent =
+        "تعديل التاجر";
+
+    openModal("traderModal");
+
+}
+
+
+document.getElementById("traderForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+
+    const id =
+        document.getElementById(
+            "traderId"
+        ).value;
+
+
+    const payload = {
+
+        trader_name:
+            document.getElementById(
+                "traderName"
+            ).value.trim(),
+
+        phone:
+            document.getElementById(
+                "traderPhone"
+            ).value.trim(),
+
+        notes:
+            document.getElementById(
+                "traderNotes"
+            ).value.trim()
+
+    };
+
+
+    let result;
+
+
+    if(id){
+
+        result =
+            await db.from("traders")
+            .update(payload)
+            .eq("id",id);
+
+    }else{
+
+        result =
+            await db.from("traders")
+            .insert(payload);
+
     }
 
-`;
 
-document.head.appendChild(style);
+    if(result.error){
 
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    await logActivity(
+        id ? "تعديل تاجر" : "إضافة تاجر",
+        "traders",
+        id || "",
+        payload.trader_name
+    );
+
+
+    closeModal("traderModal");
+
+    showToast(
+        id
+        ? "تم تعديل التاجر"
+        : "تم إضافة التاجر"
+    );
+
+    await loadAll();
+
+});
+
+
+async function deleteTrader(id){
+
+    const t =
+        traders.find(
+            x=>x.id === id
+        );
+
+    if(!t) return;
+
+
+    if(!confirm(
+        `هل تريد حذف التاجر "${t.trader_name}"؟`
+    ))
+        return;
+
+
+    const result =
+        await db.from("traders")
+        .delete()
+        .eq("id",id);
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    showToast("تم حذف التاجر");
+
+    await loadAll();
+
+}
+
+
+/* =========================================================
+   SERVICES
+========================================================= */
+
+function renderServices(){
+
+    const grid =
+        document.getElementById(
+            "serviceGrid"
+        );
+
+
+    grid.innerHTML =
+        services.map(s=>{
+
+            const subscriptionCount =
+                subscriptions.filter(
+                    x=>x.app_service_id === s.id
+                ).length;
+
+
+            return `
+            <div class="service-card">
+
+                <div class="customer-name">
+                    ${esc(s.service_name)}
+                </div>
+
+                <div class="customer-meta">
+                    ${esc(s.description || "بدون وصف")}
+                </div>
+
+                <div class="customer-meta">
+                    السعر الافتراضي:
+                    ${money(s.default_price)}
+                    ${esc(s.currency || "EGP")}
+                </div>
+
+                <div class="customer-meta">
+                    ${subscriptionCount}
+                    اشتراك
+                </div>
+
+                <div style="margin-top:8px">
+                    ${statusBadge(s.status)}
+                </div>
+
+                <div class="card-buttons">
+
+                    <button class="btn"
+                        onclick="editService(${s.id})">
+                        تعديل
+                    </button>
+
+                    <button class="btn btn-red"
+                        onclick="deleteService(${s.id})">
+                        حذف
+                    </button>
+
+                </div>
+
+            </div>`;
+
+        }).join("");
+
+}
+
+
+function openServiceModal(){
+
+    document.getElementById("serviceForm")
+        .reset();
+
+    document.getElementById("serviceId")
+        .value = "";
+
+    document.getElementById("serviceCurrency")
+        .value =
+        settings.currency || "EGP";
+
+    document.getElementById("serviceModalTitle")
+        .textContent =
+        "إضافة خدمة";
+
+    openModal("serviceModal");
+
+}
+
+
+function editService(id){
+
+    const s =
+        services.find(
+            x=>String(x.id) === String(id)
+        );
+
+    if(!s) return;
+
+
+    document.getElementById("serviceId")
+        .value = s.id;
+
+    document.getElementById("serviceName")
+        .value = s.service_name || "";
+
+    document.getElementById("servicePrice")
+        .value = s.default_price || 0;
+
+    document.getElementById("serviceCurrency")
+        .value = s.currency || "EGP";
+
+    document.getElementById("serviceStatus")
+        .value = s.status || "active";
+
+    document.getElementById("serviceDescription")
+        .value = s.description || "";
+
+    document.getElementById("serviceModalTitle")
+        .textContent =
+        "تعديل الخدمة";
+
+    openModal("serviceModal");
+
+}
+
+
+document.getElementById("serviceForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+
+    const id =
+        document.getElementById(
+            "serviceId"
+        ).value;
+
+
+    const payload = {
+
+        service_name:
+            document.getElementById(
+                "serviceName"
+            ).value.trim(),
+
+        description:
+            document.getElementById(
+                "serviceDescription"
+            ).value.trim(),
+
+        default_price:
+            Number(
+                document.getElementById(
+                    "servicePrice"
+                ).value || 0
+            ),
+
+        currency:
+            document.getElementById(
+                "serviceCurrency"
+            ).value.trim() || "EGP",
+
+        status:
+            document.getElementById(
+                "serviceStatus"
+            ).value
+
+    };
+
+
+    let result;
+
+
+    if(id){
+
+        result =
+            await db.from("app_services")
+            .update(payload)
+            .eq("id",id);
+
+    }else{
+
+        result =
+            await db.from("app_services")
+            .insert(payload);
+
+    }
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    await logActivity(
+        id ? "تعديل خدمة" : "إضافة خدمة",
+        "app_services",
+        id || "",
+        payload.service_name
+    );
+
+
+    closeModal("serviceModal");
+
+    showToast(
+        id
+        ? "تم تعديل الخدمة"
+        : "تم إضافة الخدمة"
+    );
+
+    await loadAll();
+
+});
+
+
+async function deleteService(id){
+
+    const service =
+        services.find(
+            x=>x.id === id
+        );
+
+    if(!service) return;
+
+
+    const used =
+        subscriptions.some(
+            s=>s.app_service_id === id
+        );
+
+
+    if(used){
+
+        showToast(
+            "لا يمكن حذف خدمة مرتبطة باشتراكات، قم بإيقافها بدلاً من ذلك"
+        );
+
+        return;
+
+    }
+
+
+    if(!confirm(
+        `هل تريد حذف الخدمة "${service.service_name}"؟`
+    ))
+        return;
+
+
+    const result =
+        await db.from("app_services")
+        .delete()
+        .eq("id",id);
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    showToast("تم حذف الخدمة");
+
+    await loadAll();
+
+}
+
+
+/* =========================================================
+   INVOICES
+========================================================= */
+
+function generateInvoiceNumber(){
+
+    const prefix =
+        settings.invoice_prefix ||
+        "INV";
+
+    const now =
+        new Date();
+
+    const stamp =
+        `${now.getFullYear()}${
+            String(now.getMonth()+1).padStart(2,"0")
+        }${
+            String(now.getDate()).padStart(2,"0")
+        }${
+            String(now.getHours()).padStart(2,"0")
+        }${
+            String(now.getMinutes()).padStart(2,"0")
+        }${
+            String(now.getSeconds()).padStart(2,"0")
+        }`;
+
+    return `${prefix}-${stamp}`;
+
+}
+
+
+function renderInvoices(){
+
+    const search =
+        (
+            document.getElementById(
+                "invoiceSearch"
+            )?.value || ""
+        )
+        .toLowerCase()
+        .trim();
+
+
+    const list =
+        invoices.filter(i=>{
+
+            const c =
+                customers.find(
+                    x=>x.id === i.customer_id
+                );
+
+            const text =
+                `${i.invoice_number || ""}
+                  ${c?.client_name || ""}`
+                .toLowerCase();
+
+            return !search ||
+                text.includes(search);
+
+        });
+
+
+    document.getElementById(
+        "invoicesTable"
+    ).innerHTML =
+        list.map(i=>{
+
+            const c =
+                customers.find(
+                    x=>x.id === i.customer_id
+                );
+
+
+            return `
+            <tr>
+
+                <td>
+                    ${esc(i.invoice_number)}
+                </td>
+
+                <td>
+                    ${esc(c?.client_name || "-")}
+                </td>
+
+                <td>
+                    ${dateText(i.invoice_date)}
+                </td>
+
+                <td>
+                    ${money(i.total)}
+                    ${esc(i.currency || "EGP")}
+                </td>
+
+                <td>
+                    ${statusBadge(i.status)}
+                </td>
+
+                <td>
+
+                    <div class="actions">
+
+                        <button class="btn btn-gold"
+                            onclick="printInvoice(${i.id})">
+                            طباعة
+                        </button>
+
+                        <button class="btn btn-red"
+                            onclick="deleteInvoice(${i.id})">
+                            حذف
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>`;
+
+        }).join("");
+
+}
+
+
+document.getElementById("invoiceSearch")
+.addEventListener("input",renderInvoices);
+
+
+function openInvoiceModal(){
+
+    document.getElementById("invoiceForm")
+        .reset();
+
+    document.getElementById("invoiceNumber")
+        .value =
+        generateInvoiceNumber();
+
+    document.getElementById("invoiceDate")
+        .value =
+        todayISO();
+
+    document.getElementById("invoiceTotalPreview")
+        .textContent =
+        "0.00";
+
+    openModal("invoiceModal");
+
+}
+
+
+document.getElementById("invoiceCustomer")
+.addEventListener(
+    "change",
+    updateInvoiceSubscriptions
+);
+
+
+function updateInvoiceSubscriptions(){
+
+    const customerId =
+        Number(
+            document.getElementById(
+                "invoiceCustomer"
+            ).value
+        );
+
+
+    const select =
+        document.getElementById(
+            "invoiceSubscription"
+        );
+
+
+    select.innerHTML =
+        `<option value="">بدون اشتراك</option>` +
+        subscriptions
+        .filter(s=>s.customer_id === customerId)
+        .map(s=>{
+
+            const service =
+                services.find(
+                    x=>x.id === s.app_service_id
+                );
+
+            return `
+            <option value="${s.id}">
+                ${esc(
+                    service?.service_name ||
+                    s.page_name ||
+                    "اشتراك"
+                )}
+            </option>`;
+
+        }).join("");
+
+}
+
+
+document.getElementById("invoiceSubscription")
+.addEventListener(
+    "change",
+    ()=>{
+
+        const id =
+            Number(
+                document.getElementById(
+                    "invoiceSubscription"
+                ).value
+            );
+
+        const s =
+            subscriptions.find(
+                x=>x.id === id
+            );
+
+        if(s){
+
+            document.getElementById(
+                "invoiceSubtotal"
+            ).value =
+                s.monthly_fee || 0;
+
+            updateInvoiceTotal();
+
+        }
+
+    }
+);
+
+
+document.getElementById("invoiceSubtotal")
+.addEventListener(
+    "input",
+    updateInvoiceTotal
+);
+
+document.getElementById("invoiceDiscount")
+.addEventListener(
+    "input",
+    updateInvoiceTotal
+);
+
+
+function updateInvoiceTotal(){
+
+    const subtotal =
+        Number(
+            document.getElementById(
+                "invoiceSubtotal"
+            ).value || 0
+        );
+
+    const discount =
+        Number(
+            document.getElementById(
+                "invoiceDiscount"
+            ).value || 0
+        );
+
+    const total =
+        Math.max(0,subtotal-discount);
+
+
+    document.getElementById(
+        "invoiceTotalPreview"
+    ).textContent =
+        money(total);
+
+}
+
+
+document.getElementById("invoiceForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+
+    const subtotal =
+        Number(
+            document.getElementById(
+                "invoiceSubtotal"
+            ).value || 0
+        );
+
+    const discount =
+        Number(
+            document.getElementById(
+                "invoiceDiscount"
+            ).value || 0
+        );
+
+    const total =
+        Math.max(
+            0,
+            subtotal-discount
+        );
+
+
+    const payload = {
+
+        invoice_number:
+            document.getElementById(
+                "invoiceNumber"
+            ).value,
+
+        customer_id:
+            Number(
+                document.getElementById(
+                    "invoiceCustomer"
+                ).value
+            ),
+
+        subscription_id:
+            document.getElementById(
+                "invoiceSubscription"
+            ).value || null,
+
+        invoice_date:
+            document.getElementById(
+                "invoiceDate"
+            ).value || todayISO(),
+
+        due_date:
+            document.getElementById(
+                "invoiceDueDate"
+            ).value || null,
+
+        subtotal,
+        discount,
+        total,
+
+        currency:
+            settings.currency || "EGP",
+
+        status:
+            document.getElementById(
+                "invoiceStatus"
+            ).value,
+
+        notes:
+            document.getElementById(
+                "invoiceNotes"
+            ).value.trim()
+
+    };
+
+
+    const result =
+        await db.from("invoices")
+        .insert(payload)
+        .select()
+        .single();
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    await db.from("invoice_items")
+    .insert({
+
+        invoice_id:
+            result.data.id,
+
+        service_name:
+            getInvoiceServiceName(
+                payload.subscription_id
+            ),
+
+        description:
+            payload.notes || "",
+
+        quantity:1,
+
+        unit_price:
+            subtotal,
+
+        discount:
+            discount,
+
+        total:
+            total
+
+    });
+
+
+    await logActivity(
+        "إنشاء فاتورة",
+        "invoices",
+        result.data.id,
+        payload.invoice_number
+    );
+
+
+    closeModal("invoiceModal");
+
+    showToast("تم إنشاء الفاتورة");
+
+    await loadAll();
+
+});
+
+
+function getInvoiceServiceName(subscriptionId){
+
+    if(!subscriptionId)
+        return "خدمة";
+
+    const s =
+        subscriptions.find(
+            x=>String(x.id) ===
+            String(subscriptionId)
+        );
+
+    const service =
+        services.find(
+            x=>x.id === s?.app_service_id
+        );
+
+    return (
+        service?.service_name ||
+        s?.page_name ||
+        "اشتراك"
+    );
+
+}
+
+
+async function deleteInvoice(id){
+
+    if(!confirm("هل تريد حذف الفاتورة؟"))
+        return;
+
+
+    const result =
+        await db.from("invoices")
+        .delete()
+        .eq("id",id);
+
+
+    if(result.error){
+
+        showToast(result.error.message);
+
+        return;
+
+    }
+
+
+    await logActivity(
+        "حذف فاتورة",
+        "invoices",
+        id,
+        ""
+    );
+
+
+    showToast("تم حذف الفاتورة");
+
+    await loadAll();
+
+}
+
+
+async function printInvoice(id){
+
+    const invoice =
+        invoices.find(
+            x=>x.id === id
+        );
+
+    if(!invoice) return;
+
+
+    const customer =
+        customers.find(
+            x=>x.id === invoice.customer_id
+        );
+
+
+    const serviceName =
+        getInvoiceServiceName(
+            invoice.subscription_id
+        );
+
+
+    const companyName =
+        settings.company_name ||
+        "BADGEIFY";
+
+
+    const printWindow =
+        window.open(
+            "",
+            "_blank",
+            "width=850,height=900"
+        );
+
+
+    printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+فاتورة ${esc(invoice.invoice_number)}
+</title>
+
+<style>
+
+body{
+    font-family:Tahoma,Arial;
+    padding:40px;
+    color:#111;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    border-bottom:2px solid #111;
+    padding-bottom:20px;
+}
+
+h1{
+    margin:0;
+}
+
+.info{
+    margin-top:30px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:30px;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:12px;
+}
+
+.total{
+    margin-top:30px;
+    text-align:left;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.footer{
+    margin-top:80px;
+    text-align:center;
+    color:#777;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<div>
+    <h1>${esc(companyName)}</h1>
+</div>
+
+<div>
+    <strong>
+        فاتورة
+    </strong>
+
+    <br>
+
+    ${esc(invoice.invoice_number)}
+
+</div>
+
+</div>
+
+<div class="info">
+
+<strong>العميل:</strong>
+${esc(customer?.client_name || "")}
+
+<br><br>
+
+<strong>التاريخ:</strong>
+${dateText(invoice.invoice_date)}
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>الخدمة</th>
+<th>السعر</th>
+<th>الخصم</th>
+<th>الإجمالي</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>
+${esc(serviceName)}
+</td>
+
+<td>
+${money(invoice.subtotal)}
+${esc(invoice.currency || "EGP")}
+</td>
+
+<td>
+${money(invoice.discount)}
+${esc(invoice.currency || "EGP")}
+</td>
+
+<td>
+${money(invoice.total)}
+${esc(invoice.currency || "EGP")}
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<div class="total">
+الإجمالي:
+${money(invoice.total)}
+${esc(invoice.currency || "EGP")}
+</div>
+
+<div class="footer">
+${esc(settings.company_address || "")}
+</div>
+
+<script>
+window.onload=function(){
+    window.print();
+}
+<\/script>
+
+</body>
+
+</html>
+    `);
+
+    printWindow.document.close();
+
+}
+
+
+/* =========================================================
+   ACTIVITY LOG
+========================================================= */
+
+async function logActivity(
+    action,
+    entityType,
+    entityId,
+    description
+){
+
+    try{
+
+        await db.from("activity_logs")
+        .insert({
+
+            user_id:
+                currentUser?.id || null,
+
+            action:
+                action,
+
+            entity_type:
+                entityType,
+
+            entity_id:
+                String(entityId || ""),
+
+            description:
+                description || ""
+
+        });
+
+    }catch(err){
+
+        console.error(
+            "Activity log error",
+            err
+        );
+
+    }
+
+}
+
+
+function renderActivity(){
+
+    document.getElementById(
+        "activityTable"
+    ).innerHTML =
+        activityLogs.map(a=>{
+
+            return `
+            <tr>
+
+                <td>
+                    ${new Date(
+                        a.created_at
+                    ).toLocaleString("ar-EG")}
+                </td>
+
+                <td>
+                    ${esc(a.action)}
+                </td>
+
+                <td>
+                    ${esc(a.entity_type || "-")}
+                </td>
+
+                <td>
+                    ${esc(a.description || "-")}
+                </td>
+
+            </tr>`;
+
+        }).join("");
+
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function renderSettings(){
+
+    document.getElementById(
+        "settingCompanyName"
+    ).value =
+        settings.company_name || "BADGEIFY";
+
+    document.getElementById(
+        "settingCompanyPhone"
+    ).value =
+        settings.company_phone || "";
+
+    document.getElementById(
+        "settingCompanyWhatsapp"
+    ).value =
+        settings.company_whatsapp || "";
+
+    document.getElementById(
+        "settingCompanyAddress"
+    ).value =
+        settings.company_address || "";
+
+    document.getElementById(
+        "settingInvoicePrefix"
+    ).value =
+        settings.invoice_prefix || "INV";
+
+    document.getElementById(
+        "settingCurrency"
+    ).value =
+        settings.currency || "EGP";
+
+    document.getElementById(
+        "settingFollowupDays"
+    ).value =
+        settings.followup_days || 30;
+
+}
+
+
+document.getElementById("settingsForm")
+.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+
+    const values = {
+
+        company_name:
+            document.getElementById(
+                "settingCompanyName"
+            ).value.trim(),
+
+        company_phone:
+            document.getElementById(
+                "settingCompanyPhone"
+            ).value.trim(),
+
+        company_whatsapp:
+            document.getElementById(
+                "settingCompanyWhatsapp"
+            ).value.trim(),
+
+        company_address:
+            document.getElementById(
+                "settingCompanyAddress"
+            ).value.trim(),
+
+        invoice_prefix:
+            document.getElementById(
+                "settingInvoicePrefix"
+            ).value.trim(),
+
+        currency:
+            document.getElementById(
+                "settingCurrency"
+            ).value.trim(),
+
+        followup_days:
+            document.getElementById(
+                "settingFollowupDays"
+            ).value
+
+    };
+
+
+    for(const key of Object.keys(values)){
+
+        const result =
+            await db.from("app_settings")
+            .upsert({
+
+                setting_key:key,
+
+                setting_value:
+                    String(values[key]),
+
+                updated_at:
+                    new Date().toISOString()
+
+            },{
+                onConflict:"setting_key"
+            });
+
+
+        if(result.error){
+
+            showToast(result.error.message);
+
+            return;
+
+        }
+
+    }
+
+
+    await logActivity(
+        "تعديل الإعدادات",
+        "app_settings",
+        "",
+        ""
+    );
+
+
+    showToast("تم حفظ الإعدادات");
+
+    await loadAll();
+
+});
+
+
+/* =========================================================
+   CUSTOMER / INVOICE / FOLLOWUP SELECT HELPERS
+========================================================= */
+
+document.getElementById("invoiceCustomer")
+.addEventListener(
+    "change",
+    updateInvoiceSubscriptions
+);
+
+
+/* =========================================================
+   CLOSE MODAL ON BACKDROP
+========================================================= */
+
+document.querySelectorAll(".modal")
+.forEach(modal=>{
+
+    modal.addEventListener("click",e=>{
+
+        if(e.target === modal){
+
+            modal.classList.remove("show");
+
+        }
+
+    });
+
+});
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+db.auth.onAuthStateChange(
+    (event,session)=>{
+
+        if(session){
+
+            currentUser =
+                session.user;
+
+            showApp();
+
+        }else{
+
+            currentUser =
+                null;
+
+            showLogin();
+
+        }
+
+    }
+);
+
+
+checkSession();
 
 </script>
 
