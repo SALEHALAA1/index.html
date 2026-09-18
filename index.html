@@ -4278,32 +4278,15 @@ onclick="openTraderPortal(${trader.id})">
 
 }
 
-async function openTraderPortal(traderId){
+    function openTraderPortal(traderId){
 
-    const { data, error } = await db
-        .from("trader_portal_tokens")
-        .select("token")
-        .eq("trader_id", traderId)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
+    const trader =
+    getTrader(traderId);
 
-    if(error){
-
-        console.error(error);
+    if(!trader){
 
         showToast(
-            "تعذر الحصول على رابط التاجر",
-            true
-        );
-
-        return;
-    }
-
-    if(!data){
-
-        showToast(
-            "لا يوجد رابط لهذا التاجر",
+            "التاجر غير موجود",
             true
         );
 
@@ -4311,12 +4294,12 @@ async function openTraderPortal(traderId){
     }
 
     const portalUrl =
-        new URL(
-            "trader.html",
-            window.location.href
-        ).href
-        + "?token="
-        + encodeURIComponent(data.token);
+    new URL(
+        "trader.html",
+        window.location.href
+    ).href
+    + "?trader="
+    + encodeURIComponent(traderId);
 
     window.open(
         portalUrl,
@@ -4324,6 +4307,460 @@ async function openTraderPortal(traderId){
     );
 
 }
+    
+/* =========================================
+   TRADER MODAL
+========================================= */
+
+function openTraderModal(id=null){
+
+    const trader=
+    id
+    ?getTrader(id)
+    :{};
+
+    openModal(
+
+        id?t("edit"):t("newTrader"),
+
+        `
+
+        <div class="form-grid">
+
+            <div class="field">
+
+                <label>
+                ${t("name")}
+                </label>
+
+                <input
+                id="traderName"
+                value="${esc(trader.trader_name||"")}"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                ${t("phone")}
+                </label>
+
+                <input
+                id="traderPhone"
+                value="${esc(trader.phone||"")}"
+                >
+
+            </div>
+
+
+            <div class="field full">
+
+                <label>
+                ${t("notes")}
+                </label>
+
+                <textarea
+                id="traderNotes"
+                >${esc(trader.notes||"")}</textarea>
+
+            </div>
+
+        </div>
+
+        `,
+
+        `
+
+        <button
+        class="ghost-btn"
+        onclick="closeModal()">
+
+        ${t("cancel")}
+
+        </button>
+
+        <button
+        class="gold-btn"
+        onclick="saveTrader(${id||"null"})">
+
+        ${t("save")}
+
+        </button>
+
+        `
+
+    );
+
+}
+
+
+async function saveTrader(id){
+
+    const data={
+
+        trader_name:
+        document.getElementById(
+            "traderName"
+        ).value.trim(),
+
+        phone:
+        document.getElementById(
+            "traderPhone"
+        ).value,
+
+        notes:
+        document.getElementById(
+            "traderNotes"
+        ).value
+
+    };
+
+    if(!data.trader_name)
+        return;
+
+    try{
+
+        let result;
+
+        if(id){
+
+            result=
+            await db
+            .from("traders")
+            .update(data)
+            .eq("id",id);
+
+        }else{
+
+            result=
+            await db
+            .from("traders")
+            .insert(data);
+
+        }
+
+        if(result.error)
+            throw result.error;
+
+        closeModal();
+
+        await refresh();
+
+        showToast(t("saved"));
+
+    }catch(error){
+
+        showToast(
+            error.message,
+            true
+        );
+
+    }
+
+}
+
+
+async function deleteTrader(id){
+
+    if(!confirm("Delete trader?"))
+        return;
+
+    try{
+
+        const result=
+        await db
+        .from("traders")
+        .delete()
+        .eq("id",id);
+
+        if(result.error)
+            throw result.error;
+
+        await refresh();
+
+        showToast(t("deleted"));
+
+    }catch(error){
+
+        showToast(
+            error.message,
+            true
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   TRADER ACCOUNT
+========================================= */
+
+function openTraderAccount(traderId){
+
+    const trader=
+    getTrader(traderId);
+
+    const customers=
+    state.customers
+    .filter(
+        c=>
+        Number(c.trader_id)
+        ===Number(traderId)
+    );
+
+    const customerIds=
+    customers.map(c=>Number(c.id));
+
+    const subscriptions=
+    state.subscriptions
+    .filter(
+        s=>
+        customerIds.includes(
+            Number(s.customer_id)
+        )
+    );
+
+    const total=
+    subscriptions.reduce(
+        (sum,s)=>
+        sum+Number(s.monthly_fee||0),
+        0
+    );
+
+    const payments=
+    state.payments
+    .filter(function(p){
+
+        const s=
+        getSubscription(
+            p.subscription_id
+        );
+
+        return s
+        &&
+        customerIds.includes(
+            Number(s.customer_id)
+        );
+
+    });
+
+    const paid=
+    payments.reduce(
+        (sum,p)=>
+        sum+Number(p.amount||0),
+        0
+    );
+
+    openModal(
+
+        `${t("trader")} — ${esc(trader.trader_name)}`,
+
+        `
+
+        <div class="stats grid"
+        style="grid-template-columns:repeat(3,1fr)">
+
+            <div class="stat">
+
+                <h2>
+                ${customers.length}
+                </h2>
+
+                <p>
+                ${t("customers")}
+                </p>
+
+            </div>
+
+            <div class="stat">
+
+                <h2>
+                ${money(total)}
+                </h2>
+
+                <p>
+                ${t("expected")}
+                </p>
+
+            </div>
+
+            <div class="stat">
+
+                <h2>
+                ${money(paid)}
+                </h2>
+
+                <p>
+                ${t("paid")}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+        class="card"
+        style="margin-top:15px">
+
+            <div class="card-head">
+
+                <h3>
+                ${t("customers")}
+                </h3>
+
+            </div>
+
+            <div class="card-body">
+
+                ${
+                customers.map(c=>`
+
+                <div class="list-item">
+
+                    <div>
+
+                        <b>
+                        ${esc(c.client_name)}
+                        </b>
+
+                        <div class="muted">
+                        ${esc(c.phone||"")}
+                        </div>
+
+                    </div>
+
+                    <button
+                    class="mini-btn"
+                    onclick="openCustomerProfile(${c.id})">
+
+                    ${t("open")}
+
+                    </button>
+
+                </div>
+
+                `).join("")
+                ||
+                `<div class="empty">${t("noData")}</div>`
+                }
+
+            </div>
+
+        </div>
+
+        `,
+
+        `<button class="ghost-btn" onclick="closeModal()">${t("cancel")}</button>`
+
+    );
+
+}
+
+
+/* =========================================
+   SERVICES
+========================================= */
+
+function renderServices(){
+
+    document.getElementById("content")
+    .innerHTML=`
+
+    <div class="page-head">
+
+        <div>
+
+            <h1>${t("services")}</h1>
+
+        </div>
+
+        <button
+        class="gold-btn"
+        onclick="openServiceModal()">
+
+        <i class="fa-solid fa-plus"></i>
+
+        ${t("newService")}
+
+        </button>
+
+    </div>
+
+
+    <div
+    class="grid"
+    style="
+    grid-template-columns:
+    repeat(auto-fit,minmax(250px,1fr))
+    ">
+
+    ${
+    state.services.map(function(service){
+
+        return `
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <h3>
+                ${esc(service.service_name)}
+                </h3>
+
+                <p class="muted">
+                ${esc(service.description||"")}
+                </p>
+
+                <div class="money">
+
+                ${money(service.default_price)}
+                ${esc(service.currency||"EGP")}
+
+                </div>
+
+                <div
+                class="actions"
+                style="margin-top:12px">
+
+                    <button
+                    class="mini-btn"
+                    onclick="openServiceModal(${service.id})">
+
+                    <i class="fa-solid fa-pen"></i>
+
+                    </button>
+
+                    <button
+                    class="mini-btn"
+                    onclick="deleteService(${service.id})">
+
+                    <i class="fa-solid fa-trash"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        `;
+
+    }).join("")
+    ||
+    `<div class="empty">${t("noData")}</div>`
+    }
+
+    </div>
+
+    `;
+
+}
+
 
 function openServiceModal(id=null){
 
