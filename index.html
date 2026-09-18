@@ -4280,7 +4280,7 @@ onclick="openTraderPortal(${trader.id})">
 
 async function openTraderPortal(traderId){
 
-    let { data, error } =
+    const { data, error } =
     await db
     .from("trader_portal_tokens")
     .select("token,is_active")
@@ -4302,41 +4302,15 @@ async function openTraderPortal(traderId){
         return;
     }
 
-
     if(!data){
 
-        const token =
-        crypto.randomUUID().replaceAll("-","");
+        showToast(
+            "لا يوجد رابط لهذا التاجر",
+            true
+        );
 
-
-        const result =
-        await db
-        .from("trader_portal_tokens")
-        .insert({
-            trader_id: traderId,
-            token: token
-        })
-        .select("token")
-        .single();
-
-
-        if(result.error){
-
-            console.error(result.error);
-
-            showToast(
-                "تعذر إنشاء رابط التاجر",
-                true
-            );
-
-            return;
-        }
-
-
-        data = result.data;
-
+        return;
     }
-
 
     const portalUrl =
     new URL(
@@ -4345,7 +4319,6 @@ async function openTraderPortal(traderId){
     ).href
     + "?token="
     + encodeURIComponent(data.token);
-
 
     window.open(
         portalUrl,
