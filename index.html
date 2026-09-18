@@ -4302,9 +4302,7 @@ async function openTraderPortal(traderId){
         const result = await response.json();
 
 
-        if(!response.ok){
-
-            console.error(result);
+        if(!response.ok || !result.url){
 
             showToast(
                 result.error || "تعذر إنشاء رابط التاجر",
@@ -4315,20 +4313,115 @@ async function openTraderPortal(traderId){
         }
 
 
-        if(!result.url){
-
-            showToast(
-                "لم يتم الحصول على رابط التاجر",
-                true
-            );
-
-            return;
-        }
+        const trader =
+            getTrader(traderId);
 
 
-        window.open(
-            result.url,
-            "_blank"
+        const traderName =
+            trader?.trader_name || "التاجر";
+
+
+        openModal(
+
+            "رابط التاجر",
+
+            `
+
+            <div style="padding:10px">
+
+                <div
+                class="field"
+                style="margin-bottom:15px">
+
+                    <label>
+                    اسم التاجر
+                    </label>
+
+                    <input
+                    value="${esc(traderName)}"
+                    readonly
+                    >
+
+                </div>
+
+
+                <div
+                class="field">
+
+                    <label>
+                    رابط التاجر
+                    </label>
+
+                    <input
+                    id="traderPortalLink"
+                    value="${esc(result.url)}"
+                    readonly
+                    style="direction:ltr;text-align:left"
+                    >
+
+                </div>
+
+            </div>
+
+            `,
+
+            `
+
+            <button
+            class="ghost-btn"
+            onclick="closeModal()">
+
+            إغلاق
+
+            </button>
+
+
+            <button
+            class="gold-btn"
+            onclick="copyTraderPortalLink()">
+
+            <i class="fa-solid fa-copy"></i>
+
+            نسخ الرابط
+
+            </button>
+
+
+            <button
+            class="gold-btn"
+            onclick="window.open('${result.url}','_blank')">
+
+            <i class="fa-solid fa-up-right-from-square"></i>
+
+            فتح الرابط
+
+            </button>
+
+
+            ${
+                trader?.phone
+                ?
+                `
+                <button
+                class="mini-btn wa"
+                onclick="sendTraderPortalWhatsApp(
+                    '${esc(trader.phone)}',
+                    '${esc(result.url)}',
+                    '${esc(traderName)}'
+                )">
+
+                <i class="fa-brands fa-whatsapp"></i>
+
+                إرسال واتساب
+
+                </button>
+                `
+                :
+                ""
+            }
+
+            `
+
         );
 
 
@@ -4342,6 +4435,73 @@ async function openTraderPortal(traderId){
         );
 
     }
+
+}
+
+
+async function copyTraderPortalLink(){
+
+    const input =
+        document.getElementById(
+            "traderPortalLink"
+        );
+
+    if(!input)
+        return;
+
+
+    try{
+
+        await navigator.clipboard.writeText(
+            input.value
+        );
+
+        showToast(
+            "تم نسخ رابط التاجر"
+        );
+
+    }catch(error){
+
+        input.select();
+
+        document.execCommand("copy");
+
+        showToast(
+            "تم نسخ رابط التاجر"
+        );
+
+    }
+
+}
+
+
+function sendTraderPortalWhatsApp(
+    phone,
+    url,
+    traderName
+){
+
+    const number =
+        whatsappNumber(phone);
+
+
+    const message =
+        "مرحباً "
+        + traderName
+        + "\n\n"
+        + "هذا هو رابط حساب التاجر الخاص بك:\n"
+        + url
+        + "\n\n"
+        + "يمكنك فتح الرابط لمتابعة العملاء والاشتراكات الخاصة بك.";
+
+
+    window.open(
+        "https://wa.me/"
+        + number
+        + "?text="
+        + encodeURIComponent(message),
+        "_blank"
+    );
 
 }
     
