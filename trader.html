@@ -448,6 +448,11 @@ tr:hover td{
     background:rgba(92,169,255,.1);
 }
 
+.status.mixed{
+    color:var(--gold2);
+    background:rgba(214,173,85,.1);
+}
+
 /* CUSTOMER CARDS MOBILE */
 
 .mobile-list{
@@ -1505,7 +1510,6 @@ function renderSubscriptions(){
     const subscriptions =
         portalData?.subscriptions || [];
 
-
     const search =
         (
             document.getElementById(
@@ -1517,8 +1521,7 @@ function renderSubscriptions(){
         .trim()
         .toLowerCase();
 
-
-    let rows =
+    const filteredRows =
         subscriptions.filter(
             sub => {
 
@@ -1530,54 +1533,166 @@ function renderSubscriptions(){
                     return false;
                 }
 
-
                 if(!search){
                     return true;
                 }
 
-
                 const customerName =
                     sub.customer_name || "";
-
 
                 const serviceName =
                     sub.service_name || "";
 
-
                 const platform =
                     sub.platform || "";
 
-
                 return (
-
-                    customerName
-                        .toLowerCase()
-                        .includes(search)
-
+                    customerName.toLowerCase().includes(search)
                     ||
-
-                    serviceName
-                        .toLowerCase()
-                        .includes(search)
-
+                    serviceName.toLowerCase().includes(search)
                     ||
-
-                    platform
-                        .toLowerCase()
-                        .includes(search)
-
+                    platform.toLowerCase().includes(search)
                 );
 
             }
         );
 
+    /*
+       تجميع العملاء الذين لديهم نفس الاشتراك.
+       الاشتراك هنا = الخدمة + المنصة.
+    */
+
+    const groups = new Map();
+
+    filteredRows.forEach(
+        sub => {
+
+            const serviceName =
+                sub.service_name || "-";
+
+            const platform =
+                sub.platform || "-";
+
+            const key =
+                serviceName
+                + "||"
+                + platform;
+
+            if(!groups.has(key)){
+
+                groups.set(
+                    key,
+                    {
+                        ...sub,
+                        customers:[],
+                        monthly_fee_total:0,
+                        payment_days:[],
+                        due_dates:[],
+                        statuses:[]
+                    }
+                );
+
+            }
+
+            const group =
+                groups.get(key);
+
+            const customerExists =
+                group.customers.some(
+                    c =>
+                        String(c.id)
+                        ===
+                        String(sub.customer_id)
+                );
+
+            if(!customerExists){
+
+                group.customers.push({
+                    id:sub.customer_id,
+                    name:sub.customer_name || "-",
+                    phone:sub.customer_phone || ""
+                });
+
+            }
+
+            group.monthly_fee_total +=
+                Number(sub.monthly_fee || 0);
+
+            if(
+                sub.payment_day !== null
+                &&
+                sub.payment_day !== undefined
+                &&
+                sub.payment_day !== ""
+            ){
+
+                group.payment_days.push(
+                    String(sub.payment_day)
+                );
+
+            }
+
+            if(sub.due_date){
+
+                group.due_dates.push(
+                    sub.due_date
+                );
+
+            }
+
+            group.statuses.push(
+                sub.payment_status || ""
+            );
+
+        }
+    );
+
+    const rows =
+        Array.from(groups.values());
+
+    rows.forEach(
+        group => {
+
+            const uniquePaymentDays =
+                [...new Set(group.payment_days)];
+
+            const uniqueDueDates =
+                [...new Set(group.due_dates)];
+
+            const uniqueStatuses =
+                [...new Set(
+                    group.statuses.filter(Boolean)
+                )];
+
+            group.payment_day_display =
+                uniquePaymentDays.length === 1
+                ?
+                uniquePaymentDays[0]
+                :
+                "متعدد";
+
+            group.due_date_display =
+                uniqueDueDates.length === 1
+                ?
+                uniqueDueDates[0]
+                :
+                null;
+
+            group.payment_status_display =
+                uniqueStatuses.length === 1
+                ?
+                uniqueStatuses[0]
+                :
+                "mixed";
+
+        }
+    );
 
     renderDesktopSubscriptions(rows);
 
     renderMobileSubscriptions(rows);
 
 }
-
 
 /* =========================
    DESKTOP
@@ -1662,7 +1777,13 @@ function renderDesktopSubscriptions(rows){
                             sub => {
 
                                 const name =
-                                    sub.customer_name || "-";
+                                    sub.customers
+                                    ?
+                                    sub.customers
+                                        .map(c => c.name)
+                                        .join("، ")
+                                    :
+                                    (sub.customer_name || "-");
 
 
                                 return `
@@ -1690,7 +1811,14 @@ function renderDesktopSubscriptions(rows){
 
                                                     <small>
                                                         ${escapeHtml(
-                                                            sub.customer_phone || ""
+                                                            sub.customers
+                                                            ?
+                                                            sub.customers
+                                                                .map(c => c.phone)
+                                                                .filter(Boolean)
+                                                                .join("، ")
+                                                            :
+                                                            (sub.customer_phone || "")
                                                         )}
                                                     </small>
 
@@ -1728,6 +1856,10 @@ function renderDesktopSubscriptions(rows){
                                             <span class="money">
 
                                                 ${money(
+                                                    sub.monthly_fee_total !== undefined
+                                                    ?
+                                                    sub.monthly_fee_total
+                                                    :
                                                     sub.monthly_fee
                                                 )}
 
@@ -1742,9 +1874,12 @@ function renderDesktopSubscriptions(rows){
 
                                         <td class="day">
 
-                                            يوم
                                             ${escapeHtml(
-                                                sub.payment_day || "-"
+                                                sub.payment_day_display !== undefined
+                                                ?
+                                                sub.payment_day_display
+                                                :
+                                                (sub.payment_day || "-")
                                             )}
 
                                         </td>
@@ -1752,9 +1887,18 @@ function renderDesktopSubscriptions(rows){
 
                                         <td>
 
-                                            ${formatDate(
-                                                sub.due_date
-                                            )}
+                                            ${sub.due_date_display !== undefined
+                                                ?
+                                                (
+                                                    sub.due_date_display
+                                                    ?
+                                                    formatDate(sub.due_date_display)
+                                                    :
+                                                    "متعدد"
+                                                )
+                                                :
+                                                formatDate(sub.due_date)
+                                            }
 
                                         </td>
 
@@ -1763,18 +1907,34 @@ function renderDesktopSubscriptions(rows){
 
                                             <span
                                                 class="status ${escapeHtml(
+                                                    sub.payment_status_display !== undefined
+                                                    ?
+                                                    sub.payment_status_display
+                                                    :
                                                     sub.payment_status
                                                 )}">
 
                                                 <i
                                                     class="fa-solid ${statusIcon(
+                                                        sub.payment_status_display !== undefined
+                                                        ?
+                                                        sub.payment_status_display
+                                                        :
                                                         sub.payment_status
                                                     )}">
                                                 </i>
 
-                                                ${statusLabel(
-                                                    sub.payment_status
-                                                )}
+                                                ${sub.payment_status_display === "mixed"
+                                                    ?
+                                                    "حالات متعددة"
+                                                    :
+                                                    statusLabel(
+                                                        sub.payment_status_display !== undefined
+                                                        ?
+                                                        sub.payment_status_display
+                                                        :
+                                                        sub.payment_status
+                                                    )}
 
                                             </span>
 
@@ -1830,7 +1990,13 @@ function renderMobileSubscriptions(rows){
             sub => {
 
                 const name =
-                    sub.customer_name || "-";
+                    sub.customers
+                    ?
+                    sub.customers
+                        .map(c => c.name)
+                        .join("، ")
+                    :
+                    (sub.customer_name || "-");
 
 
                 return `
@@ -1857,7 +2023,14 @@ function renderMobileSubscriptions(rows){
 
                                     <small>
                                         ${escapeHtml(
-                                            sub.customer_phone || ""
+                                            sub.customers
+                                            ?
+                                            sub.customers
+                                                .map(c => c.phone)
+                                                .filter(Boolean)
+                                                .join("، ")
+                                            :
+                                            (sub.customer_phone || "")
                                         )}
                                     </small>
 
@@ -1868,18 +2041,34 @@ function renderMobileSubscriptions(rows){
 
                             <span
                                 class="status ${escapeHtml(
+                                    sub.payment_status_display !== undefined
+                                    ?
+                                    sub.payment_status_display
+                                    :
                                     sub.payment_status
                                 )}">
 
                                 <i
                                     class="fa-solid ${statusIcon(
+                                        sub.payment_status_display !== undefined
+                                        ?
+                                        sub.payment_status_display
+                                        :
                                         sub.payment_status
                                     )}">
                                 </i>
 
-                                ${statusLabel(
-                                    sub.payment_status
-                                )}
+                                ${sub.payment_status_display === "mixed"
+                                    ?
+                                    "حالات متعددة"
+                                    :
+                                    statusLabel(
+                                        sub.payment_status_display !== undefined
+                                        ?
+                                        sub.payment_status_display
+                                        :
+                                        sub.payment_status
+                                    )}
 
                             </span>
 
@@ -1927,6 +2116,10 @@ function renderMobileSubscriptions(rows){
                                 <span>
 
                                     ${money(
+                                        sub.monthly_fee_total !== undefined
+                                        ?
+                                        sub.monthly_fee_total
+                                        :
                                         sub.monthly_fee
                                     )}
 
@@ -1946,9 +2139,12 @@ function renderMobileSubscriptions(rows){
                                 </label>
 
                                 <span>
-                                    يوم
                                     ${escapeHtml(
-                                        sub.payment_day || "-"
+                                        sub.payment_day_display !== undefined
+                                        ?
+                                        sub.payment_day_display
+                                        :
+                                        (sub.payment_day || "-")
                                     )}
                                 </span>
 
@@ -1962,9 +2158,18 @@ function renderMobileSubscriptions(rows){
                                 </label>
 
                                 <span>
-                                    ${formatDate(
-                                        sub.due_date
-                                    )}
+                                    ${sub.due_date_display !== undefined
+                                    ?
+                                    (
+                                        sub.due_date_display
+                                        ?
+                                        formatDate(sub.due_date_display)
+                                        :
+                                        "متعدد"
+                                    )
+                                    :
+                                    formatDate(sub.due_date)
+                                }
                                 </span>
 
                             </div>
