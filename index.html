@@ -1156,6 +1156,7 @@ let state={
     traders:[],
     services:[],
     subscriptions:[],
+    subscriptionServices:[],
     payments:[],
     invoices:[],
     invoiceItems:[],
@@ -1717,6 +1718,7 @@ async function loadData(){
         loadTable("traders"),
         loadTable("app_services"),
         loadTable("subscriptions"),
+        loadTable("subscription_services"),
         loadTable("subscription_payments"),
         loadTable("invoices"),
         loadTable("invoice_items"),
@@ -1730,15 +1732,16 @@ async function loadData(){
     state.traders=result[1];
     state.services=result[2];
     state.subscriptions=result[3];
-    state.payments=result[4];
-    state.invoices=result[5];
-    state.invoiceItems=result[6];
-    state.followups=result[7];
-    state.logs=result[8];
+    state.subscriptionServices=result[4];
+    state.payments=result[5];
+    state.invoices=result[6];
+    state.invoiceItems=result[7];
+    state.followups=result[8];
+    state.logs=result[9];
 
     state.settings={};
 
-    result[9].forEach(function(row){
+    result[10].forEach(function(row){
 
         state.settings[
             row.setting_key
@@ -3292,226 +3295,127 @@ async function deleteCustomer(id){
    SUBSCRIPTIONS
 ========================================= */
 
-function renderSubscriptions(){
-
-    const rows=
-    state.subscriptions
-    .filter(x=>x.status!=="inactive");
-
-    document.getElementById("content")
-    .innerHTML=`
-
-    <div class="page-head">
-
-        <div>
-
-            <h1>
-            ${t("subscriptions")}
-            </h1>
-
-        </div>
-
-        <button
-        class="gold-btn"
-        onclick="openSubscriptionModal()">
-
-        <i class="fa-solid fa-plus"></i>
-
-        ${t("newSubscription")}
-
-        </button>
-
-    </div>
-
-
-    <div class="card">
-
-        <div class="card-body">
-
-        <div class="table-wrap">
-
-        <table class="table">
-
-        <thead>
-
-        <tr>
-
-            <th>${t("customer")}</th>
-            <th>${t("service")}</th>
-            <th>${t("platform")}</th>
-            <th>${t("monthlyFee")}</th>
-            <th>${t("paymentDay")}</th>
-            <th>${t("status")}</th>
-            <th>${t("actions")}</th>
-
-        </tr>
-
-        </thead>
-
-        <tbody>
-
-        ${
-        rows.length
-        ?
-        rows.map(function(s){
-
-            const customer=
-            getCustomer(s.customer_id);
-
-            const service=
-            getService(s.app_service_id);
-
-            const status=
-            getPaymentState(s);
-
-            return `
-
-            <tr>
-
-                <td>
-                ${esc(customer?.client_name||"-")}
-                </td>
-
-                <td>
-                ${esc(service?.service_name||"-")}
-                </td>
-
-                <td>
-                ${esc(s.platform||"-")}
-                </td>
-
-                <td class="money">
-
-                ${money(s.monthly_fee)}
-                ${esc(s.currency||"EGP")}
-
-                </td>
-
-                <td>
-                ${esc(s.payment_day||"-")}
-                </td>
-
-                <td>
-                ${statusBadge(s)}
-                </td>
-
-                <td>
-
-                <div class="actions">
-
-                ${
-                status.type!=="paid"
-                ?
-                `
-                <button
-                class="mini-btn pay"
-                onclick="openPaymentModal(${s.id})">
-
-                <i class="fa-solid fa-check"></i>
-
-                ${t("confirmPayment")}
-
-                </button>
-                `
-                :""
-                }
-
-
-                ${
-                customer?.phone
-                ?
-                `
-                <button
-                class="mini-btn wa"
-                onclick="sendWhatsApp(
-                    ${customer.id},
-                    ${s.id},
-                    '${status.type==="overdue"
-                    ?"overdue"
-                    :
-                    status.type==="due"
-                    ?"due"
-                    :"payment"}'
-                )">
-
-                <i class="fa-brands fa-whatsapp"></i>
-
-                </button>
-                `
-                :""
-                }
-${
-customer
-?
-`
-<button
-class="mini-btn"
-title="رابط العميل"
-onclick="openCustomerPortal(${customer.id})">
-
-<i class="fa-solid fa-link"></i>
-
-</button>
-`
-:""
-}
-
-                <button
-                class="mini-btn"
-                onclick="openSubscriptionModal(${s.id})">
-
-                <i class="fa-solid fa-pen"></i>
-
-                </button>
-
-
-                <button
-                class="mini-btn"
-                onclick="deleteSubscription(${s.id})">
-
-                <i class="fa-solid fa-trash"></i>
-
-                </button>
-
-                </div>
-
-                </td>
-
-            </tr>
-
-            `;
-
-        }).join("")
-        :
-        `
-        <tr>
-
-            <td colspan="7">
-
-            <div class="empty">
-            ${t("noData")}
-            </div>
-
-            </td>
-
-        </tr>
-        `
+function newRenderer(){
+    const rows=state.subscriptions.filter(function(x){return x.status!=="inactive";});
+    function servicesForSubscription(subscription){
+        const childRows=state.subscriptionServices.filter(function(row){
+            return String(row.subscription_id)===String(subscription.id);
+        });
+        if(childRows.length){
+            return childRows.map(function(row){
+                return getService(row.app_service_id||row.service_id);
+            }).filter(Boolean);
         }
+        const service=getService(subscription.app_service_id);
+        return service?[service]:[];
+    }
+    const selectedService=document.getElementById("subscriptionServiceFilter")?.value||"";
+    const filteredRows=selectedService?rows.filter(function(subscription){
+        return servicesForSubscription(subscription).some(function(service){
+            return String(service.id)===String(selectedService);
+        });
+    }):rows;
+    const grouped={};
+    filteredRows.forEach(function(subscription){
+        const key=String(subscription.customer_id);
+        if(!grouped[key]){
+            grouped[key]={customer:getCustomer(subscription.customer_id),subscriptions:[]};
+        }
+        grouped[key].subscriptions.push(subscription);
+    });
+    const groups=Object.values(grouped);
 
-        </tbody>
-
-        </table>
-
-        </div>
-
-        </div>
-
+    document.getElementById("content").innerHTML=`
+    <div class="page-head">
+        <div><h1>${t("subscriptions")}</h1></div>
+        <button class="gold-btn" onclick="openSubscriptionModal()">
+            <i class="fa-solid fa-plus"></i> ${t("newSubscription")}
+        </button>
     </div>
+    <div class="card">
+        <div class="card-body">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+                <label style="font-weight:700">فلترة حسب الخدمة</label>
+                <select id="subscriptionServiceFilter" onchange="renderSubscriptions()" style="min-width:220px">
+                    <option value="">كل الخدمات</option>
+                    ${state.services.map(function(service){
+                        return `<option value="${service.id}" ${String(selectedService)===String(service.id)?"selected":""}>${esc(service.service_name)}</option>`;
+                    }).join("")}
+                </select>
+                <span class="muted">عدد العملاء: ${groups.length}</span>
+            </div>
+            <div class="table-wrap">
+            <table class="table">
+            <thead><tr>
+                <th>العميل</th><th>الخدمات</th><th>المنصة / الصفحة</th>
+                <th>إجمالي الاشتراك الشهري</th><th>أيام الدفع</th><th>الحالة</th><th>${t("actions")}</th>
+            </tr></thead>
+            <tbody>
+            ${
+                groups.length
+                ?
+                groups.map(function(group){
+                    const customer=group.customer;
+                    const subs=group.subscriptions;
+                    const total=subs.reduce(function(sum,s){return sum+Number(s.monthly_fee||0);},0);
+                    const currencies=[...new Set(subs.map(function(s){return s.currency||"EGP";}))].join(" / ");
+                    const serviceNames=[...new Set(subs.flatMap(servicesForSubscription).map(function(service){return service.service_name;}))];
+                    const platforms=subs.map(function(s){return (s.platform||"-")+(s.page_name?" - "+s.page_name:"");});
+                    const paymentDays=subs.map(function(s){return s.payment_day||"-";});
+                    const statusHtml=subs.map(function(s){return statusBadge(s);}).join(" ");
+                    const actions=subs.map(function(s){
+                        const status=getPaymentState(s);
+                        return `
+                        <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;flex-wrap:wrap;">
+                            <span class="muted" style="min-width:95px">
+                                ${esc(servicesForSubscription(s).map(function(service){return service.service_name;}).join(" + ")||"-")}
+                            </span>
+                            ${status.type!=="paid"?`
+                            <button class="mini-btn pay" onclick="openPaymentModal(${s.id})" title="${t("confirmPayment")}">
+                                <i class="fa-solid fa-check"></i>
+                            </button>`:""}
+                            ${customer?.phone?`
+                            <button class="mini-btn wa" onclick="sendWhatsApp(${customer.id},${s.id},'${status.type==="overdue"?"overdue":status.type==="due"?"due":"payment"}')" title="WhatsApp">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </button>`:""}
+                            ${customer?`
+                            <button class="mini-btn" title="رابط العميل" onclick="openCustomerPortal(${customer.id})">
+                                <i class="fa-solid fa-link"></i>
+                            </button>`:""}
+                            <button class="mini-btn" onclick="openSubscriptionModal(${s.id})" title="${t("edit")}">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="mini-btn" onclick="deleteSubscription(${s.id})" title="${t("delete")}">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>`;
+                    }).join("");
 
-    `;
-
+                    return `
+                    <tr>
+                        <td>
+                            <strong>${esc(customer?.client_name||"-")}</strong>
+                            ${customer?.phone?`<div class="muted">${esc(customer.phone)}</div>`:""}
+                        </td>
+                        <td>
+                            ${serviceNames.length?serviceNames.map(function(name){
+                                return `<span class="badge" style="margin:2px;display:inline-block;">${esc(name)}</span>`;
+                            }).join(""):"-"}
+                        </td>
+                        <td>${platforms.map(function(value){return `<div>${esc(value)}</div>`;}).join("")}</td>
+                        <td class="money">${money(total)} ${esc(currencies)}</td>
+                        <td>${paymentDays.map(function(day){return `<div>${esc(day)}</div>`;}).join("")}</td>
+                        <td>${statusHtml}</td>
+                        <td>${actions}</td>
+                    </tr>`;
+                }).join("")
+                :
+                `<tr><td colspan="7"><div class="empty">${t("noData")}</div></td></tr>`
+            }
+            </tbody></table></div>
+        </div>
+    </div>`;
 }
-
 
 /* =========================================
    SUBSCRIPTION MODAL
