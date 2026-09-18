@@ -3818,6 +3818,18 @@ function subscriptionServiceRowHTML(
     }
 
 }
+    window.addSubscriptionServiceRow =
+        addSubscriptionServiceRow;
+
+    window.removeSubscriptionServiceRow =
+        removeSubscriptionServiceRow;
+
+    window.updateSubscriptionServicePrice =
+        updateSubscriptionServicePrice;
+
+    window.updateSubscriptionTotal =
+        updateSubscriptionTotal;
+
     const s =
         id
         ? getSubscription(id)
