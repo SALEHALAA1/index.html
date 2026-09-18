@@ -7595,7 +7595,717 @@ async function(event,session){
 
 applyTheme();
 
+/* =========================================
+   BADGEIFY - CUSTOMER PORTAL
+========================================= */
 
+async function getCustomerPortalToken(customerId){
+
+    const result =
+    await db
+    .from("customer_portal_tokens")
+    .select("*")
+    .eq("customer_id", customerId)
+    .eq("is_active", true)
+    .order("id", {ascending:false})
+    .limit(1);
+
+    if(result.error)
+        throw result.error;
+
+    return result.data?.[0] || null;
+}
+
+
+function generateCustomerPortalToken(){
+
+    if(
+        window.crypto &&
+        typeof crypto.randomUUID === "function"
+    ){
+
+        return (
+            crypto.randomUUID().replace(/-/g,"") +
+            crypto.randomUUID().replace(/-/g,"")
+        );
+
+    }
+
+    const bytes =
+    new Uint8Array(64);
+
+    crypto.getRandomValues(bytes);
+
+    return Array
+    .from(bytes)
+    .map(function(x){
+        return x
+        .toString(16)
+        .padStart(2,"0");
+    })
+    .join("");
+
+}
+
+
+async function createCustomerPortalToken(customerId){
+
+    /* تعطيل أي رابط قديم */
+
+    let result =
+    await db
+    .from("customer_portal_tokens")
+    .update({
+        is_active:false
+    })
+    .eq("customer_id",customerId)
+    .eq("is_active",true);
+
+    if(result.error)
+        throw result.error;
+
+
+    /* إنشاء رابط جديد */
+
+    const token =
+    generateCustomerPortalToken();
+
+
+    result =
+    await db
+    .from("customer_portal_tokens")
+    .insert({
+        customer_id:customerId,
+        token:token,
+        is_active:true
+    })
+    .select()
+    .single();
+
+
+    if(result.error)
+        throw result.error;
+
+
+    return result.data;
+
+}
+
+
+function getCustomerPortalLink(token){
+
+    return new URL(
+        "client.html",
+        window.location.href
+    ).href
+    +
+    "?token="
+    +
+    encodeURIComponent(token);
+
+}
+
+
+async function copyCustomerPortalLink(link){
+
+    try{
+
+        await navigator.clipboard.writeText(link);
+
+        showToast(
+            state.lang==="ar"
+            ?
+            "تم نسخ رابط العميل"
+            :
+            "Customer portal link copied"
+        );
+
+    }catch(error){
+
+        window.prompt(
+            state.lang==="ar"
+            ?
+            "انسخ الرابط:"
+            :
+            "Copy the link:",
+            link
+        );
+
+    }
+
+}
+
+
+async function sendCustomerPortalWhatsApp(
+    customerId,
+    link
+){
+
+    const customer =
+    getCustomer(customerId);
+
+    if(!customer){
+
+        showToast(
+            state.lang==="ar"
+            ?
+            "العميل غير موجود"
+            :
+            "Customer not found",
+            true
+        );
+
+        return;
+
+    }
+
+
+    if(!customer.phone){
+
+        showToast(
+            state.lang==="ar"
+            ?
+            "لا يوجد رقم هاتف للعميل"
+            :
+            "Customer has no phone number",
+            true
+        );
+
+        return;
+
+    }
+
+
+    const number =
+    whatsappNumber(customer.phone);
+
+
+    const message =
+    state.lang==="ar"
+    ?
+    "مرحباً "
+    +
+    (customer.client_name || "")
+    +
+    "\n\n"
+    +
+    "يمكنك متابعة اشتراكاتك والمدفوعات الخاصة بك من خلال الرابط التالي:"
+    +
+    "\n\n"
+    +
+    link
+    +
+    "\n\n"
+    +
+    "BADGEIFY"
+    :
+    "Hello "
+    +
+    (customer.client_name || "")
+    +
+    "\n\n"
+    +
+    "You can follow your subscriptions and payments through the following link:"
+    +
+    "\n\n"
+    +
+    link
+    +
+    "\n\n"
+    +
+    "BADGEIFY";
+
+
+    window.open(
+        "https://wa.me/"
+        +
+        number
+        +
+        "?text="
+        +
+        encodeURIComponent(message),
+        "_blank"
+    );
+
+}
+
+
+async function deactivateCustomerPortal(customerId){
+
+    const result =
+    await db
+    .from("customer_portal_tokens")
+    .update({
+        is_active:false
+    })
+    .eq("customer_id",customerId)
+    .eq("is_active",true);
+
+
+    if(result.error)
+        throw result.error;
+
+}
+
+
+async function openCustomerPortalManager(customerId){
+
+    try{
+
+        const customer =
+        getCustomer(customerId);
+
+
+        if(!customer){
+
+            showToast(
+                state.lang==="ar"
+                ?
+                "العميل غير موجود"
+                :
+                "Customer not found",
+                true
+            );
+
+            return;
+
+        }
+
+
+        let token =
+        await getCustomerPortalToken(
+            customerId
+        );
+
+
+        /*
+           لو مفيش رابط:
+           ننشئ واحد تلقائياً
+        */
+
+        if(!token){
+
+            token =
+            await createCustomerPortalToken(
+                customerId
+            );
+
+        }
+
+
+        const link =
+        getCustomerPortalLink(
+            token.token
+        );
+
+
+        openModal(
+
+            state.lang==="ar"
+            ?
+            "رابط بوابة العميل"
+            :
+            "Customer Portal Link",
+
+
+            `
+
+            <div style="
+                margin-bottom:15px;
+            ">
+
+                <div class="muted">
+                    ${
+                        state.lang==="ar"
+                        ?
+                        "العميل"
+                        :
+                        "Customer"
+                    }
+                </div>
+
+                <h3 style="
+                    margin:5px 0 15px;
+                    color:var(--gold2);
+                ">
+                    ${esc(customer.client_name)}
+                </h3>
+
+
+                <div style="
+                    background:var(--panel2);
+                    border:1px solid var(--border);
+                    border-radius:10px;
+                    padding:12px;
+                    direction:ltr;
+                    text-align:left;
+                    word-break:break-all;
+                    font-size:11px;
+                ">
+                    ${esc(link)}
+                </div>
+
+            </div>
+
+
+            <div style="
+                display:grid;
+                grid-template-columns:
+                repeat(2,1fr);
+                gap:8px;
+            ">
+
+
+                <button
+                    class="gold-btn"
+                    onclick="
+                        copyCustomerPortalLink(
+                            '${link}'
+                        )
+                    "
+                >
+                    <i class="fa-solid fa-copy"></i>
+                    ${
+                        state.lang==="ar"
+                        ?
+                        "نسخ الرابط"
+                        :
+                        "Copy Link"
+                    }
+                </button>
+
+
+                <button
+                    class="ghost-btn"
+                    onclick="
+                        window.open(
+                            '${link}',
+                            '_blank'
+                        )
+                    "
+                >
+                    <i class="fa-solid fa-up-right-from-square"></i>
+                    ${
+                        state.lang==="ar"
+                        ?
+                        "فتح البوابة"
+                        :
+                        "Open Portal"
+                    }
+                </button>
+
+
+                <button
+                    class="ghost-btn"
+                    onclick="
+                        sendCustomerPortalWhatsApp(
+                            ${customerId},
+                            '${link}'
+                        )
+                    "
+                >
+                    <i class="fa-brands fa-whatsapp"></i>
+                    ${
+                        state.lang==="ar"
+                        ?
+                        "إرسال واتساب"
+                        :
+                        "Send WhatsApp"
+                    }
+                </button>
+
+
+                <button
+                    class="ghost-btn"
+                    onclick="
+                        regenerateCustomerPortal(
+                            ${customerId}
+                        )
+                    "
+                >
+                    <i class="fa-solid fa-rotate"></i>
+                    ${
+                        state.lang==="ar"
+                        ?
+                        "إنشاء رابط جديد"
+                        :
+                        "New Link"
+                    }
+                </button>
+
+            </div>
+
+
+            <button
+                class="red-btn"
+                style="
+                    width:100%;
+                    margin-top:10px;
+                "
+                onclick="
+                    deactivateCustomerPortalButton(
+                        ${customerId}
+                    )
+                "
+            >
+                <i class="fa-solid fa-link-slash"></i>
+                ${
+                    state.lang==="ar"
+                    ?
+                    "إلغاء تفعيل الرابط"
+                    :
+                    "Deactivate Link"
+                }
+            </button>
+
+            `,
+
+
+            `
+            <button
+                class="ghost-btn"
+                onclick="closeModal()"
+            >
+                ${t("cancel")}
+            </button>
+            `
+
+        );
+
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast(
+            error.message,
+            true
+        );
+
+    }
+
+}
+
+
+async function regenerateCustomerPortal(customerId){
+
+    if(
+        !confirm(
+            state.lang==="ar"
+            ?
+            "سيتم إلغاء الرابط الحالي وإنشاء رابط جديد.\nهل تريد المتابعة؟"
+            :
+            "The current link will be deactivated and a new one will be created.\nContinue?"
+        )
+    )
+    return;
+
+
+    try{
+
+        await createCustomerPortalToken(
+            customerId
+        );
+
+        closeModal();
+
+        await openCustomerPortalManager(
+            customerId
+        );
+
+
+        showToast(
+            state.lang==="ar"
+            ?
+            "تم إنشاء رابط جديد"
+            :
+            "New portal link created"
+        );
+
+
+    }catch(error){
+
+        showToast(
+            error.message,
+            true
+        );
+
+    }
+
+}
+
+
+async function deactivateCustomerPortalButton(
+    customerId
+){
+
+    if(
+        !confirm(
+            state.lang==="ar"
+            ?
+            "هل تريد إلغاء تفعيل رابط العميل؟"
+            :
+            "Deactivate customer portal link?"
+        )
+    )
+    return;
+
+
+    try{
+
+        await deactivateCustomerPortal(
+            customerId
+        );
+
+        closeModal();
+
+        showToast(
+            state.lang==="ar"
+            ?
+            "تم إلغاء تفعيل رابط العميل"
+            :
+            "Customer portal deactivated"
+        );
+
+
+    }catch(error){
+
+        showToast(
+            error.message,
+            true
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   ADD PORTAL BUTTONS TO CUSTOMER LIST
+========================================= */
+
+function addPortalButtonsToCustomerList(){
+
+    document
+    .querySelectorAll(
+        '#content table tbody tr'
+    )
+    .forEach(function(row){
+
+        const firstCell =
+        row.querySelector("td");
+
+        const actions =
+        row.querySelector(".actions");
+
+
+        if(!firstCell || !actions)
+            return;
+
+
+        const onclick =
+        firstCell.getAttribute(
+            "onclick"
+        );
+
+
+        if(!onclick)
+            return;
+
+
+        const match =
+        onclick.match(
+            /openCustomerProfile\((\d+)\)/
+        );
+
+
+        if(!match)
+            return;
+
+
+        const customerId =
+        Number(match[1]);
+
+
+        if(
+            actions.querySelector(
+                ".portal-btn"
+            )
+        )
+        return;
+
+
+        const button =
+        document.createElement("button");
+
+
+        button.className =
+        "mini-btn portal-btn";
+
+
+        button.innerHTML =
+        '<i class="fa-solid fa-link"></i>';
+
+
+        button.title =
+        state.lang==="ar"
+        ?
+        "رابط العميل"
+        :
+        "Customer Portal";
+
+
+        button.onclick =
+        function(event){
+
+            event.stopPropagation();
+
+            openCustomerPortalManager(
+                customerId
+            );
+
+        };
+
+
+        actions.insertBefore(
+            button,
+            actions.firstChild
+        );
+
+    });
+
+}
+
+
+/* =========================================
+   WATCH CUSTOMER LIST / PROFILE
+========================================= */
+
+const badgeifyPortalObserver =
+new MutationObserver(function(){
+
+    addPortalButtonsToCustomerList();
+
+});
+
+
+badgeifyPortalObserver.observe(
+    document.body,
+    {
+        childList:true,
+        subtree:true
+    }
+);
+
+
+/* =========================================
+   INITIAL PORTAL BUTTONS
+========================================= */
+
+setTimeout(
+    addPortalButtonsToCustomerList,
+    500
+);
 </script>
 
 </body>
