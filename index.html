@@ -28,33 +28,32 @@
     </script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
-        .gold-gradient { background: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C); }
         .gold-border { border-color: rgba(212, 175, 55, 0.3); }
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col">
 
-    <!-- شاشة تسجيل الدخول -->
+    <!-- شاشة تسجيل الدخول الحقيقية عبر Supabase Auth -->
     <div id="login-screen" class="fixed inset-0 bg-zinc-950 flex items-center justify-center z-50 p-4">
         <div class="w-full max-w-md bg-zinc-900 border gold-border p-8 rounded-2xl shadow-2xl relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-gold/10 rounded-full blur-2xl"></div>
             
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-black text-gold tracking-wider">BADGEIFY</h1>
-                <p class="text-zinc-400 text-xs mt-1 uppercase tracking-widest">Verified Trust & Security</p>
+                <p class="text-zinc-400 text-xs mt-1 uppercase tracking-widest">تسجيل الدخول بحساب Supabase</p>
             </div>
 
             <div class="space-y-5">
                 <div>
                     <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase">البريد الإلكتروني</label>
-                    <input type="email" id="email" value="admin@badgeify.com"
+                    <input type="email" id="email" 
                         class="w-full px-4 py-3 bg-zinc-950 border gold-border rounded-xl focus:ring-2 focus:ring-gold focus:outline-none text-white text-sm"
-                        placeholder="admin@badgeify.com">
+                        placeholder="name@example.com">
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase">كلمة المرور</label>
-                    <input type="password" id="password" value="12345678"
+                    <input type="password" id="password" 
                         class="w-full px-4 py-3 bg-zinc-950 border gold-border rounded-xl focus:ring-2 focus:ring-gold focus:outline-none text-white text-sm"
                         placeholder="••••••••">
                 </div>
@@ -63,15 +62,14 @@
 
                 <button type="button" onclick="handleLogin()" id="login-btn"
                     class="w-full py-3.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-xl transition-all shadow-lg shadow-gold/20 cursor-pointer">
-                    دخول للنظام
+                    دخول عبر Supabase
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- لوحة التحكم الرئيسية (مخفية حتى يتم تسجيل الدخول) -->
+    <!-- لوحة التحكم الرئيسية -->
     <div id="app-container" class="hidden flex-1 flex flex-col">
-        <!-- شريط التنقل العلوي -->
         <header class="bg-zinc-900 border-b gold-border px-6 py-4 flex justify-between items-center sticky top-0 z-40">
             <div class="flex items-center gap-6">
                 <h1 class="text-xl font-black text-gold tracking-wider">BADGEIFY</h1>
@@ -87,7 +85,7 @@
                 <button onclick="openAddClientModal()" class="px-4 py-2 bg-gold hover:bg-gold-600 text-zinc-950 font-bold text-xs rounded-lg transition-all shadow cursor-pointer">
                     <i class="fa-solid fa-plus ml-1"></i> إضافة عميل
                 </button>
-                <button onclick="handleLogout()" class="px-3 py-2 bg-zinc-800 hover:bg-rose-950/50 text-zinc-400 hover:text-rose-400 text-xs rounded-lg transition-all border border-zinc-700 cursor-pointer">
+                <button onclick="handleLogout()" class="px-3 py-2 bg-zinc-800 hover:bg-rose-950/50 text-zinc-400 hover:text-rose-400 text-xs rounded-lg transition-all border border-zinc-700 cursor-pointer" title="تسجيل الخروج">
                     <i class="fa-solid fa-power-off"></i>
                 </button>
             </div>
@@ -102,10 +100,8 @@
             <button onclick="switchTab('payments')" class="mob-nav text-zinc-400 flex flex-col items-center gap-1" data-tab="payments"><i class="fa-solid fa-receipt"><span>المدفوعات</span></i></button>
         </div>
 
-        <!-- محتوى الأقسام -->
         <main class="flex-1 p-4 md:p-8 pb-20 md:pb-8 max-w-7xl mx-auto w-full">
-            
-            <!-- 1. قسم الرئيسية (Dashboard) -->
+            <!-- الرئيسية -->
             <section id="tab-dashboard" class="tab-content space-y-6">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
@@ -140,15 +136,13 @@
                                     <th class="p-3">إجراء</th>
                                 </tr>
                             </thead>
-                            <tbody id="dashboard-due-list" class="divide-y divide-zinc-800">
-                                <!-- سيتم تعبئتها برمجياً -->
-                            </tbody>
+                            <tbody id="dashboard-due-list" class="divide-y divide-zinc-800"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- 2. قسم العملاء -->
+            <!-- العملاء -->
             <section id="tab-clients" class="tab-content hidden space-y-6">
                 <div class="flex flex-col md:flex-row justify-between gap-4 items-center">
                     <div class="w-full md:w-96 relative">
@@ -176,15 +170,13 @@
                                     <th class="p-4 text-center">إجراءات</th>
                                 </tr>
                             </thead>
-                            <tbody id="clients-table-body" class="divide-y divide-zinc-800">
-                                <!-- العملاء -->
-                            </tbody>
+                            <tbody id="clients-table-body" class="divide-y divide-zinc-800"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- 3. قسم التحصيل -->
+            <!-- التحصيل -->
             <section id="tab-collection" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
                     <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-wallet ml-2 text-gold"></i>متابعة وتحصيل الاشتراكات</h2>
@@ -201,15 +193,13 @@
                                     <th class="p-3 text-center">الإجراءات والواتساب</th>
                                 </tr>
                             </thead>
-                            <tbody id="collection-table-body" class="divide-y divide-zinc-800">
-                                <!-- التحصيلات -->
-                            </tbody>
+                            <tbody id="collection-table-body" class="divide-y divide-zinc-800"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- 4. قسم تجديد البيدجات -->
+            <!-- تجديد البيدجات -->
             <section id="tab-renewals" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
                     <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-calendar-days ml-2 text-gold"></i>مواعيد تجديد البيدجات المستقلة</h2>
@@ -225,15 +215,13 @@
                                     <th class="p-3">الحالة التنبيهية</th>
                                 </tr>
                             </thead>
-                            <tbody id="renewals-table-body" class="divide-y divide-zinc-800">
-                                <!-- التجديدات -->
-                            </tbody>
+                            <tbody id="renewals-table-body" class="divide-y divide-zinc-800"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- 5. سجل المدفوعات -->
+            <!-- سجل المدفوعات -->
             <section id="tab-payments" class="tab-content hidden space-y-6">
                 <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
                     <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-receipt ml-2 text-gold"></i>سجل المدفوعات الشامل</h2>
@@ -249,24 +237,20 @@
                                     <th class="p-3">تاريخ الدفع الحقيقي</th>
                                 </tr>
                             </thead>
-                            <tbody id="payments-table-body" class="divide-y divide-zinc-800">
-                                <!-- المدفوعات -->
-                            </tbody>
+                            <tbody id="payments-table-body" class="divide-y divide-zinc-800"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
 
-    <!-- نافذة (Modal) إضافة أو تعديل عميل -->
+    <!-- نافذة إضافة أو تعديل عميل -->
     <div id="client-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div class="bg-zinc-900 border gold-border w-full max-w-xl rounded-2xl p-6 relative max-h-[90vh] overflow-y-auto">
             <h3 id="modal-title" class="text-lg font-bold text-gold mb-4">إضافة عميل جديد</h3>
             <form id="client-form" onsubmit="saveClient(event)" class="space-y-4">
                 <input type="hidden" id="client-id">
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-zinc-400 mb-1">اسم العميل</label>
@@ -277,7 +261,6 @@
                         <input type="text" id="c-page" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-zinc-400 mb-1">رقم الموبايل / واتساب</label>
@@ -294,52 +277,44 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs text-zinc-400 mb-1">رابط الصفحة أو البروفايل</label>
                     <input type="text" id="c-link" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs text-zinc-400 mb-1">قيمة الاشتراك (جنيه)</label>
-                        <input type="number" id="c-amount" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="300">
+                        <input type="number" id="c-amount" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
                     </div>
                     <div>
                         <label class="block text-xs text-zinc-400 mb-1">يوم دفع العميل (1-31)</label>
-                        <input type="number" id="c-pay-day" min="1" max="31" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="20">
+                        <input type="number" id="c-pay-day" min="1" max="31" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
                     </div>
                     <div>
                         <label class="block text-xs text-zinc-400 mb-1">يوم تجديد البيدج (1-31)</label>
-                        <input type="number" id="c-renew-day" min="1" max="31" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="25">
+                        <input type="number" id="c-renew-day" min="1" max="31" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs text-zinc-400 mb-1">ملاحظات</label>
                     <textarea id="c-notes" rows="2" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold"></textarea>
                 </div>
-
                 <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeModal('client-modal')" class="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-medium hover:bg-zinc-700 cursor-pointer">إلغاء</button>
+                    <button type="button" onclick="closeModal('client-modal')" class="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-medium cursor-pointer">إلغاء</button>
                     <button type="submit" class="px-5 py-2 bg-gold text-zinc-950 font-bold rounded-xl text-sm hover:bg-gold-600 transition cursor-pointer">حفظ العميل</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- نافذة تفاصيل العميل وسجل المدفوعات -->
+    <!-- نافذة تفاصيل العميل -->
     <div id="details-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div class="bg-zinc-900 border gold-border w-full max-w-2xl rounded-2xl p-6 relative max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
                 <h3 id="det-client-name" class="text-xl font-bold text-gold">تفاصيل العميل</h3>
                 <button onclick="closeModal('details-modal')" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            
-            <div id="det-client-info" class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-zinc-950 p-4 rounded-xl border border-zinc-800 mb-6 text-xs">
-                <!-- معلومات العميل -->
-            </div>
-
+            <div id="det-client-info" class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-zinc-950 p-4 rounded-xl border border-zinc-800 mb-6 text-xs"></div>
             <h4 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-clock-rotate-left ml-2 text-gold"></i>سجل مدفوعات العميل</h4>
             <div class="overflow-x-auto">
                 <table class="w-full text-right text-xs">
@@ -350,15 +325,13 @@
                             <th class="p-2.5">تاريخ الدفع الحقيقي</th>
                         </tr>
                     </thead>
-                    <tbody id="det-payments-body" class="divide-y divide-zinc-800">
-                        <!-- المدفوعات -->
-                    </tbody>
+                    <tbody id="det-payments-body" class="divide-y divide-zinc-800"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- سكريبت النظام والاتصال بـ Supabase -->
+    <!-- السكريبت البرمجي للربط مع Supabase Auth -->
     <script>
         const SUPABASE_URL = "https://rsvzachgbqsucqgrwguv.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
@@ -369,7 +342,9 @@
         let paymentsData = [];
 
         window.addEventListener('DOMContentLoaded', async () => {
-            if (localStorage.getItem('badgeify_logged') === 'true') {
+            // التحقق من الجلسة الحالية لـ Supabase Auth
+            const { data: { session } } = await db.auth.getSession();
+            if (session) {
                 showApp();
                 await loadAllData();
             }
@@ -385,28 +360,24 @@
             errorMsg.classList.add('hidden');
 
             try {
-                const { data, error } = await db
-                    .from('admins')
-                    .select('*')
-                    .eq('email', email)
-                    .eq('password', password);
+                const { data, error } = await db.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
 
-                if (error || !data || data.length === 0) {
-                    throw new Error('البريد أو كلمة المرور غير صحيحة');
-                }
+                if (error) throw error;
 
-                localStorage.setItem('badgeify_logged', 'true');
                 showApp();
                 await loadAllData();
             } catch (err) {
-                errorMsg.textContent = err.message;
+                errorMsg.textContent = 'خطأ في بيانات الدخول: تأكد من الإيميل وبكلمة مرور حسابك في Supabase';
                 errorMsg.classList.remove('hidden');
-                btn.textContent = 'دخول للنظام';
+                btn.textContent = 'دخول عبر Supabase';
             }
         }
 
-        function handleLogout() {
-            localStorage.removeItem('badgeify_logged');
+        async function handleLogout() {
+            await db.auth.signOut();
             location.reload();
         }
 
@@ -458,27 +429,18 @@
             }
         }
 
-        // حساب حالة العميل تلقائياً
         function getClientStatus(client) {
             const today = new Date().getDate();
             const currentMonthName = new Date().toLocaleString('ar-EG', { month: 'long' });
-            
-            // هل دفع الشهر الحالي؟
             const paidThisMonth = paymentsData.some(p => p.client_id === client.id && p.paid_month === currentMonthName);
             if (paidThisMonth) return 'مدفوع';
-
             if (today < client.pay_day) return 'مستحق';
             return 'متأخر';
         }
 
         function renderDashboard() {
             const total = clientsData.length;
-            const currentMonthName = new Date().toLocaleString('ar-EG', { month: 'long' });
-            
-            let paidCount = 0;
-            let dueCount = 0;
-            let lateCount = 0;
-
+            let paidCount = 0, dueCount = 0, lateCount = 0;
             const dueRows = [];
 
             clientsData.forEach(client => {
@@ -505,14 +467,13 @@
             document.getElementById('stat-paid').textContent = paidCount;
             document.getElementById('stat-due').textContent = dueCount;
             document.getElementById('stat-late').textContent = lateCount;
-
             document.getElementById('dashboard-due-list').innerHTML = dueRows.length ? dueRows.join('') : `<tr><td colspan="6" class="p-4 text-center text-zinc-500">لا توجد مستحقات متأخرة حالياً، الكل تمام!</td></tr>`;
         }
 
         function renderClients(filtered = clientsData) {
             const tbody = document.getElementById('clients-table-body');
             if (!filtered.length) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-zinc-500">لا يوجد عملاء مضافون بعد. اضغط على "إضافة عميل جديد".</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-zinc-500">لا يوجد عملاء مضافون بعد.</td></tr>`;
                 return;
             }
 
@@ -546,9 +507,9 @@
         function renderCollection() {
             const tbody = document.getElementById('collection-table-body');
             const rows = clientsData.filter(c => getClientStatus(c) !== 'مدفوع').map(client => {
-                const status = getClientStatus(client);
                 const msg = `مرحباً ${client.name}، تذكير بخصوص اشتراك صفحة ${client.page_name} بقيمة ${client.amount} جنيه، وموعد الدفع هو يوم ${client.pay_day} من الشهر. برجاء تأكيد الدفع. شكراً لك.`;
                 const waLink = `https://wa.me/${client.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+                const status = getClientStatus(client);
 
                 return `
                     <tr class="hover:bg-zinc-800/50">
@@ -564,7 +525,6 @@
                     </tr>
                 `;
             });
-
             tbody.innerHTML = rows.length ? rows.join('') : `<tr><td colspan="6" class="p-4 text-center text-zinc-500">ممتاز! جميع العملاء قاموا بدفع اشتراكاتهم هذا الشهر.</td></tr>`;
         }
 
@@ -577,16 +537,9 @@
                 let badgeTxt = `بعد ${diff} يوم`;
                 let badgeClass = 'bg-zinc-800 text-zinc-300';
 
-                if (diff === 0) {
-                    badgeTxt = 'اليوم!';
-                    badgeClass = 'bg-rose-950 text-rose-400 border border-rose-900';
-                } else if (diff === 1) {
-                    badgeTxt = 'غداً';
-                    badgeClass = 'bg-amber-950 text-amber-400 border border-amber-900';
-                } else if (diff < 0) {
-                    badgeTxt = 'تم تجاوز الموعد';
-                    badgeClass = 'bg-rose-950 text-rose-400 border border-rose-900';
-                }
+                if (diff === 0) { badgeTxt = 'اليوم!'; badgeClass = 'bg-rose-950 text-rose-400 border border-rose-900'; }
+                else if (diff === 1) { badgeTxt = 'غداً'; badgeClass = 'bg-amber-950 text-amber-400 border border-amber-900'; }
+                else if (diff < 0) { badgeTxt = 'تم تجاوز الموعد'; badgeClass = 'bg-rose-950 text-rose-400 border border-rose-900'; }
 
                 return `
                     <tr class="hover:bg-zinc-800/50">
@@ -606,7 +559,6 @@
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-zinc-500">لا توجد مدفوعات مسجلة بعد.</td></tr>`;
                 return;
             }
-
             tbody.innerHTML = paymentsData.map(p => {
                 const client = clientsData.find(c => c.id === p.client_id) || { name: 'عميل محذوف', page_name: '-' };
                 return `
@@ -635,13 +587,9 @@
                 paid_date: todayStr
             }]);
 
-            if (error) {
-                alert('حدث خطأ أثناء تسجيل الدفع: ' + error.message);
-                return;
-            }
-
+            if (error) { alert('خطأ: ' + error.message); return; }
             await loadAllData();
-            alert('تم تسجيل الدفع بنجاح وإضافته للسجل!');
+            alert('تم تسجيل الدفع بنجاح!');
         }
 
         function openAddClientModal() {
@@ -685,31 +633,17 @@
                 notes: document.getElementById('c-notes').value.trim()
             };
 
-            let error;
-            if (id) {
-                const res = await db.from('clients').update(clientObj).eq('id', id);
-                error = res.error;
-            } else {
-                const res = await db.from('clients').insert([clientObj]);
-                error = res.error;
-            }
-
-            if (error) {
-                alert('خطأ في حفظ العميل: ' + error.message);
-                return;
-            }
+            let error = id ? (await db.from('clients').update(clientObj).eq('id', id)).error : (await db.from('clients').insert([clientObj])).error;
+            if (error) { alert('خطأ: ' + error.message); return; }
 
             closeModal('client-modal');
             await loadAllData();
         }
 
         async function deleteClient(id) {
-            if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) return;
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
             const { error } = await db.from('clients').delete().eq('id', id);
-            if (error) {
-                alert('خطأ في الحذف: ' + error.message);
-                return;
-            }
+            if (error) { alert('خطأ: ' + error.message); return; }
             await loadAllData();
         }
 
@@ -729,14 +663,13 @@
             `;
 
             const clientPayments = paymentsData.filter(p => p.client_id === client.id);
-            const pBody = document.getElementById('det-payments-body');
-            pBody.innerHTML = clientPayments.length ? clientPayments.map(p => `
+            document.getElementById('det-payments-body').innerHTML = clientPayments.length ? clientPayments.map(p => `
                 <tr>
                     <td class="p-2.5 font-semibold text-white">${p.paid_month}</td>
                     <td class="p-2.5 text-gold">${p.amount} ج.م</td>
                     <td class="p-2.5 text-zinc-400">${p.paid_date}</td>
                 </tr>
-            `).join('') : `<tr><td colspan="3" class="p-3 text-center text-zinc-500">لا توجد مدفوعات مسجلة لهذا العميل حتى الآن.</td></tr>`;
+            `).join('') : `<tr><td colspan="3" class="p-3 text-center text-zinc-500">لا توجد مدفوعات مسجلة.</td></tr>`;
 
             document.getElementById('details-modal').classList.remove('hidden');
         }
