@@ -3294,37 +3294,12 @@ async function deleteCustomer(id){
 
 function renderSubscriptions(){
 
-    const rows =
-        state.subscriptions
-        .filter(x => x.status !== "inactive");
-
-    /*
-     * تجميع كل اشتراكات العميل الواحد
-     * في حساب واحد داخل شاشة الاشتراكات
-     */
-
-    const grouped = {};
-
-    rows.forEach(function(s){
-
-        const key = String(s.customer_id);
-
-        if(!grouped[key]){
-            grouped[key] = {
-                customer_id: s.customer_id,
-                subscriptions: []
-            };
-        }
-
-        grouped[key].subscriptions.push(s);
-
-    });
-
-    const customerGroups =
-        Object.values(grouped);
+    const rows=
+    state.subscriptions
+    .filter(x=>x.status!=="inactive");
 
     document.getElementById("content")
-    .innerHTML = `
+    .innerHTML=`
 
     <div class="page-head">
 
@@ -3333,16 +3308,6 @@ function renderSubscriptions(){
             <h1>
             ${t("subscriptions")}
             </h1>
-
-            <div
-                style="
-                    margin-top:6px;
-                    opacity:.7;
-                    font-size:13px;
-                "
-            >
-                تجميع جميع اشتراكات العميل الواحد في حساب واحد
-            </div>
 
         </div>
 
@@ -3371,12 +3336,12 @@ function renderSubscriptions(){
 
         <tr>
 
-            <th>العميل</th>
-            <th>الاشتراكات والخدمات</th>
-            <th>المنصات</th>
-            <th>إجمالي الحساب الشهري</th>
-            <th>مواعيد الدفع</th>
-            <th>الحالة</th>
+            <th>${t("customer")}</th>
+            <th>${t("service")}</th>
+            <th>${t("platform")}</th>
+            <th>${t("monthlyFee")}</th>
+            <th>${t("paymentDay")}</th>
+            <th>${t("status")}</th>
             <th>${t("actions")}</th>
 
         </tr>
@@ -3386,347 +3351,129 @@ function renderSubscriptions(){
         <tbody>
 
         ${
-        customerGroups.length
+        rows.length
         ?
-        customerGroups.map(function(group){
+        rows.map(function(s){
 
-            const customer =
-                getCustomer(group.customer_id);
+            const customer=
+            getCustomer(s.customer_id);
 
-            const total =
-                group.subscriptions.reduce(
-                    function(sum,s){
-                        return sum + Number(s.monthly_fee || 0);
-                    },
-                    0
-                );
+            const service=
+            getService(s.app_service_id);
 
-            const statuses =
-                group.subscriptions.map(
-                    function(s){
-                        return getPaymentState(s);
-                    }
-                );
-
-            const hasOverdue =
-                statuses.some(
-                    function(x){
-                        return x.type === "overdue";
-                    }
-                );
-
-            const hasDue =
-                statuses.some(
-                    function(x){
-                        return x.type === "due";
-                    }
-                );
-
-            const allPaid =
-                statuses.length > 0 &&
-                statuses.every(
-                    function(x){
-                        return x.type === "paid";
-                    }
-                );
-
-            let groupStatus = "";
-
-            if(hasOverdue){
-                groupStatus = `
-                    <span class="status-badge danger">
-                        متأخر
-                    </span>
-                `;
-            }
-            else if(hasDue){
-                groupStatus = `
-                    <span class="status-badge warning">
-                        مستحق
-                    </span>
-                `;
-            }
-            else if(allPaid){
-                groupStatus = `
-                    <span class="status-badge success">
-                        مدفوع
-                    </span>
-                `;
-            }
-            else{
-                groupStatus = `
-                    <span class="status-badge">
-                        ${group.subscriptions.length} اشتراك
-                    </span>
-                `;
-            }
-
-            const servicesHtml =
-                group.subscriptions.map(
-                    function(s,index){
-
-                        const service =
-                            getService(s.app_service_id);
-
-                        return `
-                            <div
-                                style="
-                                    display:flex;
-                                    align-items:center;
-                                    justify-content:space-between;
-                                    gap:10px;
-                                    padding:7px 0;
-                                    border-bottom:
-                                        ${index <
-                                        group.subscriptions.length-1
-                                        ? "1px solid rgba(255,255,255,.07)"
-                                        : "none"};
-                                "
-                            >
-
-                                <div>
-
-                                    <strong>
-                                        ${esc(
-                                            service?.service_name || "-"
-                                        )}
-                                    </strong>
-
-                                    <span
-                                        style="
-                                            opacity:.65;
-                                            font-size:12px;
-                                            margin-right:6px;
-                                        "
-                                    >
-                                        ${money(s.monthly_fee)}
-                                        ${esc(s.currency || "EGP")}
-                                    </span>
-
-                                </div>
-
-                                <span
-                                    style="
-                                        opacity:.7;
-                                        font-size:12px;
-                                    "
-                                >
-                                    اشتراك ${index + 1}
-                                </span>
-
-                            </div>
-                        `;
-
-                    }
-                ).join("");
-
-            const platforms =
-                group.subscriptions.map(
-                    function(s){
-                        return esc(s.platform || "-");
-                    }
-                ).join(" ، ");
-
-            const paymentDays =
-                group.subscriptions.map(
-                    function(s){
-                        return esc(s.payment_day || "-");
-                    }
-                ).join(" ، ");
-
-            const actionsHtml =
-                group.subscriptions.map(
-                    function(s){
-
-                        const status =
-                            getPaymentState(s);
-
-                        const subscriptionId =
-                            JSON.stringify(s.id);
-
-                        const customerId =
-                            JSON.stringify(customer?.id);
-
-                        return `
-                            <div
-                                style="
-                                    display:flex;
-                                    align-items:center;
-                                    gap:5px;
-                                    margin-bottom:6px;
-                                "
-                            >
-
-                                <span
-                                    style="
-                                        min-width:22px;
-                                        opacity:.6;
-                                        font-size:11px;
-                                    "
-                                >
-                                    #${group.subscriptions.indexOf(s)+1}
-                                </span>
-
-                                ${
-                                status.type !== "paid"
-                                ?
-                                `
-                                <button
-                                    class="mini-btn pay"
-                                    title="${t("confirmPayment")}"
-                                    onclick="openPaymentModal(${subscriptionId})"
-                                >
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                `
-                                :""
-                                }
-
-                                ${
-                                customer?.phone
-                                ?
-                                `
-                                <button
-                                    class="mini-btn wa"
-                                    title="WhatsApp"
-                                    onclick="sendWhatsApp(
-                                        ${customerId},
-                                        ${subscriptionId},
-                                        '${status.type==="overdue"
-                                        ?"overdue"
-                                        :
-                                        status.type==="due"
-                                        ?"due"
-                                        :"payment"}'
-                                    )"
-                                >
-                                    <i class="fa-brands fa-whatsapp"></i>
-                                </button>
-                                `
-                                :""
-                                }
-
-                                <button
-                                    class="mini-btn"
-                                    title="تعديل الاشتراك"
-                                    onclick="openSubscriptionModal(${subscriptionId})"
-                                >
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-
-                                <button
-                                    class="mini-btn"
-                                    title="حذف الاشتراك"
-                                    onclick="deleteSubscription(${subscriptionId})"
-                                >
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-
-                            </div>
-                        `;
-
-                    }
-                ).join("");
+            const status=
+            getPaymentState(s);
 
             return `
 
             <tr>
 
                 <td>
-
-                    <strong>
-                        ${esc(customer?.client_name || "-")}
-                    </strong>
-
-                    ${
-                    customer?.phone
-                    ?
-                    `
-                    <div
-                        style="
-                            margin-top:5px;
-                            opacity:.65;
-                            font-size:12px;
-                        "
-                    >
-                        ${esc(customer.phone)}
-                    </div>
-                    `
-                    :""
-                    }
-
-                    <div
-                        style="
-                            margin-top:7px;
-                            font-size:12px;
-                            opacity:.65;
-                        "
-                    >
-                        ${group.subscriptions.length}
-                        اشتراك
-                    </div>
-
+                ${esc(customer?.client_name||"-")}
                 </td>
-
 
                 <td>
-
-                    ${servicesHtml}
-
+                ${esc(service?.service_name||"-")}
                 </td>
-
 
                 <td>
-                    ${platforms}
+                ${esc(s.platform||"-")}
                 </td>
-
 
                 <td class="money">
 
-                    <strong
-                        style="font-size:16px;"
-                    >
-                        ${money(total)}
-                        ${esc(
-                            group.subscriptions[0]?.currency || "EGP"
-                        )}
-                    </strong>
+                ${money(s.monthly_fee)}
+                ${esc(s.currency||"EGP")}
 
                 </td>
 
-
                 <td>
-                    ${paymentDays}
+                ${esc(s.payment_day||"-")}
                 </td>
 
-
                 <td>
-                    ${groupStatus}
+                ${statusBadge(s)}
                 </td>
 
-
                 <td>
 
-                    <div class="actions">
+                <div class="actions">
 
-                        ${actionsHtml}
+                ${
+                status.type!=="paid"
+                ?
+                `
+                <button
+                class="mini-btn pay"
+                onclick="openPaymentModal(${s.id})">
 
-                        ${
-                        customer
-                        ?
-                        `
-                        <button
-                            class="mini-btn"
-                            title="رابط العميل"
-                            onclick="openCustomerPortal(${customerId})"
-                        >
-                            <i class="fa-solid fa-link"></i>
-                        </button>
-                        `
-                        :""
-                        }
+                <i class="fa-solid fa-check"></i>
 
-                    </div>
+                ${t("confirmPayment")}
+
+                </button>
+                `
+                :""
+                }
+
+
+                ${
+                customer?.phone
+                ?
+                `
+                <button
+                class="mini-btn wa"
+                onclick="sendWhatsApp(
+                    ${customer.id},
+                    ${s.id},
+                    '${status.type==="overdue"
+                    ?"overdue"
+                    :
+                    status.type==="due"
+                    ?"due"
+                    :"payment"}'
+                )">
+
+                <i class="fa-brands fa-whatsapp"></i>
+
+                </button>
+                `
+                :""
+                }
+${
+customer
+?
+`
+<button
+class="mini-btn"
+title="رابط العميل"
+onclick="openCustomerPortal(${customer.id})">
+
+<i class="fa-solid fa-link"></i>
+
+</button>
+`
+:""
+}
+
+                <button
+                class="mini-btn"
+                onclick="openSubscriptionModal(${s.id})">
+
+                <i class="fa-solid fa-pen"></i>
+
+                </button>
+
+
+                <button
+                class="mini-btn"
+                onclick="deleteSubscription(${s.id})">
+
+                <i class="fa-solid fa-trash"></i>
+
+                </button>
+
+                </div>
 
                 </td>
 
@@ -3741,9 +3488,9 @@ function renderSubscriptions(){
 
             <td colspan="7">
 
-                <div class="empty">
-                    ${t("noData")}
-                </div>
+            <div class="empty">
+            ${t("noData")}
+            </div>
 
             </td>
 
@@ -3765,6 +3512,13 @@ function renderSubscriptions(){
 
 }
 
+
+/* =========================================
+   SUBSCRIPTION MODAL
+========================================= */
+
+async function openSubscriptionModal(id=null){
+    
 function subscriptionServiceRowHTML(
     index,
     selectedService="",
