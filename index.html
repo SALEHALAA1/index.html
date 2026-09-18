@@ -1023,6 +1023,21 @@ data-t="main">
 <span data-t="activity">سجل النشاط</span>
 </button>
 
+<button data-page="notifications">
+<i class="fa-solid fa-bell"></i>
+<span data-t="notifications">التنبيهات</span>
+</button>
+
+<button data-page="reports">
+<i class="fa-solid fa-chart-column"></i>
+<span data-t="reports">التقارير</span>
+</button>
+
+<button data-page="quicksearch">
+<i class="fa-solid fa-magnifying-glass"></i>
+<span data-t="quicksearch">البحث السريع</span>
+</button>
+
 </nav>
 
 </aside>
@@ -1052,6 +1067,24 @@ id="themeBtn"
 class="icon-btn"
 >
 <i class="fa-solid fa-sun"></i>
+</button>
+
+<button
+id="globalSearchBtn"
+class="icon-btn"
+title="البحث السريع"
+onclick="state.page='quicksearch';render();"
+>
+<i class="fa-solid fa-magnifying-glass"></i>
+</button>
+
+<button
+id="notificationsBtn"
+class="icon-btn"
+title="التنبيهات"
+onclick="state.page='notifications';render();"
+>
+<i class="fa-solid fa-bell"></i>
 </button>
 
 <button
@@ -1197,6 +1230,9 @@ invoices:"الفواتير",
 followups:"المتابعات",
 settings:"الإعدادات",
 activity:"سجل النشاط",
+notifications:"التنبيهات",
+reports:"التقارير",
+quicksearch:"البحث السريع",
 main:"الرئيسية",
 
 email:"البريد الإلكتروني",
@@ -1329,6 +1365,9 @@ invoices:"Invoices",
 followups:"Follow-ups",
 settings:"Settings",
 activity:"Activity Log",
+notifications:"Notifications",
+reports:"Reports",
+quicksearch:"Quick search",
 main:"Main",
 
 email:"Email",
@@ -8794,6 +8833,105 @@ function renderActivity(){
 }
 
 
+
+/* =========================================
+   BADGEIFY ENHANCEMENTS
+========================================= */
+
+function getNotificationRows(){
+    return state.subscriptions.filter(function(s){return s.status!=="inactive";}).map(function(s){
+        return {sub:s,customer:getCustomer(s.customer_id),state:getPaymentState(s)};
+    }).filter(function(x){return x.customer&&x.state&&x.state.type!=="paid";});
+}
+
+function sendPaymentReminder(subscriptionId){
+    const sub=getSubscription(subscriptionId),customer=sub?getCustomer(sub.customer_id):null;
+    if(!sub||!customer)return;
+    const templates=getWhatsAppTemplates(),type=getPaymentState(sub).type;
+    const template=type==="overdue"?templates.overdue:(type==="due"?templates.due:templates.payment);
+    const number=whatsappNumber(customer.phone);
+    if(!number){showToast("رقم WhatsApp غير موجود",true);return;}
+    window.open("https://wa.me/"+number+"?text="+encodeURIComponent(buildWhatsAppMessage(template,customer,sub)),"_blank");
+}
+
+function renderNotifications(){
+    const rows=getNotificationRows();
+    let html='<div class="page-head"><div><h1>'+t("notifications")+'</h1><p>تنبيهات الاستحقاقات والمتأخرات والاشتراكات القريبة</p></div></div>';
+    html+='<div class="card"><div class="card-body">';
+    if(!rows.length)html+='<div class="empty">لا توجد تنبيهات حالياً</div>';
+    rows.forEach(function(x){
+        const type=x.state.type,cls=type==="overdue"?"overdue":(type==="due"?"due":"upcoming");
+        const label=type==="overdue"?"متأخر":(type==="due"?"مستحق اليوم":"قادم");
+        html+='<div class="alert-row '+cls+'"><div><b>'+esc(x.customer.client_name||"-")+'</b><div class="muted">'+esc(getServiceName(x.sub))+' • '+esc(x.sub.platform||"-")+' • '+label+' • '+formatDate(subscriptionDueDate(x.sub))+'</div></div><div class="actions"><button class="mini-btn pay" onclick="openPaymentModal('+Number(x.sub.id)+')">دفع</button>';
+        if(x.customer.phone)html+='<button class="mini-btn wa" onclick="sendPaymentReminder('+Number(x.sub.id)+')"><i class="fa-brands fa-whatsapp"></i></button>';
+        html+='</div></div>';
+    });
+    html+='</div></div>';
+    document.getElementById("content").innerHTML=html;
+}
+
+function renderQuickSearch(){
+    const input=document.getElementById("globalSearchInput"),query=(input?input.value:"").trim().toLowerCase();
+    const customers=state.customers.filter(function(c){return !query||(String(c.client_name||"")+" "+String(c.phone||"")).toLowerCase().includes(query);}).slice(0,20);
+    const subscriptions=state.subscriptions.filter(function(s){const c=getCustomer(s.customer_id);return !query||(String(c&&c.client_name||"")+" "+String(c&&c.phone||"")+" "+String(getServiceName(s)||"")+" "+String(s.platform||"")).toLowerCase().includes(query);}).slice(0,20);
+    let html='<div class="page-head"><div><h1>'+t("quicksearch")+'</h1><p>بحث في العملاء والاشتراكات والخدمات</p></div></div>';
+    html+='<div class="search"><input id="globalSearchInput" value="'+esc(query)+'" oninput="renderQuickSearch()" placeholder="اسم العميل، الهاتف، الخدمة، المنصة..." style="width:100%"></div>';
+    html+='<div class="grid cols"><div class="card"><div class="card-head"><h3>العملاء ('+customers.length+')</h3></div><div class="card-body">';
+    if(customers.length)customers.forEach(function(c){html+='<div class="quick-result" onclick="openCustomerProfile('+Number(c.id)+')"><b>'+esc(c.client_name||"-")+'</b><div class="muted">'+esc(c.phone||"-")+'</div></div>';});
+    else html+='<div class="empty">لا توجد نتائج</div>';
+    html+='</div></div><div class="card"><div class="card-head"><h3>الاشتراكات ('+subscriptions.length+')</h3></div><div class="card-body">';
+    if(subscriptions.length)subscriptions.forEach(function(s){const c=getCustomer(s.customer_id);html+='<div class="quick-result" onclick="state.page=\'subscriptions\';render()"><b>'+esc(c&&c.client_name||"-")+'</b><div class="muted">'+esc(getServiceName(s))+' • '+esc(s.platform||"-")+' • '+money(s.monthly_fee)+' '+esc(s.currency||"EGP")+'</div></div>';});
+    else html+='<div class="empty">لا توجد نتائج</div>';
+    html+='</div></div></div>';
+    document.getElementById("content").innerHTML=html;
+}
+
+function exportBadgeifyCSV(rows,filename){
+    if(!rows.length){showToast("لا توجد بيانات للتصدير",true);return;}
+    const keys=Object.keys(rows[0]),lines=[keys.join(",")];
+    rows.forEach(function(row){lines.push(keys.map(function(k){return '"'+String(row[k]??"").replace(/"/g,'""')+'"';}).join(","));});
+    const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+}
+
+function exportSubscriptionsCSV(){
+    exportBadgeifyCSV(state.subscriptions.map(function(s){const c=getCustomer(s.customer_id);return {id:s.id,customer:c&&c.client_name||"",phone:c&&c.phone||"",service:getServiceName(s),platform:s.platform||"",monthly_fee:s.monthly_fee||0,payment_day:s.payment_day||"",due_date:subscriptionDueDate(s)||"",status:s.status||""};}),"subscriptions.csv");
+}
+
+function backupBadgeifyData(){
+    const data={exported_at:new Date().toISOString(),customers:state.customers,traders:state.traders,services:state.services,subscriptions:state.subscriptions,subscription_services:state.subscriptionServices,payments:state.payments,invoices:state.invoices,invoice_items:state.invoiceItems,followups:state.followups,settings:state.settings};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="BADGEIFY-backup-"+isoDate(new Date())+".json";a.click();URL.revokeObjectURL(url);showToast("تم إنشاء نسخة احتياطية من البيانات");
+}
+
+function renderReports(){
+    const active=state.subscriptions.filter(function(s){return s.status!=="inactive";}),paidThisMonth=state.payments.filter(function(p){return String(p.paid_month||"")===monthKey(new Date());});
+    const collected=paidThisMonth.reduce(function(a,p){return a+Number(p.amount||0);},0),expected=active.reduce(function(a,s){return a+Number(s.monthly_fee||0);},0);
+    const overdue=active.filter(function(s){return getPaymentState(s).type==="overdue";}),overdueValue=overdue.reduce(function(a,s){return a+Number(s.monthly_fee||0);},0),serviceTotals={};
+    active.forEach(function(s){const n=getServiceName(s)||"غير محدد";serviceTotals[n]=(serviceTotals[n]||0)+Number(s.monthly_fee||0);});
+    let html='<div class="page-head"><div><h1>'+t("reports")+'</h1><p>ملخص مالي وتشغيلي مع التصدير والنسخة الاحتياطية</p></div><div class="page-actions"><button class="gold-btn" onclick="backupBadgeifyData()"><i class="fa-solid fa-download"></i> نسخة احتياطية</button><button class="ghost-btn" onclick="exportBadgeifyCSV(state.customers.map(function(c){return {id:c.id,name:c.client_name,phone:c.phone};}),\'customers.csv\')">تصدير العملاء</button><button class="ghost-btn" onclick="exportSubscriptionsCSV()">تصدير الاشتراكات</button></div></div>';
+    html+='<div class="grid stats"><div class="stat"><div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div><h2>'+money(collected)+'</h2><p>المحصل هذا الشهر</p></div><div class="stat"><div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div><h2>'+money(expected)+'</h2><p>القيمة الشهرية المتوقعة</p></div><div class="stat"><div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><h2>'+money(overdueValue)+'</h2><p>قيمة المتأخرات</p></div><div class="stat"><div class="stat-icon"><i class="fa-solid fa-user-group"></i></div><h2>'+state.customers.length+'</h2><p>إجمالي العملاء</p></div></div>';
+    html+='<div class="grid cols" style="margin-top:16px"><div class="card"><div class="card-head"><h3>الإيرادات حسب الخدمة</h3></div><div class="card-body"><div class="list">';
+    Object.entries(serviceTotals).sort(function(a,b){return b[1]-a[1];}).forEach(function(x){html+='<div class="list-item"><span>'+esc(x[0])+'</span><span class="money">'+money(x[1])+' '+esc(state.settings.currency||"EGP")+'</span></div>';});
+    if(!Object.keys(serviceTotals).length)html+='<div class="empty">لا توجد بيانات</div>';
+    html+='</div></div></div><div class="card"><div class="card-head"><h3>حالة الاشتراكات</h3></div><div class="card-body"><div class="list"><div class="list-item"><span>نشط</span><b>'+active.length+'</b></div><div class="list-item"><span>متأخر</span><b>'+overdue.length+'</b></div><div class="list-item"><span>مدفوع هذا الشهر</span><b>'+paidThisMonth.length+'</b></div></div></div></div></div>';
+    document.getElementById("content").innerHTML=html;
+}
+
+function enhanceDashboard(){
+    const active=state.subscriptions.filter(function(s){return s.status!=="inactive";}),alerts=getNotificationRows().length;
+    const upcoming=active.filter(function(s){const d=subscriptionDueDate(s);if(!d)return false;const diff=Math.ceil((new Date(d)-new Date())/86400000);return diff>=1&&diff<=7;}).length;
+    const content=document.getElementById("content");
+    if(!content||document.querySelector(".badgeify-dashboard-enhancements"))return;
+    content.insertAdjacentHTML("beforeend",'<div class="enhance-grid badgeify-dashboard-enhancements"><div class="enhance-card"><h3>التنبيهات الحالية</h3><div class="big">'+alerts+'</div><div class="muted">اشتراكات تحتاج متابعة</div></div><div class="enhance-card"><h3>تنتهي خلال 7 أيام</h3><div class="big">'+upcoming+'</div><div class="muted">يمكن متابعتها قبل موعدها</div></div><div class="enhance-card"><h3>إجمالي المدفوعات المسجلة</h3><div class="big">'+money(state.payments.reduce(function(a,p){return a+Number(p.amount||0);},0))+'</div><div class="muted">'+esc(state.settings.currency||"EGP")+'</div></div></div>');
+}
+
+const badgeifyOriginalDashboard=renderDashboard;
+function renderDashboard(){
+    badgeifyOriginalDashboard();
+    enhanceDashboard();
+}
+
 /* =========================================
    REFRESH / RENDER
 ========================================= */
@@ -8867,7 +9005,16 @@ function render(){
         renderSettings,
 
         activity:
-        renderActivity
+        renderActivity,
+
+        notifications:
+        renderNotifications,
+
+        reports:
+        renderReports,
+
+        quicksearch:
+        renderQuickSearch
 
     };
 
