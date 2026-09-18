@@ -2,100 +2,384 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1280">
-    <title>BADGEIFY - V3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BADGEIFY - Management System</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                            DEFAULT: '#D4AF37',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
+        .gold-gradient { background: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C); }
+        .gold-border { border-color: rgba(212, 175, 55, 0.3); }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center">
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col">
 
     <!-- شاشة تسجيل الدخول -->
-    <div id="login-screen" class="w-full max-w-md bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-black text-indigo-400 tracking-wider">BADGEIFY</h1>
-            <p class="text-slate-400 text-sm mt-2">نظام الإدارة والتحكم الذكي</p>
-        </div>
-
-        <div class="space-y-6">
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">البريد الإلكتروني</label>
-                <input type="email" id="email" value="admin@badgeify.com"
-                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white"
-                    placeholder="admin@badgeify.com">
+    <div id="login-screen" class="fixed inset-0 bg-zinc-950 flex items-center justify-center z-50 p-4">
+        <div class="w-full max-w-md bg-zinc-900 border gold-border p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-gold/10 rounded-full blur-2xl"></div>
+            
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-black text-gold tracking-wider">BADGEIFY</h1>
+                <p class="text-zinc-400 text-xs mt-1 uppercase tracking-widest">Verified Trust & Security</p>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
-                <input type="password" id="password" value="12345678"
-                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white"
-                    placeholder="••••••••">
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase">البريد الإلكتروني</label>
+                    <input type="email" id="email" value="admin@badgeify.com"
+                        class="w-full px-4 py-3 bg-zinc-950 border gold-border rounded-xl focus:ring-2 focus:ring-gold focus:outline-none text-white text-sm"
+                        placeholder="admin@badgeify.com">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-400 mb-2 uppercase">كلمة المرور</label>
+                    <input type="password" id="password" value="12345678"
+                        class="w-full px-4 py-3 bg-zinc-950 border gold-border rounded-xl focus:ring-2 focus:ring-gold focus:outline-none text-white text-sm"
+                        placeholder="••••••••">
+                </div>
+
+                <div id="login-error" class="hidden text-rose-400 text-xs text-center bg-rose-950/40 p-3 rounded-lg border border-rose-900"></div>
+
+                <button type="button" onclick="handleLogin()" id="login-btn"
+                    class="w-full py-3.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-xl transition-all shadow-lg shadow-gold/20 cursor-pointer">
+                    دخول للنظام
+                </button>
             </div>
-
-            <div id="login-error" class="hidden text-rose-400 text-sm text-center bg-rose-950/50 p-3 rounded-lg border border-rose-900 break-words"></div>
-
-            <button type="button" id="login-btn" onclick="handleLogin()" 
-                class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 cursor-pointer">
-                دخول للنظام
-            </button>
         </div>
     </div>
 
-    <!-- لوحة التحكم -->
-    <div id="dashboard-screen" class="hidden w-full min-h-screen bg-slate-900 flex flex-col">
-        <header class="bg-slate-800 border-b border-slate-700 px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <span class="text-xl font-black text-indigo-400">BADGEIFY</span>
-                <span class="text-xs bg-indigo-950 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-800">لوحة التحكم النشطة</span>
+    <!-- لوحة التحكم الرئيسية (مخفية حتى يتم تسجيل الدخول) -->
+    <div id="app-container" class="hidden flex-1 flex flex-col">
+        <!-- شريط التنقل العلوي -->
+        <header class="bg-zinc-900 border-b gold-border px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+            <div class="flex items-center gap-6">
+                <h1 class="text-xl font-black text-gold tracking-wider">BADGEIFY</h1>
+                <nav class="hidden md:flex gap-2">
+                    <button onclick="switchTab('dashboard')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gold bg-gold/10" data-tab="dashboard"><i class="fa-solid fa-chart-pie ml-2"></i>الرئيسية</button>
+                    <button onclick="switchTab('clients')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white" data-tab="clients"><i class="fa-solid fa-users ml-2"></i>العملاء</button>
+                    <button onclick="switchTab('collection')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white" data-tab="collection"><i class="fa-solid fa-wallet ml-2"></i>التحصيل</button>
+                    <button onclick="switchTab('renewals')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white" data-tab="renewals"><i class="fa-solid fa-calendar-days ml-2"></i>تجديد البيدجات</button>
+                    <button onclick="switchTab('payments')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-white" data-tab="payments"><i class="fa-solid fa-receipt ml-2"></i>سجل المدفوعات</button>
+                </nav>
             </div>
-            <button onclick="handleLogout()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-sm font-medium rounded-lg transition-all border border-rose-800/50 cursor-pointer">
-                تسجيل الخروج
-            </button>
+            <div class="flex items-center gap-3">
+                <button onclick="openAddClientModal()" class="px-4 py-2 bg-gold hover:bg-gold-600 text-zinc-950 font-bold text-xs rounded-lg transition-all shadow cursor-pointer">
+                    <i class="fa-solid fa-plus ml-1"></i> إضافة عميل
+                </button>
+                <button onclick="handleLogout()" class="px-3 py-2 bg-zinc-800 hover:bg-rose-950/50 text-zinc-400 hover:text-rose-400 text-xs rounded-lg transition-all border border-zinc-700 cursor-pointer">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
         </header>
 
-        <main class="flex-1 p-8">
-            <div class="max-w-7xl mx-auto">
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                    <h2 class="text-xl font-bold text-white mb-2">مرحباً بك يا فنان في النظام</h2>
-                    <p class="text-slate-400">تم تسجيل الدخول بنجاح تام!</p>
+        <!-- التنقل السفلي للموبايل -->
+        <div class="md:hidden bg-zinc-900 border-t gold-border fixed bottom-0 left-0 right-0 z-40 flex justify-around p-3 text-xs">
+            <button onclick="switchTab('dashboard')" class="mob-nav text-gold flex flex-col items-center gap-1" data-tab="dashboard"><i class="fa-solid fa-chart-pie"><span>الرئيسية</span></i></button>
+            <button onclick="switchTab('clients')" class="mob-nav text-zinc-400 flex flex-col items-center gap-1" data-tab="clients"><i class="fa-solid fa-users"><span>العملاء</span></i></button>
+            <button onclick="switchTab('collection')" class="mob-nav text-zinc-400 flex flex-col items-center gap-1" data-tab="collection"><i class="fa-solid fa-wallet"><span>التحصيل</span></i></button>
+            <button onclick="switchTab('renewals')" class="mob-nav text-zinc-400 flex flex-col items-center gap-1" data-tab="renewals"><i class="fa-solid fa-calendar-days"><span>التجديد</span></i></button>
+            <button onclick="switchTab('payments')" class="mob-nav text-zinc-400 flex flex-col items-center gap-1" data-tab="payments"><i class="fa-solid fa-receipt"><span>المدفوعات</span></i></button>
+        </div>
+
+        <!-- محتوى الأقسام -->
+        <main class="flex-1 p-4 md:p-8 pb-20 md:pb-8 max-w-7xl mx-auto w-full">
+            
+            <!-- 1. قسم الرئيسية (Dashboard) -->
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
+                        <p class="text-xs text-zinc-400 font-medium">كل العملاء</p>
+                        <h3 id="stat-total" class="text-3xl font-black text-white mt-2">0</h3>
+                    </div>
+                    <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
+                        <p class="text-xs text-zinc-400 font-medium">مدفوع هذا الشهر</p>
+                        <h3 id="stat-paid" class="text-3xl font-black text-emerald-400 mt-2">0</h3>
+                    </div>
+                    <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
+                        <p class="text-xs text-zinc-400 font-medium">مستحق</p>
+                        <h3 id="stat-due" class="text-3xl font-black text-amber-400 mt-2">0</h3>
+                    </div>
+                    <div class="bg-zinc-900 border gold-border p-5 rounded-2xl">
+                        <p class="text-xs text-zinc-400 font-medium">متأخر</p>
+                        <h3 id="stat-late" class="text-3xl font-black text-rose-400 mt-2">0</h3>
+                    </div>
                 </div>
-            </div>
+
+                <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-clock-rotate-left ml-2 text-gold"></i>أقرب مواعيد التحصيل والمتابعة</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
+                                <tr>
+                                    <th class="p-3">العميل</th>
+                                    <th class="p-3">الصفحة</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">موعد الدفع</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-due-list" class="divide-y divide-zinc-800">
+                                <!-- سيتم تعبئتها برمجياً -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. قسم العملاء -->
+            <section id="tab-clients" class="tab-content hidden space-y-6">
+                <div class="flex flex-col md:flex-row justify-between gap-4 items-center">
+                    <div class="w-full md:w-96 relative">
+                        <i class="fa-solid fa-search absolute right-4 top-3.5 text-zinc-500"></i>
+                        <input type="text" id="client-search" oninput="filterClients()" placeholder="بحث بالاسم، الصفحة، أو الموبايل..."
+                            class="w-full pl-4 pr-11 py-3 bg-zinc-900 border gold-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gold text-white">
+                    </div>
+                    <button onclick="openAddClientModal()" class="w-full md:w-auto px-5 py-3 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-xl text-sm transition shadow cursor-pointer">
+                        <i class="fa-solid fa-user-plus ml-2"></i>إضافة عميل جديد
+                    </button>
+                </div>
+
+                <div class="bg-zinc-900 border gold-border rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
+                                <tr>
+                                    <th class="p-4">العميل</th>
+                                    <th class="p-4">الصفحة والمنصة</th>
+                                    <th class="p-4">الموبايل</th>
+                                    <th class="p-4">الاشتراك</th>
+                                    <th class="p-4">ميعاد الدفع</th>
+                                    <th class="p-4">تجديد البيدج</th>
+                                    <th class="p-4">الحالة</th>
+                                    <th class="p-4 text-center">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body" class="divide-y divide-zinc-800">
+                                <!-- العملاء -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. قسم التحصيل -->
+            <section id="tab-collection" class="tab-content hidden space-y-6">
+                <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-wallet ml-2 text-gold"></i>متابعة وتحصيل الاشتراكات</h2>
+                    <p class="text-xs text-zinc-400 mb-6">العملاء المستحقون والمتأخرون عن الدفع هذا الشهر.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
+                                <tr>
+                                    <th class="p-3">العميل</th>
+                                    <th class="p-3">الصفحة</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">يوم الدفع</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3 text-center">الإجراءات والواتساب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="collection-table-body" class="divide-y divide-zinc-800">
+                                <!-- التحصيلات -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. قسم تجديد البيدجات -->
+            <section id="tab-renewals" class="tab-content hidden space-y-6">
+                <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-calendar-days ml-2 text-gold"></i>مواعيد تجديد البيدجات المستقلة</h2>
+                    <p class="text-xs text-zinc-400 mb-6">مواعيد تجديد صفحات العملاء منفصلة تماماً عن مواعيد دفع الاشتراكات.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
+                                <tr>
+                                    <th class="p-3">الصفحة</th>
+                                    <th class="p-3">العميل</th>
+                                    <th class="p-3">يوم التجديد</th>
+                                    <th class="p-3">الموعد القادم</th>
+                                    <th class="p-3">الحالة التنبيهية</th>
+                                </tr>
+                            </thead>
+                            <tbody id="renewals-table-body" class="divide-y divide-zinc-800">
+                                <!-- التجديدات -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. سجل المدفوعات -->
+            <section id="tab-payments" class="tab-content hidden space-y-6">
+                <div class="bg-zinc-900 border gold-border rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-receipt ml-2 text-gold"></i>سجل المدفوعات الشامل</h2>
+                    <p class="text-xs text-zinc-400 mb-6">أرشيف كامل لكل عملية دفع تم تسجيلها للعملاء عبر الفترات.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
+                                <tr>
+                                    <th class="p-3">اسم العميل</th>
+                                    <th class="p-3">الصفحة</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">الشهر المدفوع</th>
+                                    <th class="p-3">تاريخ الدفع الحقيقي</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payments-table-body" class="divide-y divide-zinc-800">
+                                <!-- المدفوعات -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
+    <!-- نافذة (Modal) إضافة أو تعديل عميل -->
+    <div id="client-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-zinc-900 border gold-border w-full max-w-xl rounded-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <h3 id="modal-title" class="text-lg font-bold text-gold mb-4">إضافة عميل جديد</h3>
+            <form id="client-form" onsubmit="saveClient(event)" class="space-y-4">
+                <input type="hidden" id="client-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">اسم العميل</label>
+                        <input type="text" id="c-name" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">اسم الصفحة</label>
+                        <input type="text" id="c-page" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">رقم الموبايل / واتساب</label>
+                        <input type="text" id="c-phone" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="010xxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">المنصة</label>
+                        <select id="c-platform" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
+                            <option value="Facebook">Facebook</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="WhatsApp Business">WhatsApp Business</option>
+                            <option value="Facebook + Instagram">Facebook + Instagram</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">رابط الصفحة أو البروفايل</label>
+                    <input type="text" id="c-link" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">قيمة الاشتراك (جنيه)</label>
+                        <input type="number" id="c-amount" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="300">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">يوم دفع العميل (1-31)</label>
+                        <input type="number" id="c-pay-day" min="1" max="31" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="20">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-zinc-400 mb-1">يوم تجديد البيدج (1-31)</label>
+                        <input type="number" id="c-renew-day" min="1" max="31" required class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold" placeholder="25">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">ملاحظات</label>
+                    <textarea id="c-notes" rows="2" class="w-full p-3 bg-zinc-950 border gold-border rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-gold"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('client-modal')" class="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-medium hover:bg-zinc-700 cursor-pointer">إلغاء</button>
+                    <button type="submit" class="px-5 py-2 bg-gold text-zinc-950 font-bold rounded-xl text-sm hover:bg-gold-600 transition cursor-pointer">حفظ العميل</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة تفاصيل العميل وسجل المدفوعات -->
+    <div id="details-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-zinc-900 border gold-border w-full max-w-2xl rounded-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+                <h3 id="det-client-name" class="text-xl font-bold text-gold">تفاصيل العميل</h3>
+                <button onclick="closeModal('details-modal')" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div id="det-client-info" class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-zinc-950 p-4 rounded-xl border border-zinc-800 mb-6 text-xs">
+                <!-- معلومات العميل -->
+            </div>
+
+            <h4 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-clock-rotate-left ml-2 text-gold"></i>سجل مدفوعات العميل</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <thead class="bg-zinc-950 text-zinc-400 border-b border-zinc-800">
+                        <tr>
+                            <th class="p-2.5">الشهر</th>
+                            <th class="p-2.5">المبلغ</th>
+                            <th class="p-2.5">تاريخ الدفع الحقيقي</th>
+                        </tr>
+                    </thead>
+                    <tbody id="det-payments-body" class="divide-y divide-zinc-800">
+                        <!-- المدفوعات -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- سكريبت النظام والاتصال بـ Supabase -->
     <script>
         const SUPABASE_URL = "https://rsvzachgbqsucqgrwguv.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
 
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        window.addEventListener('DOMContentLoaded', () => {
+        let clientsData = [];
+        let paymentsData = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
             if (localStorage.getItem('badgeify_logged') === 'true') {
-                showDashboard();
+                showApp();
+                await loadAllData();
             }
         });
 
-        function showDashboard() {
-            document.body.classList.remove('items-center', 'justify-center');
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('dashboard-screen').classList.remove('hidden');
-        }
-
         async function handleLogin() {
-            const btn = document.getElementById('login-btn');
-            const errorMsg = document.getElementById('login-error');
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
-
-            if (!email || !password) {
-                errorMsg.textContent = 'من فضلك أدخل البيانات الكاملة';
-                errorMsg.classList.remove('hidden');
-                return;
-            }
+            const errorMsg = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
 
             btn.textContent = 'جاري التحقق...';
             errorMsg.classList.add('hidden');
@@ -107,18 +391,15 @@
                     .eq('email', email)
                     .eq('password', password);
 
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    throw new Error('البريد أو كلمة المرور غير صحيحة في جدول admins');
+                if (error || !data || data.length === 0) {
+                    throw new Error('البريد أو كلمة المرور غير صحيحة');
                 }
 
                 localStorage.setItem('badgeify_logged', 'true');
-                showDashboard();
-
+                showApp();
+                await loadAllData();
             } catch (err) {
-                console.error("Login Error:", err);
-                errorMsg.textContent = 'خطأ: ' + err.message;
+                errorMsg.textContent = err.message;
                 errorMsg.classList.remove('hidden');
                 btn.textContent = 'دخول للنظام';
             }
@@ -127,6 +408,341 @@
         function handleLogout() {
             localStorage.removeItem('badgeify_logged');
             location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-gold', 'bg-gold/10');
+                btn.classList.add('text-zinc-400');
+                if(btn.dataset.tab === tabName) {
+                    btn.classList.add('text-gold', 'bg-gold/10');
+                    btn.classList.remove('text-zinc-400');
+                }
+            });
+
+            document.querySelectorAll('.mob-nav').forEach(btn => {
+                btn.classList.remove('text-gold');
+                btn.classList.add('text-zinc-400');
+                if(btn.dataset.tab === tabName) {
+                    btn.classList.add('text-gold');
+                    btn.classList.remove('text-zinc-400');
+                }
+            });
+        }
+
+        async function loadAllData() {
+            try {
+                const [clientsRes, paymentsRes] = await Promise.all([
+                    db.from('clients').select('*').order('id', { ascending: false }),
+                    db.from('payments').select('*').order('id', { ascending: false })
+                ]);
+
+                clientsData = clientsRes.data || [];
+                paymentsData = paymentsRes.data || [];
+
+                renderDashboard();
+                renderClients();
+                renderCollection();
+                renderRenewals();
+                renderPayments();
+            } catch (err) {
+                console.error("Error loading data:", err);
+            }
+        }
+
+        // حساب حالة العميل تلقائياً
+        function getClientStatus(client) {
+            const today = new Date().getDate();
+            const currentMonthName = new Date().toLocaleString('ar-EG', { month: 'long' });
+            
+            // هل دفع الشهر الحالي؟
+            const paidThisMonth = paymentsData.some(p => p.client_id === client.id && p.paid_month === currentMonthName);
+            if (paidThisMonth) return 'مدفوع';
+
+            if (today < client.pay_day) return 'مستحق';
+            return 'متأخر';
+        }
+
+        function renderDashboard() {
+            const total = clientsData.length;
+            const currentMonthName = new Date().toLocaleString('ar-EG', { month: 'long' });
+            
+            let paidCount = 0;
+            let dueCount = 0;
+            let lateCount = 0;
+
+            const dueRows = [];
+
+            clientsData.forEach(client => {
+                const status = getClientStatus(client);
+                if (status === 'مدفوع') paidCount++;
+                else if (status === 'مستحق') dueCount++;
+                else lateCount++;
+
+                if (status !== 'مدفوع') {
+                    dueRows.push(`
+                        <tr class="hover:bg-zinc-800/50">
+                            <td class="p-3 font-semibold text-white">${client.name}</td>
+                            <td class="p-3 text-zinc-400">${client.page_name}</td>
+                            <td class="p-3 text-gold font-bold">${client.amount} ج.م</td>
+                            <td class="p-3">يوم ${client.pay_day}</td>
+                            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${status === 'متأخر' ? 'bg-rose-950 text-rose-400 border border-rose-900' : 'bg-amber-950 text-amber-400 border border-amber-900'}">${status}</span></td>
+                            <td class="p-3"><button onclick="recordPayment(${client.id})" class="px-3 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-lg text-xs cursor-pointer">تسجيل الدفع</button></td>
+                        </tr>
+                    `);
+                }
+            });
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-paid').textContent = paidCount;
+            document.getElementById('stat-due').textContent = dueCount;
+            document.getElementById('stat-late').textContent = lateCount;
+
+            document.getElementById('dashboard-due-list').innerHTML = dueRows.length ? dueRows.join('') : `<tr><td colspan="6" class="p-4 text-center text-zinc-500">لا توجد مستحقات متأخرة حالياً، الكل تمام!</td></tr>`;
+        }
+
+        function renderClients(filtered = clientsData) {
+            const tbody = document.getElementById('clients-table-body');
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-zinc-500">لا يوجد عملاء مضافون بعد. اضغط على "إضافة عميل جديد".</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(client => {
+                const status = getClientStatus(client);
+                return `
+                    <tr class="hover:bg-zinc-800/50">
+                        <td class="p-4 font-semibold text-white cursor-pointer hover:text-gold" onclick="openClientDetails(${client.id})">${client.name}</td>
+                        <td class="p-4 text-zinc-300">${client.page_name} <span class="text-xs text-zinc-500 block">(${client.platform})</span></td>
+                        <td class="p-4 text-zinc-300" dir="ltr">${client.phone}</td>
+                        <td class="p-4 text-gold font-bold">${client.amount} ج.م</td>
+                        <td class="p-4">يوم ${client.pay_day}</td>
+                        <td class="p-4">يوم ${client.renew_day}</td>
+                        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${status === 'مدفوع' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900' : status === 'متأخر' ? 'bg-rose-950 text-rose-400 border border-rose-900' : 'bg-amber-950 text-amber-400 border border-amber-900'}">${status}</span></td>
+                        <td class="p-4 text-center space-x-1 space-x-reverse">
+                            <button onclick="openClientDetails(${client.id})" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs" title="التفاصيل"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="editClient(${client.id})" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-gold rounded-lg text-xs" title="تعديل"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteClient(${client.id})" class="p-2 bg-zinc-800 hover:bg-rose-950 text-rose-400 rounded-lg text-xs" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterClients() {
+            const query = document.getElementById('client-search').value.toLowerCase();
+            const filtered = clientsData.filter(c => c.name.toLowerCase().includes(query) || c.page_name.toLowerCase().includes(query) || c.phone.includes(query));
+            renderClients(filtered);
+        }
+
+        function renderCollection() {
+            const tbody = document.getElementById('collection-table-body');
+            const rows = clientsData.filter(c => getClientStatus(c) !== 'مدفوع').map(client => {
+                const status = getClientStatus(client);
+                const msg = `مرحباً ${client.name}، تذكير بخصوص اشتراك صفحة ${client.page_name} بقيمة ${client.amount} جنيه، وموعد الدفع هو يوم ${client.pay_day} من الشهر. برجاء تأكيد الدفع. شكراً لك.`;
+                const waLink = `https://wa.me/${client.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+
+                return `
+                    <tr class="hover:bg-zinc-800/50">
+                        <td class="p-3 font-semibold text-white">${client.name}</td>
+                        <td class="p-3 text-zinc-300">${client.page_name}</td>
+                        <td class="p-3 text-gold font-bold">${client.amount} ج.م</td>
+                        <td class="p-3">يوم ${client.pay_day}</td>
+                        <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${status === 'متأخر' ? 'bg-rose-950 text-rose-400 border border-rose-900' : 'bg-amber-950 text-amber-400 border border-amber-900'}">${status}</span></td>
+                        <td class="p-3 text-center space-x-2 space-x-reverse">
+                            <button onclick="recordPayment(${client.id})" class="px-3 py-1.5 bg-gold hover:bg-gold-600 text-zinc-950 font-bold rounded-lg text-xs cursor-pointer">تسجيل الدفع</button>
+                            <a href="${waLink}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs inline-block"><i class="fa-brands fa-whatsapp ml-1"></i>واتساب</a>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rows.length ? rows.join('') : `<tr><td colspan="6" class="p-4 text-center text-zinc-500">ممتاز! جميع العملاء قاموا بدفع اشتراكاتهم هذا الشهر.</td></tr>`;
+        }
+
+        function renderRenewals() {
+            const tbody = document.getElementById('renewals-table-body');
+            const today = new Date().getDate();
+
+            tbody.innerHTML = clientsData.map(client => {
+                let diff = client.renew_day - today;
+                let badgeTxt = `بعد ${diff} يوم`;
+                let badgeClass = 'bg-zinc-800 text-zinc-300';
+
+                if (diff === 0) {
+                    badgeTxt = 'اليوم!';
+                    badgeClass = 'bg-rose-950 text-rose-400 border border-rose-900';
+                } else if (diff === 1) {
+                    badgeTxt = 'غداً';
+                    badgeClass = 'bg-amber-950 text-amber-400 border border-amber-900';
+                } else if (diff < 0) {
+                    badgeTxt = 'تم تجاوز الموعد';
+                    badgeClass = 'bg-rose-950 text-rose-400 border border-rose-900';
+                }
+
+                return `
+                    <tr class="hover:bg-zinc-800/50">
+                        <td class="p-3 font-semibold text-white">${client.page_name}</td>
+                        <td class="p-3 text-zinc-300">${client.name}</td>
+                        <td class="p-3">يوم ${client.renew_day}</td>
+                        <td class="p-3 text-gold">تاريخ ${client.renew_day} من الشهر</td>
+                        <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}">${badgeTxt}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderPayments() {
+            const tbody = document.getElementById('payments-table-body');
+            if (!paymentsData.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-zinc-500">لا توجد مدفوعات مسجلة بعد.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = paymentsData.map(p => {
+                const client = clientsData.find(c => c.id === p.client_id) || { name: 'عميل محذوف', page_name: '-' };
+                return `
+                    <tr class="hover:bg-zinc-800/50">
+                        <td class="p-3 font-semibold text-white">${client.name}</td>
+                        <td class="p-3 text-zinc-300">${client.page_name}</td>
+                        <td class="p-3 text-gold font-bold">${p.amount} ج.م</td>
+                        <td class="p-3">${p.paid_month}</td>
+                        <td class="p-3 text-zinc-400">${p.paid_date}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function recordPayment(clientId) {
+            const client = clientsData.find(c => c.id === clientId);
+            if (!client) return;
+
+            const currentMonthName = new Date().toLocaleString('ar-EG', { month: 'long' });
+            const todayStr = new Date().toLocaleDateString('ar-EG');
+
+            const { error } = await db.from('payments').insert([{
+                client_id: client.id,
+                amount: client.amount,
+                paid_month: currentMonthName,
+                paid_date: todayStr
+            }]);
+
+            if (error) {
+                alert('حدث خطأ أثناء تسجيل الدفع: ' + error.message);
+                return;
+            }
+
+            await loadAllData();
+            alert('تم تسجيل الدفع بنجاح وإضافته للسجل!');
+        }
+
+        function openAddClientModal() {
+            document.getElementById('client-id').value = '';
+            document.getElementById('modal-title').textContent = 'إضافة عميل جديد';
+            document.getElementById('client-form').reset();
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        function editClient(id) {
+            const client = clientsData.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('client-id').value = client.id;
+            document.getElementById('modal-title').textContent = 'تعديل بيانات العميل';
+            document.getElementById('c-name').value = client.name;
+            document.getElementById('c-page').value = client.page_name;
+            document.getElementById('c-phone').value = client.phone;
+            document.getElementById('c-platform').value = client.platform;
+            document.getElementById('c-link').value = client.link || '';
+            document.getElementById('c-amount').value = client.amount;
+            document.getElementById('c-pay-day').value = client.pay_day;
+            document.getElementById('c-renew-day').value = client.renew_day;
+            document.getElementById('c-notes').value = client.notes || '';
+
+            document.getElementById('client-modal').classList.remove('hidden');
+        }
+
+        async function saveClient(e) {
+            e.preventDefault();
+            const id = document.getElementById('client-id').value;
+            const clientObj = {
+                name: document.getElementById('c-name').value.trim(),
+                page_name: document.getElementById('c-page').value.trim(),
+                phone: document.getElementById('c-phone').value.trim(),
+                platform: document.getElementById('c-platform').value,
+                link: document.getElementById('c-link').value.trim(),
+                amount: parseFloat(document.getElementById('c-amount').value),
+                pay_day: parseInt(document.getElementById('c-pay-day').value),
+                renew_day: parseInt(document.getElementById('c-renew-day').value),
+                notes: document.getElementById('c-notes').value.trim()
+            };
+
+            let error;
+            if (id) {
+                const res = await db.from('clients').update(clientObj).eq('id', id);
+                error = res.error;
+            } else {
+                const res = await db.from('clients').insert([clientObj]);
+                error = res.error;
+            }
+
+            if (error) {
+                alert('خطأ في حفظ العميل: ' + error.message);
+                return;
+            }
+
+            closeModal('client-modal');
+            await loadAllData();
+        }
+
+        async function deleteClient(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) return;
+            const { error } = await db.from('clients').delete().eq('id', id);
+            if (error) {
+                alert('خطأ في الحذف: ' + error.message);
+                return;
+            }
+            await loadAllData();
+        }
+
+        function openClientDetails(id) {
+            const client = clientsData.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('det-client-name').textContent = client.name;
+            document.getElementById('det-client-info').innerHTML = `
+                <div><span class="text-zinc-500 block">الصفحة:</span> <strong class="text-white">${client.page_name}</strong></div>
+                <div><span class="text-zinc-500 block">المنصة:</span> <strong class="text-white">${client.platform}</strong></div>
+                <div><span class="text-zinc-500 block">الموبايل:</span> <strong class="text-white">${client.phone}</strong></div>
+                <div><span class="text-zinc-500 block">الاشتراك:</span> <strong class="text-gold">${client.amount} ج.م</strong></div>
+                <div><span class="text-zinc-500 block">يوم الدفع:</span> <strong class="text-white">يوم ${client.pay_day}</strong></div>
+                <div><span class="text-zinc-500 block">تجديد البيدج:</span> <strong class="text-white">يوم ${client.renew_day}</strong></div>
+                <div class="col-span-2"><span class="text-zinc-500 block">ملاحظات:</span> <span class="text-zinc-300">${client.notes || 'لا توجد'}</span></div>
+            `;
+
+            const clientPayments = paymentsData.filter(p => p.client_id === client.id);
+            const pBody = document.getElementById('det-payments-body');
+            pBody.innerHTML = clientPayments.length ? clientPayments.map(p => `
+                <tr>
+                    <td class="p-2.5 font-semibold text-white">${p.paid_month}</td>
+                    <td class="p-2.5 text-gold">${p.amount} ج.م</td>
+                    <td class="p-2.5 text-zinc-400">${p.paid_date}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="3" class="p-3 text-center text-zinc-500">لا توجد مدفوعات مسجلة لهذا العميل حتى الآن.</td></tr>`;
+
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
         }
     </script>
 </body>
