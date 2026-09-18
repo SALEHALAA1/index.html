@@ -6,7 +6,7 @@
     <title>BADGEIFY - Management System</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase Client -->
+    <!-- Supabase Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
@@ -14,96 +14,97 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center">
 
-    <!-- Launch/Login Screen -->
+    <!-- شاشة تسجيل الدخول -->
     <div id="login-screen" class="w-full max-w-md bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-black text-indigo-400 tracking-wider">BADGEIFY</h1>
             <p class="text-slate-400 text-sm mt-2">نظام الإدارة والتحكم الذكي</p>
         </div>
 
-        <form id="login-form" class="space-y-6">
+        <div class="space-y-6">
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-2">البريد الإلكتروني</label>
-                <input type="email" id="email" required 
+                <input type="email" id="email" 
                     class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white"
                     placeholder="admin@badgeify.com">
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
-                <input type="password" id="password" required 
+                <input type="password" id="password" 
                     class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-white"
                     placeholder="••••••••">
             </div>
 
             <div id="login-error" class="hidden text-rose-400 text-sm text-center bg-rose-950/50 py-2 rounded-lg border border-rose-900"></div>
 
-            <button type="submit" id="login-btn" 
-                class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30">
+            <button type="button" id="login-btn" onclick="handleLogin()" 
+                class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 cursor-pointer">
                 دخول للنظام
             </button>
-        </form>
+        </div>
     </div>
 
-    <!-- Dashboard Screen (Hidden by default) -->
+    <!-- لوحة التحكم (مخفية افتراضياً) -->
     <div id="dashboard-screen" class="hidden w-full min-h-screen bg-slate-900 flex flex-col">
-        <!-- Top Navbar -->
         <header class="bg-slate-800 border-b border-slate-700 px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <span class="text-xl font-black text-indigo-400">BADGEIFY</span>
-                <span class="text-xs bg-indigo-950 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-800">لوحة التحكم</span>
+                <span class="text-xs bg-indigo-950 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-800">لوحة التحكم النشطة</span>
             </div>
-            <button id="logout-btn" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-sm font-medium rounded-lg transition-all border border-rose-800/50">
+            <button onclick="handleLogout()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-sm font-medium rounded-lg transition-all border border-rose-800/50 cursor-pointer">
                 تسجيل الخروج
             </button>
         </header>
 
-        <!-- Main Content Area -->
         <main class="flex-1 p-8">
             <div class="max-w-7xl mx-auto">
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                    <h2 class="text-xl font-bold text-white mb-2">أهلاً بك يا فنان في نظام Badgeify</h2>
-                    <p class="text-slate-400">تم تسجيل الدخول بنجاح والاتصال بقاعدة البيانات يعمل بكفاءة تامة.</p>
+                    <h2 class="text-xl font-bold text-white mb-2">مرحباً بك يا فنان في النظام</h2>
+                    <p class="text-slate-400">تم تسجيل الدخول بنجاح والاتصال بقاعدة بيانات Supabase يعمل بكفاءة تامة.</p>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Supabase Logic & App Initialization -->
+    <!-- كود المنطق والاتصال بقاعدة البيانات -->
     <script>
-        // إعدادات اتصال Supabase الخاصة بك
-        const SUPABASE_URL = 'ضع_رابط_supabase_هنا';
-        const SUPABASE_ANON_KEY = 'ضع_مفتاح_anon_هنا';
-        
+        const SUPABASE_URL = "https://rsvzachgbqsucqgrwguv.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6InJzdnphY2hnYnFzdWNxZ3J3Z3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODA5MTYsImV4cCI6MjEwNTI1NjkxNn0.5r-YQOaFhjRDuaqdHTRWP6k-mCb0Z6AY_q2ExN_2wCQ";
+
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // التحقق من الجلسة النشطة مسبقاً عند فتح الصفحة
         window.addEventListener('DOMContentLoaded', async () => {
-            const { data: { session } } = await db.auth.getSession();
-            if (session) {
-                showDashboard();
+            try {
+                const { data: { session } } = await db.auth.getSession();
+                if (session) {
+                    showDashboard();
+                }
+            } catch (err) {
+                console.error("Session check error:", err);
             }
         });
 
-        // دالة إظهار الداشبورد
         function showDashboard() {
             document.body.classList.remove('items-center', 'justify-center');
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
         }
 
-        // معالجة تسجيل الدخول بدون أي ريفرش مزعج
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); // تمنع إعادة تحميل الصفحة نهائياً
-            
+        async function handleLogin() {
             const btn = document.getElementById('login-btn');
             const errorMsg = document.getElementById('login-error');
-            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!email || !password) {
+                errorMsg.textContent = 'من فضلك أدخل البريد الإلكتروني وكلمة المرور';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
             btn.textContent = 'جاري التحقق والدخول...';
             errorMsg.classList.add('hidden');
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
 
             try {
                 const { data, error } = await db.auth.signInWithPassword({
@@ -111,23 +112,25 @@
                     password: password,
                 });
 
-                if (error) throw error;
+                if (error) {
+                    throw error;
+                }
 
                 if (data.session) {
                     showDashboard();
                 }
             } catch (error) {
-                errorMsg.textContent = 'خطأ في البريد الإلكتروني أو كلمة المرور!';
+                console.error("Login Error:", error.message);
+                errorMsg.textContent = 'خطأ في البريد أو كلمة المرور تأكد من صحتها!';
                 errorMsg.classList.remove('hidden');
                 btn.textContent = 'دخول للنظام';
             }
-        });
+        }
 
-        // زر تسجيل الخروج
-        document.getElementById('logout-btn').addEventListener('click', async () => {
+        async function handleLogout() {
             await db.auth.signOut();
             location.reload();
-        });
+        }
     </script>
 </body>
 </html>
