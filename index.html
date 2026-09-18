@@ -2760,65 +2760,44 @@ function renderCustomers(){
 
 function sendCustomerWhatsApp(customerId){
 
-    const customer=
-    getCustomer(customerId);
+    const customer = getCustomer(customerId);
 
-    const subscription=
-    state.subscriptions.find(
-        x=>
-        Number(x.customer_id)
-        ===Number(customerId)
-        &&
-        x.status!=="inactive"
-    );
-
-    if(subscription){
-
-        const statePayment=
-        getPaymentState(subscription);
-
-        let type="payment";
-
-        if(statePayment.type==="overdue")
-            type="overdue";
-
-        else if(statePayment.type==="due")
-            type="due";
-
-        sendWhatsApp(
-            customerId,
-            subscription.id,
-            type
-        );
-
-    }else{
-
-        const templates=
-        getWhatsAppTemplates();
-
-        const message=
-        buildWhatsAppMessage(
-            templates.welcome,
-            customer,
-            null
-        );
-
-        const number=
-        whatsappNumber(customer.phone);
-
-        window.open(
-            "https://wa.me/"
-            +number
-            +"?text="
-            +encodeURIComponent(message),
-            "_blank"
-        );
-
+    if(!customer){
+        showToast("العميل غير موجود", true);
+        return;
     }
 
+    if(!customer.phone){
+        showToast("لا يوجد رقم هاتف للعميل", true);
+        return;
+    }
+
+    let number = String(customer.phone)
+        .replace(/\D/g,"");
+
+    if(number.startsWith("0")){
+        number = "20" + number.substring(1);
+    }
+
+    if(!number){
+        showToast("رقم الهاتف غير صحيح", true);
+        return;
+    }
+
+    const message =
+        "السلام عليكم " +
+        (customer.client_name || "") +
+        "\n\n" +
+        "أهلاً بك في BADGEIFY.";
+
+    const url =
+        "https://wa.me/" +
+        number +
+        "?text=" +
+        encodeURIComponent(message);
+
+    window.open(url, "_blank");
 }
-
-
 /* =========================================
    CUSTOMER MODAL
 ========================================= */
