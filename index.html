@@ -4282,52 +4282,62 @@ async function openTraderPortal(traderId){
 
     try{
 
-        const { data, error } = await db
-            .from("trader_portal_tokens")
-            .select("token")
-            .eq("trader_id", traderId)
-            .eq("is_active", true)
-            .limit(1)
-            .maybeSingle();
+        const response = await fetch(
+            "https://rsvzachgbqsucqgrwguv.supabase.co/functions/v1/trader-portal-link",
+            {
+                method: "POST",
 
-        if(error){
+                headers: {
+                    "Content-Type": "application/json",
+                    "apikey": "sb_publishable_jn8QNpKQ8v7awUj2wYANdw_wcliO986"
+                },
 
-            console.error(error);
+                body: JSON.stringify({
+                    trader_id: Number(traderId)
+                })
+            }
+        );
+
+
+        const result = await response.json();
+
+
+        if(!response.ok){
+
+            console.error(result);
 
             showToast(
-                "تعذر الحصول على رابط التاجر",
+                result.error || "تعذر إنشاء رابط التاجر",
                 true
             );
 
             return;
         }
 
-        if(!data || !data.token){
+
+        if(!result.url){
 
             showToast(
-                "لا يوجد رابط لهذا التاجر",
+                "لم يتم الحصول على رابط التاجر",
                 true
             );
 
             return;
         }
 
-        const portalUrl =
-            "https://salehalaa1.github.io/index.html/trader.html"
-            + "?token="
-            + encodeURIComponent(data.token);
 
         window.open(
-            portalUrl,
+            result.url,
             "_blank"
         );
+
 
     }catch(error){
 
         console.error(error);
 
         showToast(
-            "حدث خطأ أثناء فتح رابط التاجر",
+            "حدث خطأ أثناء إنشاء رابط التاجر",
             true
         );
 
