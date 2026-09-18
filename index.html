@@ -3517,54 +3517,121 @@ onclick="openCustomerPortal(${customer.id})">
    SUBSCRIPTION MODAL
 ========================================= */
 
-function openSubscriptionModal(id=null){
+async function openSubscriptionModal(id=null){
 
-    const s=
-    id
-    ?getSubscription(id)
-    :{
-        status:"active",
-        payment_day:new Date().getDate(),
-        currency:
-        state.settings.currency||"EGP"
-    };
+    const s =
+        id
+        ? getSubscription(id)
+        : {
+            status:"active",
+            payment_day:new Date().getDate(),
+            currency:state.settings.currency||"EGP"
+        };
+
+    let serviceRows = [];
+
+    /*
+     * لو تعديل اشتراك موجود:
+     * نحاول تحميل الخدمات التابعة له من subscription_services
+     */
+    if(id){
+
+        try{
+
+            const result =
+                await db
+                .from("subscription_services")
+                .select("*")
+                .eq("subscription_id",id)
+                .order("id",{ascending:true});
+
+            if(result.error)
+                throw result.error;
+
+            serviceRows = result.data || [];
+
+        }catch(error){
+
+            console.error(
+                "Error loading subscription services:",
+                error
+            );
+
+        }
+
+    }
+
+    /*
+     * لو الاشتراك قديم ومفيش له خدمات في
+     * subscription_services
+     *
+     * نستخدم الخدمة الموجودة أصلًا في subscriptions
+     */
+    if(!serviceRows.length){
+
+        serviceRows = [
+
+            {
+                app_service_id:
+                    s.app_service_id || "",
+
+                price:
+                    Number(s.monthly_fee || 0),
+
+                status:
+                    s.status || "active",
+
+                notes:""
+            }
+
+        ];
+
+    }
 
     openModal(
 
-        id?t("edit"):t("newSubscription"),
+        id
+        ? t("edit")
+        : t("newSubscription"),
 
         `
 
         <div class="form-grid">
 
+            <!-- العميل -->
+
             <div class="field">
 
                 <label>
-                ${t("customer")}
+                    ${t("customer")}
                 </label>
 
                 <select id="subCustomer">
 
                     <option value="">
-                    ${t("choose")}
+                        ${t("choose")}
                     </option>
 
                     ${
-                    state.customers
-                    .map(c=>`
+                        state.customers
+                        .map(c=>`
 
-                    <option
-                    value="${c.id}"
-                    ${Number(s.customer_id)
-                    ===Number(c.id)
-                    ?"selected":""
-                    }>
+                            <option
+                                value="${c.id}"
+                                ${
+                                    Number(s.customer_id)
+                                    === Number(c.id)
+                                    ? "selected"
+                                    : ""
+                                }
+                            >
 
-                    ${esc(c.client_name)}
+                                ${esc(c.client_name)}
 
-                    </option>
+                            </option>
 
-                    `).join("")
+                        `)
+                        .join("")
                     }
 
                 </select>
@@ -3572,116 +3639,41 @@ function openSubscriptionModal(id=null){
             </div>
 
 
-            <div class="field">
-
-                <label>
-                ${t("service")}
-                </label>
-
-                <select id="subService">
-
-                    <option value="">
-                    ${t("choose")}
-                    </option>
-
-                    ${
-                    state.services
-                    .map(x=>`
-
-                    <option
-                    value="${x.id}"
-                    ${String(s.app_service_id)
-                    ===String(x.id)
-                    ?"selected":""
-                    }>
-
-                    ${esc(x.service_name)}
-
-                    </option>
-
-                    `).join("")
-                    }
-
-                </select>
-
-            </div>
-
+            <!-- يوم الدفع -->
 
             <div class="field">
 
                 <label>
-                ${t("platform")}
+                    ${t("paymentDay")}
                 </label>
 
                 <input
-                id="subPlatform"
-                value="${esc(s.platform||"")}"
+                    id="subPaymentDay"
+                    type="number"
+                    min="1"
+                    max="31"
+                    value="${esc(s.payment_day || 1)}"
                 >
 
             </div>
 
 
-            <div class="field">
-
-                <label>
-                ${t("page")}
-                </label>
-
-                <input
-                id="subPage"
-                value="${esc(s.page_name||"")}"
-                >
-
-            </div>
-
+            <!-- الحالة -->
 
             <div class="field">
 
                 <label>
-                ${t("monthlyFee")}
-                </label>
-
-                <input
-                id="subFee"
-                type="number"
-                step="0.01"
-                value="${esc(s.monthly_fee||0)}"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("paymentDay")}
-                </label>
-
-                <input
-                id="subPaymentDay"
-                type="number"
-                min="1"
-                max="31"
-                value="${esc(s.payment_day||1)}"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                ${t("status")}
+                    ${t("status")}
                 </label>
 
                 <select id="subStatus">
 
                     <option value="active">
-                    ${t("active")}
+                        ${t("active")}
                     </option>
 
                     <option value="inactive">
-                    ${t("inactive")}
+                        ${t("inactive")}
                     </option>
 
                 </select>
@@ -3689,29 +3681,142 @@ function openSubscriptionModal(id=null){
             </div>
 
 
+            <!-- المنصة -->
+
             <div class="field">
 
                 <label>
-                ${t("pageLink")}
+                    ${t("platform")}
                 </label>
 
                 <input
-                id="subPageLink"
-                value="${esc(s.page_link||"")}"
+                    id="subPlatform"
+                    value="${esc(s.platform || "")}"
                 >
 
             </div>
 
 
+            <!-- الصفحة -->
+
+            <div class="field">
+
+                <label>
+                    ${t("page")}
+                </label>
+
+                <input
+                    id="subPage"
+                    value="${esc(s.page_name || "")}"
+                >
+
+            </div>
+
+
+            <!-- رابط الصفحة -->
+
+            <div class="field">
+
+                <label>
+                    ${t("pageLink")}
+                </label>
+
+                <input
+                    id="subPageLink"
+                    value="${esc(s.page_link || "")}"
+                >
+
+            </div>
+
+
+            <!-- الخدمات -->
+
+            <div class="field full">
+
+                <label style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                ">
+
+                    <span>
+                        الخدمات داخل الاشتراك
+                    </span>
+
+                    <button
+                        type="button"
+                        class="ghost-btn"
+                        onclick="addSubscriptionServiceRow()"
+                    >
+
+                        <i class="fa-solid fa-plus"></i>
+
+                        إضافة خدمة أخرى
+
+                    </button>
+
+                </label>
+
+
+                <div
+                    id="subscriptionServicesContainer"
+                    style="
+                        display:flex;
+                        flex-direction:column;
+                        gap:10px;
+                        margin-top:10px;
+                    "
+                >
+
+                    ${
+                        serviceRows
+                        .map((row,index)=>
+
+                            subscriptionServiceRowHTML(
+                                index,
+                                row.app_service_id,
+                                row.price
+                            )
+
+                        )
+                        .join("")
+                    }
+
+                </div>
+
+            </div>
+
+
+            <!-- الإجمالي -->
+
+            <div class="field">
+
+                <label>
+                    إجمالي الاشتراك
+                </label>
+
+                <input
+                    id="subTotalFee"
+                    type="number"
+                    step="0.01"
+                    value="0"
+                    readonly
+                >
+
+            </div>
+
+
+            <!-- ملاحظات -->
+
             <div class="field full">
 
                 <label>
-                ${t("notes")}
+                    ${t("notes")}
                 </label>
 
                 <textarea
-                id="subNotes"
-                >${esc(s.notes||"")}</textarea>
+                    id="subNotes"
+                >${esc(s.notes || "")}</textarea>
 
             </div>
 
@@ -3722,18 +3827,20 @@ function openSubscriptionModal(id=null){
         `
 
         <button
-        class="ghost-btn"
-        onclick="closeModal()">
+            class="ghost-btn"
+            onclick="closeModal()"
+        >
 
-        ${t("cancel")}
+            ${t("cancel")}
 
         </button>
 
         <button
-        class="gold-btn"
-        onclick="saveSubscription(${id||"null"})">
+            class="gold-btn"
+            onclick="saveSubscription(${id || "null"})"
+        >
 
-        ${t("save")}
+            ${t("save")}
 
         </button>
 
@@ -3741,37 +3848,29 @@ function openSubscriptionModal(id=null){
 
     );
 
-    document.getElementById(
-        "subStatus"
-    ).value=
-    s.status||"active";
+
+    /*
+     * تحديث الإجمالي
+     */
+
+    updateSubscriptionTotal();
 
 
-    document.getElementById(
-        "subService"
-    ).addEventListener(
-        "change",
-        function(){
+    /*
+     * تحديد الحالة
+     */
 
-            if(id) return;
+    const statusElement =
+        document.getElementById("subStatus");
 
-            const service=
-            getService(this.value);
+    if(statusElement){
 
-            if(service){
+        statusElement.value =
+            s.status || "active";
 
-                document.getElementById(
-                    "subFee"
-                ).value=
-                service.default_price||0;
-
-            }
-
-        }
-    );
+    }
 
 }
-
 
 async function saveSubscription(id){
 
