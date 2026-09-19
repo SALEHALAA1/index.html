@@ -560,6 +560,42 @@ body.light .topbar{
     color:var(--muted);
 }
 
+
+/* SUBSCRIPTION FILTER */
+.subscription-filters{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:10px;
+    margin-bottom:16px;
+}
+.subscription-filter-btn{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--panel2);
+    color:var(--text);
+    text-align:center;
+}
+.subscription-filter-btn:hover,
+.subscription-filter-btn.active{
+    border-color:var(--gold);
+    background:rgba(214,179,90,.12);
+    color:var(--gold2);
+}
+.subscription-filter-btn b{
+    display:block;
+    font-size:18px;
+    margin-bottom:2px;
+}
+.subscription-filter-btn span{
+    color:var(--muted);
+    font-size:10px;
+}
+@media(max-width:600px){
+    .subscription-filters{grid-template-columns:repeat(2,1fr);}
+}
+
 /* SEARCH */
 
 .search{
@@ -997,8 +1033,7 @@ data-t="main">
 <span data-t="invoices">الفواتير</span>
 </button>
 
-<button data-page="followups">
-<i class="fa-solid fa-calendar-check"></i>
+<button data-page="followups"><i class="fa-solid fa-calendar-check"></i>
 <span data-t="followups">المتابعات</span>
 </button>
 
@@ -1154,6 +1189,8 @@ let state={
 
     page:"dashboard",
 
+    subscriptionFilterStatus:"all",
+
     customers:[],
     traders:[],
     services:[],
@@ -1303,7 +1340,13 @@ deleted:"تم الحذف",
 
 successPayment:"تم تأكيد الدفع بنجاح",
 
-today:"اليوم"
+today:"اليوم",
+visa:"الفيزا المستخدمة",
+visaName:"اسم الفيزا",
+visaLast4:"آخر 4 أرقام",
+subscriptionFilter:"فلترة الاشتراكات",
+allSubscriptions:"كل الاشتراكات",
+upcomingSubscriptions:"القادمة"
 
 },
 
@@ -1435,7 +1478,13 @@ deleted:"Deleted",
 
 successPayment:"Payment confirmed",
 
-today:"Today"
+today:"Today",
+visa:"Payment card",
+visaName:"Card name",
+visaLast4:"Last 4 digits",
+subscriptionFilter:"Subscription filter",
+allSubscriptions:"All subscriptions",
+upcomingSubscriptions:"Upcoming"
 
 }
 
@@ -1997,7 +2046,6 @@ function sendWhatsApp(
 
     const subscription=
     getSubscription(subscriptionId);
-
     if(!customer?.phone){
 
         showToast(
@@ -2998,7 +3046,6 @@ function openCustomerModal(id=null){
                 <label>
                 ${t("name")}
                 </label>
-
                 <input
                 id="customerName"
                 value="${esc(c.client_name||"")}"
@@ -3312,11 +3359,27 @@ function renderSubscriptions(){
         return service?[service]:[];
     }
     const selectedService=document.getElementById("subscriptionServiceFilter")?.value||"";
-    const filteredRows=selectedService?rows.filter(function(subscription){
+    const selectedStatus=state.subscriptionFilterStatus||"all";
+
+    let filteredRows=selectedService?rows.filter(function(subscription){
         return servicesForSubscription(subscription).some(function(service){
             return String(service.id)===String(selectedService);
         });
     }):rows;
+
+    if(selectedStatus!=="all"){
+        filteredRows=filteredRows.filter(function(subscription){
+            return getPaymentState(subscription).type===selectedStatus;
+        });
+    }
+
+    const counts={
+        all:rows.length,
+        upcoming:rows.filter(x=>getPaymentState(x).type==="upcoming").length,
+        due:rows.filter(x=>getPaymentState(x).type==="due").length,
+        overdue:rows.filter(x=>getPaymentState(x).type==="overdue").length,
+        paid:rows.filter(x=>getPaymentState(x).type==="paid").length
+    };
     const grouped={};
     filteredRows.forEach(function(subscription){
         const key=String(subscription.customer_id);
@@ -3336,6 +3399,25 @@ function renderSubscriptions(){
     </div>
     <div class="card">
         <div class="card-body">
+
+            <div class="subscription-filters">
+                <button class="subscription-filter-btn \${selectedStatus==="all"?"active":""}" onclick="setSubscriptionStatusFilter('all')">
+                    <b>\${counts.all}</b><span>\${t("allSubscriptions")}</span>
+                </button>
+                <button class="subscription-filter-btn \${selectedStatus==="upcoming"?"active":""}" onclick="setSubscriptionStatusFilter('upcoming')">
+                    <b>\${counts.upcoming}</b><span>\${t("upcomingSubscriptions")}</span>
+                </button>
+                <button class="subscription-filter-btn \${selectedStatus==="due"?"active":""}" onclick="setSubscriptionStatusFilter('due')">
+                    <b>\${counts.due}</b><span>\${t("dueToday")}</span>
+                </button>
+                <button class="subscription-filter-btn \${selectedStatus==="overdue"?"active":""}" onclick="setSubscriptionStatusFilter('overdue')">
+                    <b>\${counts.overdue}</b><span>\${t("overdue")}</span>
+                </button>
+                <button class="subscription-filter-btn \${selectedStatus==="paid"?"active":""}" onclick="setSubscriptionStatusFilter('paid')">
+                    <b>\${counts.paid}</b><span>\${t("paid")}</span>
+                </button>
+            </div>
+
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
                 <label style="font-weight:700">فلترة حسب الخدمة</label>
                 <select id="subscriptionServiceFilter" onchange="renderSubscriptions()" style="min-width:220px">
@@ -3417,6 +3499,12 @@ function renderSubscriptions(){
             </tbody></table></div>
         </div>
     </div>`;
+}
+
+
+function setSubscriptionStatusFilter(status){
+    state.subscriptionFilterStatus=status||"all";
+    renderSubscriptions();
 }
 
 /* =========================================
@@ -3992,12 +4080,27 @@ function subscriptionServiceRowHTML(
             </div>
 
 
+
+            <!-- =========================
+                 الفيزا المستخدمة
+            ========================== -->
+
+            <div class="field">
+                <label>\${t("visaName")}</label>
+                <input id="subVisaName" value="\${esc(s.visa_name || "")}" placeholder="Visa 1">
+            </div>
+
+            <div class="field">
+                <label>\${t("visaLast4")}</label>
+                <input id="subVisaLast4" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="\${esc(s.visa_last4 || "")}" placeholder="1234">
+            </div>
+
+
             <!-- =========================
                  الخدمات
             ========================== -->
 
             <div class="field full">
-
                 <label
                     style="
                         display:flex;
@@ -4400,7 +4503,13 @@ async function saveSubscription(id){
 
 
         currency:
-            state.settings.currency || "EGP"
+            state.settings.currency || "EGP",
+
+        visa_name:
+            document.getElementById("subVisaName").value.trim(),
+
+        visa_last4:
+            document.getElementById("subVisaLast4").value.replace(/\D/g,"").slice(-4)
 
     };
 
@@ -4998,7 +5107,6 @@ function renderPayments(){
     </div>
 
     </div>
-
     `;
 
 }
@@ -5998,7 +6106,6 @@ async function saveService(id){
         showToast(t("saved"));
 
     }catch(error){
-
         showToast(
             error.message,
             true
@@ -6998,7 +7105,6 @@ async function createTraderInvoice(){
         );
 
         closeModal();
-
         await refresh();
 
         showToast(t("saved"));
@@ -7997,7 +8103,6 @@ function openCustomerProfile(id){
             <div class="card-body">
 
                 <h2 style="margin-top:0">
-
                 ${esc(customer.client_name)}
 
                 </h2>
@@ -8997,9 +9102,3 @@ async function(event,session){
 ========================================= */
 
 applyTheme();
-
-
-</script>
-
-</body>
-</html>
