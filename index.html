@@ -997,7 +997,6 @@ data-t="main">
 </div>
 
 <nav class="nav">
-
 <button data-page="dashboard" class="active">
 <i class="fa-solid fa-chart-pie"></i>
 <span data-t="dashboard">لوحة التحكم</span>
@@ -1997,7 +1996,6 @@ function buildWhatsAppMessage(
         subscription?
         money(subscription.monthly_fee):
         "",
-
         currency:
         subscription?.currency
         ||
@@ -2997,8 +2995,7 @@ function sendCustomerWhatsApp(customerId){
         .replace(/\D/g,"");
 
     if(number.startsWith("0")){
-        number = "20" + number.substring(1);
-    }
+        number = "20" + number.substring(1);    }
 
     if(!number){
         showToast("رقم الهاتف غير صحيح", true);
@@ -3401,20 +3398,20 @@ function renderSubscriptions(){
         <div class="card-body">
 
             <div class="subscription-filters">
-                <button class="subscription-filter-btn \${selectedStatus==="all"?"active":""}" onclick="setSubscriptionStatusFilter('all')">
-                    <b>\${counts.all}</b><span>\${t("allSubscriptions")}</span>
+                <button class="subscription-filter-btn ${selectedStatus==="all"?"active":""}" onclick="setSubscriptionStatusFilter('all')">
+                    <b>${counts.all}</b><span>${t("allSubscriptions")}</span>
                 </button>
-                <button class="subscription-filter-btn \${selectedStatus==="upcoming"?"active":""}" onclick="setSubscriptionStatusFilter('upcoming')">
-                    <b>\${counts.upcoming}</b><span>\${t("upcomingSubscriptions")}</span>
+                <button class="subscription-filter-btn ${selectedStatus==="upcoming"?"active":""}" onclick="setSubscriptionStatusFilter('upcoming')">
+                    <b>${counts.upcoming}</b><span>${t("upcomingSubscriptions")}</span>
                 </button>
-                <button class="subscription-filter-btn \${selectedStatus==="due"?"active":""}" onclick="setSubscriptionStatusFilter('due')">
-                    <b>\${counts.due}</b><span>\${t("dueToday")}</span>
+                <button class="subscription-filter-btn ${selectedStatus==="due"?"active":""}" onclick="setSubscriptionStatusFilter('due')">
+                    <b>${counts.due}</b><span>${t("dueToday")}</span>
                 </button>
-                <button class="subscription-filter-btn \${selectedStatus==="overdue"?"active":""}" onclick="setSubscriptionStatusFilter('overdue')">
-                    <b>\${counts.overdue}</b><span>\${t("overdue")}</span>
+                <button class="subscription-filter-btn ${selectedStatus==="overdue"?"active":""}" onclick="setSubscriptionStatusFilter('overdue')">
+                    <b>${counts.overdue}</b><span>${t("overdue")}</span>
                 </button>
-                <button class="subscription-filter-btn \${selectedStatus==="paid"?"active":""}" onclick="setSubscriptionStatusFilter('paid')">
-                    <b>\${counts.paid}</b><span>\${t("paid")}</span>
+                <button class="subscription-filter-btn ${selectedStatus==="paid"?"active":""}" onclick="setSubscriptionStatusFilter('paid')">
+                    <b>${counts.paid}</b><span>${t("paid")}</span>
                 </button>
             </div>
 
@@ -3997,8 +3994,7 @@ function subscriptionServiceRowHTML(
 
 
             <!-- =========================
-                 الحالة
-            ========================== -->
+                 الحالة            ========================== -->
 
             <div class="field">
 
@@ -4086,13 +4082,13 @@ function subscriptionServiceRowHTML(
             ========================== -->
 
             <div class="field">
-                <label>\${t("visaName")}</label>
-                <input id="subVisaName" value="\${esc(s.visa_name || "")}" placeholder="Visa 1">
+                <label>${t("visaName")}</label>
+                <input id="subVisaName" value="${esc(s.visa_name || "")}" placeholder="Visa 1">
             </div>
 
             <div class="field">
-                <label>\${t("visaLast4")}</label>
-                <input id="subVisaLast4" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="\${esc(s.visa_last4 || "")}" placeholder="1234">
+                <label>${t("visaLast4")}</label>
+                <input id="subVisaLast4" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="${esc(s.visa_last4 || "")}" placeholder="1234">
             </div>
 
 
@@ -4997,7 +4993,6 @@ function renderPayments(){
     <div class="page-head">
 
         <div>
-
             <h1>${t("payments")}</h1>
 
         </div>
@@ -5996,7 +5991,6 @@ function openServiceModal(id=null){
                 </select>
 
             </div>
-
 
             <div class="field full">
 
@@ -6997,8 +6991,7 @@ async function createTraderInvoice(){
     );
 
     const subtotal=
-    subscriptions.reduce(
-        (sum,s)=>
+    subscriptions.reduce(        (sum,s)=>
         sum+Number(s.monthly_fee||0),
         0
     );
@@ -7997,8 +7990,7 @@ function sendPortalWhatsApp(customerId, link){
     window.open(
         "https://wa.me/" +
         number +
-        "?text=" +
-        encodeURIComponent(message),
+        "?text=" +        encodeURIComponent(message),
         "_blank"
     );
 
@@ -8998,107 +8990,3 @@ document.getElementById(
     const password=
     document.getElementById(
         "loginPassword"
-    ).value;
-
-    document.getElementById(
-        "loginMsg"
-    ).textContent="...";
-
-
-    const result=
-    await db.auth.signInWithPassword({
-
-        email:email,
-
-        password:password
-
-    });
-
-
-    if(result.error){
-
-        document.getElementById(
-            "loginMsg"
-        ).textContent=
-        result.error.message;
-
-    }else{
-
-        document.getElementById(
-            "loginMsg"
-        ).textContent="";
-
-    }
-
-};
-
-
-document.getElementById(
-    "logoutBtn"
-).onclick=async function(){
-
-    await db.auth.signOut();
-
-};
-
-
-document.getElementById(
-    "refreshBtn"
-).onclick=
-refresh;
-
-
-/* =========================================
-   AUTH
-========================================= */
-
-db.auth.onAuthStateChange(
-async function(event,session){
-
-    currentUser=
-    session?.user||null;
-
-    if(currentUser){
-
-        document
-        .getElementById(
-            "loginView"
-        )
-        .classList
-        .add("hidden");
-
-        document
-        .getElementById(
-            "appView"
-        )
-        .classList
-        .remove("hidden");
-
-        await refresh();
-
-    }else{
-
-        document
-        .getElementById(
-            "loginView"
-        )
-        .classList
-        .remove("hidden");
-
-        document
-        .getElementById(
-            "appView"
-        )
-        .classList
-        .add("hidden");
-
-    }
-
-});
-
-
-/* =========================================
-   INITIAL
-========================================= */
-
-applyTheme();
