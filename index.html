@@ -561,41 +561,12 @@ body.light .topbar{
 }
 
 
-/* SUBSCRIPTION FILTER */
-.subscription-filters{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:10px;
-    margin-bottom:16px;
-}
-.subscription-filter-btn{
-    width:100%;
-    padding:11px 12px;
-    border:1px solid var(--border);
-    border-radius:12px;
-    background:var(--panel2);
-    color:var(--text);
-    text-align:center;
-}
-.subscription-filter-btn:hover,
-.subscription-filter-btn.active{
-    border-color:var(--gold);
-    background:rgba(214,179,90,.12);
-    color:var(--gold2);
-}
-.subscription-filter-btn b{
-    display:block;
-    font-size:18px;
-    margin-bottom:2px;
-}
-.subscription-filter-btn span{
-    color:var(--muted);
-    font-size:10px;
-}
-@media(max-width:600px){
-    .subscription-filters{grid-template-columns:repeat(2,1fr);}
-}
-
+/* BADGEIFY SUBSCRIPTION FILTER */
+.subscription-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.subscription-filter-btn{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel2);color:var(--text);text-align:center}
+.subscription-filter-btn:hover,.subscription-filter-btn.active{border-color:var(--gold);background:rgba(214,179,90,.12);color:var(--gold2)}
+.subscription-filter-btn b{display:block;font-size:18px;margin-bottom:2px}.subscription-filter-btn span{color:var(--muted);font-size:10px}
+@media(max-width:600px){.subscription-filters{grid-template-columns:repeat(2,1fr)}}
 /* SEARCH */
 
 .search{
@@ -997,6 +968,7 @@ data-t="main">
 </div>
 
 <nav class="nav">
+
 <button data-page="dashboard" class="active">
 <i class="fa-solid fa-chart-pie"></i>
 <span data-t="dashboard">لوحة التحكم</span>
@@ -1032,7 +1004,8 @@ data-t="main">
 <span data-t="invoices">الفواتير</span>
 </button>
 
-<button data-page="followups"><i class="fa-solid fa-calendar-check"></i>
+<button data-page="followups">
+<i class="fa-solid fa-calendar-check"></i>
 <span data-t="followups">المتابعات</span>
 </button>
 
@@ -1340,10 +1313,8 @@ deleted:"تم الحذف",
 successPayment:"تم تأكيد الدفع بنجاح",
 
 today:"اليوم",
-visa:"الفيزا المستخدمة",
 visaName:"اسم الفيزا",
 visaLast4:"آخر 4 أرقام",
-subscriptionFilter:"فلترة الاشتراكات",
 allSubscriptions:"كل الاشتراكات",
 upcomingSubscriptions:"القادمة"
 
@@ -1478,10 +1449,8 @@ deleted:"Deleted",
 successPayment:"Payment confirmed",
 
 today:"Today",
-visa:"Payment card",
 visaName:"Card name",
 visaLast4:"Last 4 digits",
-subscriptionFilter:"Subscription filter",
 allSubscriptions:"All subscriptions",
 upcomingSubscriptions:"Upcoming"
 
@@ -1996,6 +1965,7 @@ function buildWhatsAppMessage(
         subscription?
         money(subscription.monthly_fee):
         "",
+
         currency:
         subscription?.currency
         ||
@@ -2044,6 +2014,7 @@ function sendWhatsApp(
 
     const subscription=
     getSubscription(subscriptionId);
+
     if(!customer?.phone){
 
         showToast(
@@ -2995,7 +2966,8 @@ function sendCustomerWhatsApp(customerId){
         .replace(/\D/g,"");
 
     if(number.startsWith("0")){
-        number = "20" + number.substring(1);    }
+        number = "20" + number.substring(1);
+    }
 
     if(!number){
         showToast("رقم الهاتف غير صحيح", true);
@@ -3043,6 +3015,7 @@ function openCustomerModal(id=null){
                 <label>
                 ${t("name")}
                 </label>
+
                 <input
                 id="customerName"
                 value="${esc(c.client_name||"")}"
@@ -3396,23 +3369,12 @@ function renderSubscriptions(){
     </div>
     <div class="card">
         <div class="card-body">
-
             <div class="subscription-filters">
-                <button class="subscription-filter-btn ${selectedStatus==="all"?"active":""}" onclick="setSubscriptionStatusFilter('all')">
-                    <b>${counts.all}</b><span>${t("allSubscriptions")}</span>
-                </button>
-                <button class="subscription-filter-btn ${selectedStatus==="upcoming"?"active":""}" onclick="setSubscriptionStatusFilter('upcoming')">
-                    <b>${counts.upcoming}</b><span>${t("upcomingSubscriptions")}</span>
-                </button>
-                <button class="subscription-filter-btn ${selectedStatus==="due"?"active":""}" onclick="setSubscriptionStatusFilter('due')">
-                    <b>${counts.due}</b><span>${t("dueToday")}</span>
-                </button>
-                <button class="subscription-filter-btn ${selectedStatus==="overdue"?"active":""}" onclick="setSubscriptionStatusFilter('overdue')">
-                    <b>${counts.overdue}</b><span>${t("overdue")}</span>
-                </button>
-                <button class="subscription-filter-btn ${selectedStatus==="paid"?"active":""}" onclick="setSubscriptionStatusFilter('paid')">
-                    <b>${counts.paid}</b><span>${t("paid")}</span>
-                </button>
+                <button class="subscription-filter-btn ${selectedStatus==="all"?"active":""}" onclick="setSubscriptionStatusFilter('all')"><b>${counts.all}</b><span>${t("allSubscriptions")}</span></button>
+                <button class="subscription-filter-btn ${selectedStatus==="upcoming"?"active":""}" onclick="setSubscriptionStatusFilter('upcoming')"><b>${counts.upcoming}</b><span>${t("upcomingSubscriptions")}</span></button>
+                <button class="subscription-filter-btn ${selectedStatus==="due"?"active":""}" onclick="setSubscriptionStatusFilter('due')"><b>${counts.due}</b><span>${t("dueToday")}</span></button>
+                <button class="subscription-filter-btn ${selectedStatus==="overdue"?"active":""}" onclick="setSubscriptionStatusFilter('overdue')"><b>${counts.overdue}</b><span>${t("overdue")}</span></button>
+                <button class="subscription-filter-btn ${selectedStatus==="paid"?"active":""}" onclick="setSubscriptionStatusFilter('paid')"><b>${counts.paid}</b><span>${t("paid")}</span></button>
             </div>
 
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
@@ -3497,7 +3459,6 @@ function renderSubscriptions(){
         </div>
     </div>`;
 }
-
 
 function setSubscriptionStatusFilter(status){
     state.subscriptionFilterStatus=status||"all";
@@ -3994,7 +3955,8 @@ function subscriptionServiceRowHTML(
 
 
             <!-- =========================
-                 الحالة            ========================== -->
+                 الحالة
+            ========================== -->
 
             <div class="field">
 
@@ -4076,7 +4038,6 @@ function subscriptionServiceRowHTML(
             </div>
 
 
-
             <!-- =========================
                  الفيزا المستخدمة
             ========================== -->
@@ -4091,12 +4052,12 @@ function subscriptionServiceRowHTML(
                 <input id="subVisaLast4" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="${esc(s.visa_last4 || "")}" placeholder="1234">
             </div>
 
-
             <!-- =========================
                  الخدمات
             ========================== -->
 
             <div class="field full">
+
                 <label
                     style="
                         display:flex;
@@ -4993,6 +4954,7 @@ function renderPayments(){
     <div class="page-head">
 
         <div>
+
             <h1>${t("payments")}</h1>
 
         </div>
@@ -5102,6 +5064,7 @@ function renderPayments(){
     </div>
 
     </div>
+
     `;
 
 }
@@ -5992,6 +5955,7 @@ function openServiceModal(id=null){
 
             </div>
 
+
             <div class="field full">
 
                 <label>${t("description")}</label>
@@ -6100,6 +6064,7 @@ async function saveService(id){
         showToast(t("saved"));
 
     }catch(error){
+
         showToast(
             error.message,
             true
@@ -6991,7 +6956,8 @@ async function createTraderInvoice(){
     );
 
     const subtotal=
-    subscriptions.reduce(        (sum,s)=>
+    subscriptions.reduce(
+        (sum,s)=>
         sum+Number(s.monthly_fee||0),
         0
     );
@@ -7098,6 +7064,7 @@ async function createTraderInvoice(){
         );
 
         closeModal();
+
         await refresh();
 
         showToast(t("saved"));
@@ -7990,7 +7957,8 @@ function sendPortalWhatsApp(customerId, link){
     window.open(
         "https://wa.me/" +
         number +
-        "?text=" +        encodeURIComponent(message),
+        "?text=" +
+        encodeURIComponent(message),
         "_blank"
     );
 
@@ -8095,6 +8063,7 @@ function openCustomerProfile(id){
             <div class="card-body">
 
                 <h2 style="margin-top:0">
+
                 ${esc(customer.client_name)}
 
                 </h2>
@@ -8990,3 +8959,113 @@ document.getElementById(
     const password=
     document.getElementById(
         "loginPassword"
+    ).value;
+
+    document.getElementById(
+        "loginMsg"
+    ).textContent="...";
+
+
+    const result=
+    await db.auth.signInWithPassword({
+
+        email:email,
+
+        password:password
+
+    });
+
+
+    if(result.error){
+
+        document.getElementById(
+            "loginMsg"
+        ).textContent=
+        result.error.message;
+
+    }else{
+
+        document.getElementById(
+            "loginMsg"
+        ).textContent="";
+
+    }
+
+};
+
+
+document.getElementById(
+    "logoutBtn"
+).onclick=async function(){
+
+    await db.auth.signOut();
+
+};
+
+
+document.getElementById(
+    "refreshBtn"
+).onclick=
+refresh;
+
+
+/* =========================================
+   AUTH
+========================================= */
+
+db.auth.onAuthStateChange(
+async function(event,session){
+
+    currentUser=
+    session?.user||null;
+
+    if(currentUser){
+
+        document
+        .getElementById(
+            "loginView"
+        )
+        .classList
+        .add("hidden");
+
+        document
+        .getElementById(
+            "appView"
+        )
+        .classList
+        .remove("hidden");
+
+        await refresh();
+
+    }else{
+
+        document
+        .getElementById(
+            "loginView"
+        )
+        .classList
+        .remove("hidden");
+
+        document
+        .getElementById(
+            "appView"
+        )
+        .classList
+        .add("hidden");
+
+    }
+
+});
+
+
+/* =========================================
+   INITIAL
+========================================= */
+
+applyTheme();
+
+
+</script>
+
+</body>
+</html>
