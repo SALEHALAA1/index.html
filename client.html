@@ -1024,16 +1024,9 @@ function renderSubscriptions(
                         </div>
 
                         
-                        \${subscription.visa_last4 ? `
-                        <div class="detail">
-                            <div class="detail-label">
-                                الفيزا المستخدمة
-                            </div>
-                            <div class="detail-value">
-                                •••• \${escapeHtml(subscription.visa_last4)}
-                            </div>
-                        </div>
-                        ` : ""}
+                        \${subscription.visa_last4 && '<div class="detail"><div class="detail-label">الفيزا المستخدمة</div><div class="detail-value">•••• ' + escapeHtml(subscription.visa_last4) + '</div></div>'}
+
+                        
 <div class="detail">
                             <div class="detail-label">
                                 الحالة
