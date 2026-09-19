@@ -979,6 +979,11 @@ data-t="main">
 <span data-t="customers">العملاء</span>
 </button>
 
+<button data-page="visaCards">
+<i class="fa-solid fa-credit-card"></i>
+<span data-t="visaCards">الفيز</span>
+</button>
+
 <button data-page="traders">
 <i class="fa-solid fa-user-tie"></i>
 <span data-t="traders">التجار</span>
@@ -1164,6 +1169,7 @@ let state={
     subscriptionFilterStatus:"all",
 
     customers:[],
+    visaCards:[],
     traders:[],
     services:[],
     subscriptions:[],
@@ -1313,6 +1319,12 @@ deleted:"تم الحذف",
 successPayment:"تم تأكيد الدفع بنجاح",
 
 today:"اليوم",
+visaCards:"الفيز",
+newVisaCard:"فيزا جديدة",
+cardName:"اسم الفيزا",
+cardNumber:"رقم الفيزا",
+last4:"آخر 4 أرقام",
+selectVisa:"اختر الفيزا",
 visaName:"اسم الفيزا",
 visaLast4:"آخر 4 أرقام",
 allSubscriptions:"كل الاشتراكات",
@@ -1449,6 +1461,12 @@ deleted:"Deleted",
 successPayment:"Payment confirmed",
 
 today:"Today",
+visaCards:"Cards",
+newVisaCard:"New card",
+cardName:"Card name",
+cardNumber:"Card number",
+last4:"Last 4 digits",
+selectVisa:"Select card",
 visaName:"Card name",
 visaLast4:"Last 4 digits",
 allSubscriptions:"All subscriptions",
@@ -1734,6 +1752,7 @@ async function loadData(){
     await Promise.all([
 
         loadTable("customers"),
+        loadTable("visa_cards"),
         loadTable("traders"),
         loadTable("app_services"),
         loadTable("subscriptions"),
@@ -1748,19 +1767,20 @@ async function loadData(){
     ]);
 
     state.customers=result[0];
-    state.traders=result[1];
-    state.services=result[2];
-    state.subscriptions=result[3];
-    state.subscriptionServices=result[4];
-    state.payments=result[5];
-    state.invoices=result[6];
-    state.invoiceItems=result[7];
-    state.followups=result[8];
-    state.logs=result[9];
+    state.visaCards=result[1];
+    state.traders=result[2];
+    state.services=result[3];
+    state.subscriptions=result[4];
+    state.subscriptionServices=result[5];
+    state.payments=result[6];
+    state.invoices=result[7];
+    state.invoiceItems=result[8];
+    state.followups=result[9];
+    state.logs=result[10];
 
     state.settings={};
 
-    result[10].forEach(function(row){
+    result[11].forEach(function(row){
 
         state.settings[
             row.setting_key
@@ -1783,6 +1803,15 @@ function getCustomer(id){
 
 }
 
+
+function getVisaCard(id){
+    return state.visaCards.find(x=>Number(x.id)===Number(id));
+}
+
+function maskVisaCard(card){
+    if(!card) return "-";
+    return "•••• " + String(card.last4 || "").slice(-4);
+}
 
 function getTrader(id){
 
@@ -2568,6 +2597,77 @@ function renderRecentPayments(){
 
 }
 
+
+
+/* =========================================
+   VISA CARDS
+========================================= */
+function renderVisaCards(){
+    const rows=state.visaCards||[];
+    document.getElementById("content").innerHTML=`
+    <div class="page-head">
+      <div><h1>${t("visaCards")}</h1><p>${rows.length} ${t("visaCards")}</p></div>
+      <button class="gold-btn" onclick="openVisaCardModal()"><i class="fa-solid fa-plus"></i> ${t("newVisaCard")}</button>
+    </div>
+    <div class="card"><div class="card-body"><div class="table-wrap">
+      <table class="table"><thead><tr><th>${t("cardName")}</th><th>${t("last4")}</th><th>${t("actions")}</th></tr></thead>
+      <tbody>${rows.length?rows.map(function(card){return `
+        <tr>
+          <td><b>${esc(card.card_name||"-")}</b></td>
+          <td><span class="badge due">${maskVisaCard(card)}</span></td>
+          <td><div class="actions">
+            <button class="mini-btn" onclick="openVisaCardModal(${card.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="mini-btn" onclick="deleteVisaCard(${card.id})"><i class="fa-solid fa-trash"></i></button>
+          </div></td>
+        </tr>`;}).join(""):`<tr><td colspan="3"><div class="empty">${t("noData")}</div></td></tr>`}
+      </tbody></table>
+    </div></div></div>`;
+}
+
+function openVisaCardModal(id=null){
+    const card=id?getVisaCard(id):{card_name:"",last4:""};
+    openModal(
+      id?t("edit"):t("newVisaCard"),
+      `
+      <div class="form-grid">
+        <div class="field"><label>${t("cardName")}</label><input id="visaCardName" value="${esc(card?.card_name||"")}" placeholder="Visa Facebook"></div>
+        <div class="field">
+          <label>${t("cardNumber")}</label>
+          <input id="visaCardNumber" type="text" inputmode="numeric" autocomplete="off" maxlength="19" placeholder="أدخل رقم الفيزا">
+          <div class="muted" style="font-size:9px;margin-top:5px">سيتم حفظ اسم الفيزا وآخر 4 أرقام فقط.</div>
+        </div>
+        <div class="field full"><label>${t("last4")}</label><input id="visaCardLast4" value="${esc(card?.last4||"")}" maxlength="4" readonly></div>
+      </div>`,
+      `<button class="ghost-btn" onclick="closeModal()">${t("cancel")}</button>
+       <button class="gold-btn" onclick="saveVisaCard(${id||"null"})">${t("save")}</button>`
+    );
+    const n=document.getElementById("visaCardNumber");
+    const l=document.getElementById("visaCardLast4");
+    if(n&&l)n.oninput=function(){l.value=this.value.replace(/\D/g,"").slice(-4);};
+}
+async function saveVisaCard(id){
+    const name=document.getElementById("visaCardName").value.trim();
+    const number=document.getElementById("visaCardNumber").value.replace(/\D/g,"");
+    const old4=document.getElementById("visaCardLast4").value.trim();
+    const last4=(number?number.slice(-4):old4).replace(/\D/g,"").slice(-4);
+    if(!name){showToast(t("cardName"),true);return;}
+    if(last4.length!==4){showToast("اكتب رقم الفيزا بشكل صحيح",true);return;}
+    try{
+      let result;
+      if(id) result=await db.from("visa_cards").update({card_name:name,last4:last4}).eq("id",id);
+      else result=await db.from("visa_cards").insert({card_name:name,last4:last4});
+      if(result.error)throw result.error;
+      closeModal();await refresh();showToast(t("saved"));
+    }catch(error){showToast(error.message,true);}
+}
+async function deleteVisaCard(id){
+    if(!confirm(state.lang==="ar"?"هل تريد حذف هذه الفيزا؟":"Delete this card?"))return;
+    try{
+      const result=await db.from("visa_cards").delete().eq("id",id);
+      if(result.error)throw result.error;
+      await refresh();showToast(t("deleted"));
+    }catch(error){showToast(error.message,true);}
+}
 
 /* =========================================
    CUSTOMERS
@@ -4038,18 +4138,15 @@ function subscriptionServiceRowHTML(
             </div>
 
 
-            <!-- =========================
-                 الفيزا المستخدمة
-            ========================== -->
-
-            <div class="field">
-                <label>${t("visaName")}</label>
-                <input id="subVisaName" value="${esc(s.visa_name || "")}" placeholder="Visa 1">
-            </div>
-
-            <div class="field">
-                <label>${t("visaLast4")}</label>
-                <input id="subVisaLast4" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="${esc(s.visa_last4 || "")}" placeholder="1234">
+            <div class="field full">
+                <label>${t("selectVisa")}</label>
+                <select id="subVisaCard">
+                    <option value="">${t("choose")}</option>
+                    ${(state.visaCards||[]).map(function(card){
+                        return `<option value="${card.id}" ${Number(s.visa_card_id)===Number(card.id)?"selected":""}>${esc(card.card_name)} — ${maskVisaCard(card)}</option>`;
+                    }).join("")}
+                </select>
+                <div class="muted" style="font-size:9px;margin-top:5px">عند الاختيار سيظهر اسم الفيزا وآخر 4 أرقام فقط.</div>
             </div>
 
             <!-- =========================
@@ -4462,11 +4559,16 @@ async function saveSubscription(id){
         currency:
             state.settings.currency || "EGP",
 
+        visa_card_id:
+            document.getElementById("subVisaCard").value
+            ? Number(document.getElementById("subVisaCard").value)
+            : null,
+
         visa_name:
-            document.getElementById("subVisaName").value.trim(),
+            getVisaCard(document.getElementById("subVisaCard").value)?.card_name || null,
 
         visa_last4:
-            document.getElementById("subVisaLast4").value.replace(/\D/g,"").slice(-4)
+            getVisaCard(document.getElementById("subVisaCard").value)?.last4 || null
 
     };
 
@@ -8908,6 +9010,8 @@ function render(){
         dashboard:renderDashboard,
 
         customers:renderCustomers,
+
+        visaCards:renderVisaCards,
 
         traders:renderTraders,
 
