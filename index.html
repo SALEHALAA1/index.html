@@ -24,11 +24,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     --border:#252c35;
     --text:#f4f5f7;
     --muted:#9299a5;
-    --gold:#d6b35a;
-    --gold2:#f1d98d;
+    --gold:#1877f2;
+    --gold2:#5aa7ff;
     --green:#35c98a;
     --red:#ef6262;
-    --blue:#5da8ff;
+    --blue:#42a5f5;
     --shadow:0 18px 50px rgba(0,0,0,.28);
 }
 
@@ -81,7 +81,7 @@ button{
     background:
     radial-gradient(
         circle at 20% 20%,
-        rgba(214,179,90,.13),
+        rgba(24,119,242,.14),
         transparent 35%
     ),
     var(--bg);
@@ -170,7 +170,7 @@ button{
 .field input:focus,
 .field select:focus,
 .field textarea:focus{
-    border-color:var(--gold);
+    border-color:var(--blue);
 }
 
 .form-grid{
@@ -260,7 +260,7 @@ button{
 
 .nav button:hover,
 .nav button.active{
-    background:rgba(214,179,90,.12);
+    background:rgba(24,119,242,.12);
     color:var(--gold2);
 }
 
@@ -855,6 +855,125 @@ body.light .topbar{
 
 }
 
+
+/* BADGEIFY BLUE IDENTITY + MOBILE COMPACT UI */
+.logo-icon{
+    overflow:hidden;
+    background:linear-gradient(135deg,#1877f2,#0b1f3a);
+    border:1px solid rgba(90,167,255,.35);
+    box-shadow:0 8px 24px rgba(24,119,242,.18);
+}
+.brand-logo-image{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+    border-radius:inherit;
+}
+.gold-btn{
+    box-shadow:0 8px 22px rgba(24,119,242,.18);
+}
+.nav button:hover,.nav button.active{
+    box-shadow:inset 0 0 0 1px rgba(24,119,242,.10);
+}
+@media(max-width:800px){
+    .sidebar{
+        width:58px;
+        padding:10px 5px;
+    }
+    .brand{
+        padding:4px 2px 14px;
+    }
+    .brand .logo-icon{
+        width:38px;
+        height:38px;
+    }
+    .nav button{
+        min-height:42px;
+        padding:8px 4px;
+        margin:2px 0;
+        border-radius:9px;
+    }
+    .nav i{
+        width:auto;
+        font-size:15px;
+    }
+    .main{
+        width:calc(100% - 58px);
+        margin-right:58px;
+    }
+    .topbar{
+        height:58px;
+        padding:0 10px;
+    }
+    .icon-btn{
+        width:36px;
+        height:36px;
+    }
+    .content{
+        padding:11px;
+    }
+    .page-head{
+        gap:9px;
+        margin-bottom:12px;
+    }
+    .page-head h1,.page-title{
+        font-size:18px!important;
+    }
+    .card{
+        border-radius:12px;
+    }
+    .stats{
+        gap:8px;
+    }
+    .stat-card{
+        padding:11px!important;
+        min-height:0!important;
+    }
+    .stat-card .stat-value{
+        font-size:20px!important;
+    }
+    .btn,.gold-btn,.ghost-btn,.red-btn,.mini-btn{
+        padding:8px 10px;
+        border-radius:9px;
+        font-size:12px;
+    }
+    .field label{
+        font-size:10px;
+    }
+    .field input,.field select,.field textarea,
+    .search input,.search select{
+        padding:9px 10px;
+        font-size:12px;
+    }
+    .modal{
+        padding:8px;
+    }
+    .modal-box{
+        max-height:95vh;
+        border-radius:15px;
+    }
+    .modal-head{
+        padding:12px 14px!important;
+    }
+    .list-item{
+        padding:8px;
+        gap:7px;
+    }
+}
+@media(max-width:520px){
+    .login{padding:12px;}
+    .login-box{padding:22px 16px;border-radius:18px;}
+    .logo{margin-bottom:20px;}
+    .logo-icon{width:42px;height:42px;}
+    .logo-title{font-size:19px;}
+    .logo-sub{font-size:9px;}
+    .top-actions{gap:4px;}
+    .top-actions .ghost-btn{padding:7px 8px;font-size:11px;}
+    .calendar{gap:6px;}
+    .day{min-height:105px;padding:8px;}
+}
+
 </style>
 </head>
 
@@ -868,7 +987,7 @@ body.light .topbar{
 
 <div class="logo">
 
-<div class="logo-icon">B</div>
+<div class="logo-icon"><img src="https://scontent.fcai19-6.fna.fbcdn.net/v/t39.30808-6/668525850_2199653773906597_7853828551378894356_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1024&ctp=s1024x1024&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=jN9zzk0cgtMQ7kNvwGOSJ86&_nc_oc=AdoPY9Oiv9RuWpzZqiZhQtBL8_D44BTxrXRyP8FXc-1TwAiHTok27pi88YUHp6Juwsc&_nc_zt=23&_nc_ht=scontent.fcai19-6.fna&_nc_gid=J5MCcle55wDvCYr-oi3x0g&_nc_ss=7b2a8&oh=00_AQKYoylM8WFVIVRJFICZbjPr5qJ0RbK-vvanL5q7naqABg&oe=6AB4F454" alt="BADGEIFY" class="brand-logo-image"></div>
 
 <div>
 
@@ -944,9 +1063,7 @@ style="margin-top:10px">
 
 <div class="brand">
 
-<div class="logo-icon">
-B
-</div>
+<div class="logo-icon"><img src="https://scontent.fcai19-6.fna.fbcdn.net/v/t39.30808-6/668525850_2199653773906597_7853828551378894356_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1024&ctp=s1024x1024&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=jN9zzk0cgtMQ7kNvwGOSJ86&_nc_oc=AdoPY9Oiv9RuWpzZqiZhQtBL8_D44BTxrXRyP8FXc-1TwAiHTok27pi88YUHp6Juwsc&_nc_zt=23&_nc_ht=scontent.fcai19-6.fna&_nc_gid=J5MCcle55wDvCYr-oi3x0g&_nc_ss=7b2a8&oh=00_AQKYoylM8WFVIVRJFICZbjPr5qJ0RbK-vvanL5q7naqABg&oe=6AB4F454" alt="BADGEIFY" class="brand-logo-image"></div>
 
 <div>
 
